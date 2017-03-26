@@ -45,3 +45,4 @@ message(STATUS "    include path: ${EIGEN3_INCLUDE_DIR}")
 
 add_subdirectory(util)
 add_subdirectory(mapdata)
+add_subdirectory(feature_tracker)
