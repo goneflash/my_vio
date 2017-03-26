@@ -25,8 +25,16 @@ if (PROFILE_CPU)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lprofiler")
 endif()
 
+# FindX.cmake files
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
+
 find_package( OpenCV REQUIRED )
 find_package( Eigen3 REQUIRED )
+
+include_directories(
+  ${OpenCV_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+)
 
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
@@ -34,3 +42,5 @@ message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "Eigen library status:")
 message(STATUS "    include path: ${EIGEN3_INCLUDE_DIR}")
+
+add_subdirectory(util)

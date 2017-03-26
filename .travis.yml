@@ -83,7 +83,7 @@ script:
   - cd build
   - cmake ..
   - make
-  - ./main
+
   # Build tests
   - cmake .. -DUSE_TEST=ON
   - make
