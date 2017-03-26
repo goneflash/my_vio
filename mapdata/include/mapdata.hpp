@@ -15,14 +15,7 @@ struct Landmark {
   int added_frame_id;
   bool optimized;
 };
-/*
-struct PoseEdge {
-  cv::Mat R;
-  cv::Mat t;
-  int first_frame_index;
-  int second_frame_index;
-};
-*/
+
 struct FeatureMatchEdge {
   std::vector<cv::DMatch> matches;
   int first_frame_index;

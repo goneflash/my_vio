@@ -87,4 +87,4 @@ script:
   # Build tests
   - cmake .. -DUSE_TEST=ON
   - make
-  - make test
+  #- make test
