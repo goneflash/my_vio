@@ -5,10 +5,6 @@
 
 namespace vio {
 
-enum FeatureTrackerMethod {
-  OCV_BASIC_DETECTOR = 0,
-  OCV_BASIC_DETECTOR_EXTRACTOR,
-};
 
 class FeatureTrackerOptions {
  public:
@@ -17,6 +13,11 @@ class FeatureTrackerOptions {
         detector_type("ORB"),
         max_num_feature(10000),
         descriptor_type("DAISY") {}
+
+  enum FeatureTrackerMethod {
+    OCV_BASIC_DETECTOR = 0,
+    OCV_BASIC_DETECTOR_EXTRACTOR,
+  };
 
   void read(const cv::FileNode &node) {
     method = static_cast<FeatureTrackerMethod>((int)node["Method"]);

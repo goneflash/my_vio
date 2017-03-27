@@ -9,13 +9,15 @@ class FeatureTrackerOCV : public FeatureTracker {
  public:
   enum DetectorType { UNKNOWN = 0, DETECTORONLY, DETECTORDESCRIPTOR };
 
-  FeatureTrackerOCV(FeatureTrackerOptions options, FeatureMatcher *matcher);
+  FeatureTrackerOCV(FeatureTrackerOptions options,
+                    std::unique_ptr<FeatureMatcher> matcher);
   FeatureTrackerOCV() = delete;
 
   virtual bool TrackFirstFrame(ImageFrame &output_frame) override;
   virtual bool TrackFrame(const ImageFrame &prev_frame,
                           ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) override;
+  // Use match approach when lost tracking.
   virtual bool MatchFrame(const ImageFrame &prev_frame,
                           ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) override;

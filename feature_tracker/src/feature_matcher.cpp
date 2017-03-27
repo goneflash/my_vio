@@ -4,7 +4,7 @@
 
 namespace vio {
 
-FeatureMatcher *FeatureMatcher::CreateFeatureMatcher(
+std::unique_ptr<FeatureMatcher> FeatureMatcher::CreateFeatureMatcher(
     FeatureMatcherOptions option) {
   switch (option.method) {
     case OCV:

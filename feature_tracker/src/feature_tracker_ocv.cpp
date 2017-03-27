@@ -9,18 +9,18 @@
 namespace vio {
 
 FeatureTracker *FeatureTracker::CreateFeatureTrackerOCV(
-    FeatureTrackerOptions option, FeatureMatcher *matcher) {
+    FeatureTrackerOptions option, std::unique_ptr<FeatureMatcher> matcher) {
   switch (option.method) {
-    case OCV_BASIC_DETECTOR:
-    case OCV_BASIC_DETECTOR_EXTRACTOR:
-      return new FeatureTrackerOCV(option, matcher);
+    case FeatureTrackerOptions::OCV_BASIC_DETECTOR:
+    case FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR:
+      return new FeatureTrackerOCV(option, std::move(matcher));
     default:
       return nullptr;
   }
 }
 
 FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
-                                     FeatureMatcher *matcher)
+                                     std::unique_ptr<FeatureMatcher> matcher)
     : detector_type_(DETECTORONLY) {
   if (option.detector_type == "ORB") {
     detector_ = cv::ORB::create(option.max_num_feature);
@@ -31,24 +31,39 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
   } else {
     return;
   }
+  if (detector_ == NULL) {
+    std::cerr << "Error: Unable to create detector.\n";
+    return;
+  }
 
-  if (option.detector_type != option.descriptor_type) {
-    detector_type_ = DETECTORDESCRIPTOR;
-    if (option.descriptor_type == "DAISY") {
-      descriptor_ = cv::xfeatures2d::DAISY::create();
-      std::cout << "Created DAISY Descriptor.\n";
-    } else if (option.descriptor_type == "ORB") {
-      descriptor_ = cv::ORB::create();
-      std::cout << "Created ORB Descriptor.\n";
+  if (option.method == FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR) {
+    if (option.detector_type != option.descriptor_type) {
+      detector_type_ = DETECTORDESCRIPTOR;
+      if (option.descriptor_type == "DAISY") {
+        descriptor_ = cv::xfeatures2d::DAISY::create();
+        std::cout << "Created DAISY Descriptor.\n";
+      } else if (option.descriptor_type == "ORB") {
+        descriptor_ = cv::ORB::create();
+        std::cout << "Created ORB Descriptor.\n";
+      } else {
+        return;
+      }
     } else {
+      std::cout << "Warning: option is use Detector+Descriptor, but they are both"
+                << option.descriptor_type << std::endl;
+      return;
+    }
+    if (descriptor_ == NULL) {
+      std::cerr << "Error: Unable to create descriptor.\n";
       return;
     }
   }
-  matcher_ = matcher;
+  matcher_ = std::move(matcher);
 
   FeatureMatcherOptions long_term_matcher_option;
-  long_term_matcher_option.method = OCV;
+  long_term_matcher_option.method = FeatureMatcherOptions::OCV;
 
+  std::cout << "Creating long term matcher.\n";
   long_term_matcher_ =
       FeatureMatcher::CreateFeatureMatcher(long_term_matcher_option);
 }
@@ -65,7 +80,14 @@ bool FeatureTrackerOCV::TrackFrame(const ImageFrame &prev_frame,
     return false;
   }
   ComputeFeatures(new_frame);
+
+  Timer timer;
+  timer.Start();
+
   if (!matcher_->Match(prev_frame, new_frame, matches)) return false;
+
+  timer.Stop();
+  std::cout << "Matching used " << timer.GetInMs() << "ms.\n";
 
   return true;
 }
