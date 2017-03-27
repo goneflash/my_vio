@@ -6,9 +6,9 @@
 
 namespace vio {
 
-FeatureMatcher *FeatureMatcher::CreateFeatureMatcherOCV(
+std::unique_ptr<FeatureMatcher> FeatureMatcher::CreateFeatureMatcherOCV(
     FeatureMatcherOptions option) {
-  return new FeatureMatcherOCV(option);
+  return std::unique_ptr<FeatureMatcher>(new FeatureMatcherOCV(option));
 }
 
 FeatureMatcherOCV::FeatureMatcherOCV(FeatureMatcherOptions option)

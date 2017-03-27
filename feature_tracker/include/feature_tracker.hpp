@@ -19,10 +19,10 @@ class FeatureTracker {
   ~FeatureTracker() {}
 
   static FeatureTracker *CreateFeatureTracker(FeatureTrackerOptions option,
-                                              FeatureMatcher *matcher);
+                                              std::unique_ptr<FeatureMatcher> matcher);
 
   static FeatureTracker *CreateFeatureTrackerOCV(FeatureTrackerOptions option,
-                                                 FeatureMatcher *matcher);
+                                                 std::unique_ptr<FeatureMatcher> matcher);
 
   // TODO: Could change to const.
   virtual bool TrackFirstFrame(ImageFrame &output_frame) = 0;
@@ -35,8 +35,10 @@ class FeatureTracker {
                           std::vector<cv::DMatch> &matches) = 0;
 
  protected:
-  FeatureMatcher *matcher_;
-  FeatureMatcher *long_term_matcher_;
+  // matcher for tracking
+  std::unique_ptr<FeatureMatcher> matcher_;
+  // TODO: Make an argument to create tracker.
+  std::unique_ptr<FeatureMatcher> long_term_matcher_;
 };
 
 }  // vio

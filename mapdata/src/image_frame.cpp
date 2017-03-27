@@ -7,8 +7,8 @@ namespace vio {
 ImageFrame::ImageFrame(const cv::Mat &image)
     : has_grid_keypoints_(false), grid_width_size_(10), grid_height_size_(10) {
   image.copyTo(image_);
-  grid_width_index_range_ = image_.size().width / grid_width_size_ - 1;
-  grid_height_index_range_ = image_.size().height / grid_height_size_ - 1;
+  grid_width_index_range_ = image_.size().width / grid_width_size_;
+  grid_height_index_range_ = image_.size().height / grid_height_size_;
 
   grid_keypoints_index_.resize(grid_width_index_range_ + 1);
   for (int i = 0; i < grid_width_index_range_ + 1; ++i)

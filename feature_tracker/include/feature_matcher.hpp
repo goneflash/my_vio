@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/features2d.hpp>
@@ -25,6 +26,8 @@ class FeatureMatcherOptions {
         use_remove_outliers(true),
         max_dist_to_epipolar_line(0.5),
         level_of_confidence(0.999) {}
+
+  enum FeatureMatcherMethod { OCV = 0, GRID_SEARCH };
 
   bool use_ratio_test;
   double ratio_test_thresh;
@@ -80,10 +83,11 @@ class FeatureMatcher {
         level_of_confidence_(option.level_of_confidence),
         nn_match_ratio_(option.ratio_test_thresh) {}
 
-  static FeatureMatcher *CreateFeatureMatcher(FeatureMatcherOptions option);
-
-  static FeatureMatcher *CreateFeatureMatcherOCV(FeatureMatcherOptions option);
-  static FeatureMatcher *CreateFeatureMatcherGridSearch(
+  static std::unique_ptr<FeatureMatcher> CreateFeatureMatcher(
+      FeatureMatcherOptions option);
+  static std::unique_ptr<FeatureMatcher> CreateFeatureMatcherOCV(
+      FeatureMatcherOptions option);
+  static std::unique_ptr<FeatureMatcher> CreateFeatureMatcherGridSearch(
       FeatureMatcherOptions option);
 
   // TODO: Consider change to const.

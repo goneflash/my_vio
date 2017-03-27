@@ -4,13 +4,15 @@
 
 namespace vio {
 
-FeatureMatcher *FeatureMatcher::CreateFeatureMatcherGridSearch(
+std::unique_ptr<FeatureMatcher> FeatureMatcher::CreateFeatureMatcherGridSearch(
     FeatureMatcherOptions option) {
-  return new FeatureMatcherGridSearch(option);
+  return std::unique_ptr<FeatureMatcher>(new FeatureMatcherGridSearch(option));
 }
 
 FeatureMatcherGridSearch::FeatureMatcherGridSearch(FeatureMatcherOptions option)
-    : FeatureMatcher(option), pixel_search_range_(option.pixel_search_range) {}
+    : FeatureMatcher(option), pixel_search_range_(option.pixel_search_range) {
+  std::cout << "Created Grid Search Matcher.\n";
+}
 
 bool FeatureMatcherGridSearch::Match(const ImageFrame &frame0,
                                      const ImageFrame &frame1,
