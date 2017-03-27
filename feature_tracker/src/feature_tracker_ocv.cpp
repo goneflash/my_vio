@@ -36,27 +36,33 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
     return;
   }
 
-  if (option.method == FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR) {
-    if (option.detector_type != option.descriptor_type) {
-      detector_type_ = DETECTORDESCRIPTOR;
-      if (option.descriptor_type == "DAISY") {
-        descriptor_ = cv::xfeatures2d::DAISY::create();
-        std::cout << "Created DAISY Descriptor.\n";
-      } else if (option.descriptor_type == "ORB") {
-        descriptor_ = cv::ORB::create();
-        std::cout << "Created ORB Descriptor.\n";
-      } else {
-        return;
-      }
+  // If use different detector and descriptor, must explicitly specify.
+  if (option.method == FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR &&
+      option.detector_type == option.descriptor_type) {
+    std::cerr << "Error: Same detector for detector and descriptor.\n";
+    return;
+  }
+
+  if (option.method == FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR ||
+      option.detector_type != option.descriptor_type) {
+    detector_type_ = DETECTORDESCRIPTOR;
+    if (option.descriptor_type == "DAISY") {
+      descriptor_ = cv::xfeatures2d::DAISY::create();
+      std::cout << "Created DAISY Descriptor.\n";
+    } else if (option.descriptor_type == "ORB") {
+      descriptor_ = cv::ORB::create();
+      std::cout << "Created ORB Descriptor.\n";
     } else {
-      std::cout << "Warning: option is use Detector+Descriptor, but they are both"
-                << option.descriptor_type << std::endl;
       return;
     }
     if (descriptor_ == NULL) {
       std::cerr << "Error: Unable to create descriptor.\n";
       return;
     }
+  }
+  if (matcher == NULL) {
+    std::cerr << "Error: No matcher provided to tracker.\n";
+    return;
   }
   matcher_ = std::move(matcher);
 

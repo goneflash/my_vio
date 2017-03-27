@@ -9,7 +9,7 @@ class FeatureTrackerTest : public ::testing::Test {
   void CreateTracker() {
     feature_matcher_ =
         vio::FeatureMatcher::CreateFeatureMatcher(feature_matcher_option_);
-    ASSERT_TRUE(feature_matcher_ != NULL);
+    ASSERT_TRUE(feature_matcher_.get() != NULL);
 
     feature_tracker_ = vio::FeatureTracker::CreateFeatureTracker(
       feature_tracker_option_, std::move(feature_matcher_));
