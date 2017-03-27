@@ -44,6 +44,17 @@ install:
   - cd ..
   - cd ..
 
+  # Gflags
+  - git clone https://github.com/gflags/gflags.git
+  - cd gflags
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - sudo make install
+  - cd ..
+  - cd ..
+
   # Build and install Ceres
   - sudo apt-get install -y libsuitesparse-dev
   - wget http://ceres-solver.org/ceres-solver-1.12.0.tar.gz
