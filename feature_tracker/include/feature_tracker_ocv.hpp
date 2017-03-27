@@ -26,6 +26,7 @@ class FeatureTrackerOCV : public FeatureTracker {
   void ComputeFeatures(ImageFrame &frame);
 
   DetectorType detector_type_;
+  int max_feature_per_frame_;
   cv::Ptr<cv::Feature2D> detector_;
   cv::Ptr<cv::DescriptorExtractor> descriptor_;
 };

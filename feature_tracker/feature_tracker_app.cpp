@@ -16,6 +16,7 @@ class Options {
   string format;
   string detector;
   string descriptor;
+  string matcher_type;
 };
 
 int TestFramesInFolder(Options option) {
@@ -33,6 +34,16 @@ int TestFramesInFolder(Options option) {
 
   // Create tracker
   FeatureMatcherOptions matcher_options;
+  if (option.matcher_type.size()) {
+    if (option.matcher_type == "GRID") {
+      matcher_options.method = vio::FeatureMatcherOptions::GRID_SEARCH;
+    } else if (option.matcher_type == "OCV") {
+      matcher_options.method = vio::FeatureMatcherOptions::OCV;
+    } else {
+      cerr << "Error : Unknown matcher type " << option.matcher_type << std::endl;
+      return -1;
+    }
+  }
   std::unique_ptr<FeatureMatcher> matcher =
       FeatureMatcher::CreateFeatureMatcher(matcher_options);
 
@@ -61,6 +72,8 @@ int TestFramesInFolder(Options option) {
     std::vector<cv::DMatch> matches;
     tracker->TrackFrame(*frame_pre, *frame_cur, matches);
 
+    std::cout << "Feature number in new frame "
+              << frame_cur->keypoints().size() << std::endl;
     std::cout << "Found match " << matches.size() << std::endl;
 
     cv::Mat output_img = frame_cur->GetImage().clone();
@@ -74,7 +87,7 @@ int TestFramesInFolder(Options option) {
     }
 
     cv::imshow("result", output_img);
-    cv::waitKey(0);
+    cv::waitKey(50);
 
     frame_pre = std::move(frame_cur);
   }
@@ -91,6 +104,8 @@ int main(int argc, char **argv) {
       option.detector = argv[++i];
     } else if (!strcmp(argv[i], "--descriptor")) {
       option.descriptor = argv[++i];
+    } else if (!strcmp(argv[i], "--matcher_type")) {
+      option.matcher_type = argv[++i];
     }
   }
 
@@ -104,6 +119,7 @@ int main(int argc, char **argv) {
   cout << "            -f, --format image format, e.g png, jpg\n";
   cout << "            --detector, type of detector, e.g. FAST, ORB\n";
   cout << "            --descriptor, type of descriptor, e.g. ORB, DAISY\n";
+  cout << "            --matcher_type, type of feature matcher, e.g. GRID, OCV\n";
   cout << "Exampe: \n";
   cout << "./feature_tracker_app -p ~/Project/vio/data/desk_subset/ -f jpg\n";
 

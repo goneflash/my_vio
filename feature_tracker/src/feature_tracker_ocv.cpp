@@ -21,9 +21,9 @@ FeatureTracker *FeatureTracker::CreateFeatureTrackerOCV(
 
 FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
                                      std::unique_ptr<FeatureMatcher> matcher)
-    : detector_type_(DETECTORONLY) {
+    : detector_type_(DETECTORONLY), max_feature_per_frame_(option.max_num_feature) {
   if (option.detector_type == "ORB") {
-    detector_ = cv::ORB::create(option.max_num_feature);
+    detector_ = cv::ORB::create(max_feature_per_frame_);
     std::cout << "Created ORB Detector.\n";
   } else if (option.detector_type == "FAST") {
     detector_ = cv::FastFeatureDetector::create();
@@ -50,6 +50,7 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
       descriptor_ = cv::xfeatures2d::DAISY::create();
       std::cout << "Created DAISY Descriptor.\n";
     } else if (option.descriptor_type == "ORB") {
+      // TODO: Add argument
       descriptor_ = cv::ORB::create();
       std::cout << "Created ORB Descriptor.\n";
     } else {
