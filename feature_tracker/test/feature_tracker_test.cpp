@@ -9,8 +9,8 @@ TEST(FeatureTrackerTest, TestTwoFrame) {
 }
 
 TEST(FeatureTrackerTest, TestTwoFrame1) {
-  cv::Mat image0 = cv::imread("../feature_tracker/test_data/frame0.png");
-  cv::Mat image1 = cv::imread("../feature_tracker/test_data/frame1.png");
+  cv::Mat image0 = cv::imread("test_data/frame0.png");
+  cv::Mat image1 = cv::imread("test_data/frame1.png");
 
   ASSERT_TRUE(image0.data);
   ASSERT_TRUE(image1.data);

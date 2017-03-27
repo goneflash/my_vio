@@ -15,6 +15,10 @@ endif()
 option(USE_TEST "Build tests." OFF)
 option(PROFILE_CPU "Profile CPU." OFF)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 if (USE_TEST)
   enable_testing()
   include_directories(thirdparty/googletest/googletest/include)
