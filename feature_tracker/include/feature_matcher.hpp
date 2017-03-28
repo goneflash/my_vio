@@ -80,7 +80,7 @@ static void read(
 
 class FeatureMatcher {
  public:
-  explicit FeatureMatcher(FeatureMatcherOptions option)
+  explicit FeatureMatcher(const FeatureMatcherOptions &option)
       : max_match_per_desc_(2),
         max_dist_to_epipolar_line_(option.max_dist_to_epipolar_line),
         level_of_confidence_(option.level_of_confidence),
@@ -88,11 +88,11 @@ class FeatureMatcher {
         dist_type_(option.desc_dist_type) {}
 
   static std::unique_ptr<FeatureMatcher> CreateFeatureMatcher(
-      FeatureMatcherOptions option);
+      const FeatureMatcherOptions &option);
   static std::unique_ptr<FeatureMatcher> CreateFeatureMatcherOCV(
-      FeatureMatcherOptions option);
+      const FeatureMatcherOptions &option);
   static std::unique_ptr<FeatureMatcher> CreateFeatureMatcherGridSearch(
-      FeatureMatcherOptions option);
+      const FeatureMatcherOptions &option);
 
   // TODO: Consider change to const.
   virtual bool Match(const ImageFrame &frame0, const ImageFrame &frame1,

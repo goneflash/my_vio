@@ -5,11 +5,11 @@
 namespace vio {
 
 std::unique_ptr<FeatureMatcher> FeatureMatcher::CreateFeatureMatcherGridSearch(
-    FeatureMatcherOptions option) {
+    const FeatureMatcherOptions &option) {
   return std::unique_ptr<FeatureMatcher>(new FeatureMatcherGridSearch(option));
 }
 
-FeatureMatcherGridSearch::FeatureMatcherGridSearch(FeatureMatcherOptions option)
+FeatureMatcherGridSearch::FeatureMatcherGridSearch(const FeatureMatcherOptions &option)
     : FeatureMatcher(option), pixel_search_range_(option.pixel_search_range) {
   std::cout << "Created Grid Search Matcher with distance type: ";
   if (dist_type_ == FeatureMatcherOptions::HAMMING)

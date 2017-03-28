@@ -9,7 +9,7 @@ namespace vio {
 
 class FeatureMatcherGridSearch : public FeatureMatcher {
  public:
-  explicit FeatureMatcherGridSearch(FeatureMatcherOptions option);
+  explicit FeatureMatcherGridSearch(const FeatureMatcherOptions &option);
 
   bool Match(const ImageFrame &frame0, const ImageFrame &frame1,
              std::vector<cv::DMatch> &matches) override;

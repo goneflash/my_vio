@@ -7,11 +7,11 @@
 namespace vio {
 
 std::unique_ptr<FeatureMatcher> FeatureMatcher::CreateFeatureMatcherOCV(
-    FeatureMatcherOptions option) {
+    const FeatureMatcherOptions &option) {
   return std::unique_ptr<FeatureMatcher>(new FeatureMatcherOCV(option));
 }
 
-FeatureMatcherOCV::FeatureMatcherOCV(FeatureMatcherOptions option)
+FeatureMatcherOCV::FeatureMatcherOCV(const FeatureMatcherOptions &option)
     : FeatureMatcher(option) {
   // TODO: Decide matcher based on descriptors
   // Hamming-distance works only for binary feature-types like ORB, FREAK
@@ -19,6 +19,7 @@ FeatureMatcherOCV::FeatureMatcherOCV(FeatureMatcherOptions option)
     matcher_ = cv::DescriptorMatcher::create("BruteForce-Hamming");
     std::cout << "Created OCV Matcher BruteForce-Hamming.\n";
   } else if (option.desc_dist_type == FeatureMatcherOptions::NORM_L2) {
+    matcher_ = cv::DescriptorMatcher::create("BruteForce");
     std::cout << "Created OCV Matcher " << option.ocv_matcher_type << std::endl;
   }
 

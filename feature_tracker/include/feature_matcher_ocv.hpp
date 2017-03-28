@@ -9,7 +9,7 @@ namespace vio {
 
 class FeatureMatcherOCV : public FeatureMatcher {
  public:
-  FeatureMatcherOCV(FeatureMatcherOptions option);
+  FeatureMatcherOCV(const FeatureMatcherOptions &option);
   ~FeatureMatcherOCV(){};
 
   virtual bool Match(const ImageFrame &frame0, const ImageFrame &frame1,
