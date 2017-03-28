@@ -33,6 +33,7 @@ bool FeatureMatcher::SymmetryTestFilter(
     auto match_ptr = match_map.find((*matchIterator).queryIdx);
     if (match_ptr != match_map.end() &&
         match_ptr->second == (*matchIterator).trainIdx) {
+      // Here need to reverse trainIdx and queryIdx to suit matches1
       final_matches.push_back(cv::DMatch((*matchIterator).trainIdx,
                                          (*matchIterator).queryIdx,
                                          (*matchIterator).distance));

@@ -1,9 +1,11 @@
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 #include "gtest/gtest.h"
 
 #include "feature_tracker.hpp"
+#include "mapdata.hpp"
 #include "util.hpp"
 
 using namespace std;
@@ -66,6 +68,8 @@ int TestFramesInFolder(Options option) {
   if (tracker == NULL)
     return -1;
 
+  Mapdata vio_map;
+
   // Visualize tracking
   cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
 
@@ -107,8 +111,16 @@ int TestFramesInFolder(Options option) {
       cv::waitKey(0);
     }
 
+    // Store feature tracks.
+    std::unique_ptr<Keyframe> keyframe(new Keyframe(std::move(frame_pre)));
+    if (i == 1)
+      vio_map.AddFirstKeyframe(std::move(keyframe));
+    else
+      vio_map.AddNewKeyframeMatchToLastKeyframe(std::move(keyframe), matches);
+
     frame_pre = std::move(frame_cur);
   }
+
 }
 
 int main(int argc, char **argv) {

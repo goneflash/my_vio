@@ -27,7 +27,7 @@ install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 # Add application
 add_executable(${TARGET}_app ${TARGET}_app.cpp)
-target_link_libraries(${TARGET}_app ${TARGET} util gtest gtest_main)
+target_link_libraries(${TARGET}_app ${TARGET} mapdata util gtest gtest_main)
 
 if (USE_TEST)
   file(GLOB TEST_SOURCE_FILE
