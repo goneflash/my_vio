@@ -130,7 +130,10 @@ bool FeatureMatcherGridSearch::FindMatchNearFeatures(
 
 inline double FeatureMatcherGridSearch::ComputeDistance(const cv::Mat &mat0,
                                                         const cv::Mat &mat1) {
-  return cv::norm(mat0, mat1, cv::NORM_L2);
+  if (dist_type_ == FeatureMatcherOptions::NORM_L2)
+    return cv::norm(mat0, mat1, cv::NORM_L2);
+  else if (dist_type_ == FeatureMatcherOptions::HAMMING)
+    return cv::norm(mat0, mat1, cv::NORM_HAMMING); 
 }
 
 }  // vio

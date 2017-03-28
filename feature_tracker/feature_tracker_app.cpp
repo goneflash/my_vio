@@ -12,11 +12,13 @@ using namespace vio;
 
 class Options {
  public:
+  Options() : draw_match(false) {}
   string path;
   string format;
   string detector;
   string descriptor;
   string matcher_type;
+  bool draw_match;
 };
 
 int TestFramesInFolder(Options option) {
@@ -44,14 +46,19 @@ int TestFramesInFolder(Options option) {
       return -1;
     }
   }
-  std::unique_ptr<FeatureMatcher> matcher =
-      FeatureMatcher::CreateFeatureMatcher(matcher_options);
-
   FeatureTrackerOptions tracker_options;
   if (option.detector.size())
     tracker_options.detector_type = option.detector;
   if (option.descriptor.size())
     tracker_options.descriptor_type = option.descriptor;
+
+  // Change distance function for binary descriptors.
+  if (tracker_options.descriptor_type == "ORB" ||
+      tracker_options.descriptor_type == "FREAK")
+    matcher_options.desc_dist_type = FeatureMatcherOptions::HAMMING;
+
+  std::unique_ptr<FeatureMatcher> matcher =
+      FeatureMatcher::CreateFeatureMatcher(matcher_options);
   FeatureTracker *tracker = FeatureTracker::CreateFeatureTracker(
       tracker_options, std::move(matcher));
 
@@ -76,18 +83,28 @@ int TestFramesInFolder(Options option) {
               << frame_cur->keypoints().size() << std::endl;
     std::cout << "Found match " << matches.size() << std::endl;
 
-    cv::Mat output_img = frame_cur->GetImage().clone();
-
-    int thickness = 2;
-    for (int i = 0; i < matches.size(); ++i) {
-      line(output_img,
-           frame_cur->keypoints()[matches[i].trainIdx].pt,
-           frame_pre->keypoints()[matches[i].queryIdx].pt,
-           cv::Scalar(255, 0, 0), thickness);
+    // Two ways to visualize the results.
+    if (option.draw_match) {
+      cv::Mat output_img;
+      drawMatches(frame_pre->GetImage(), frame_pre->keypoints(),
+                  frame_cur->GetImage(), frame_cur->keypoints(),
+                  matches, output_img, cv::Scalar(255, 0, 0),
+                  cv::Scalar(255, 0, 0));
+      cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
+      cv::imshow("result", output_img);
+      cv::waitKey(0);
+    } else {
+      cv::Mat output_img = frame_cur->GetImage().clone();
+      int thickness = 2;
+      for (int i = 0; i < matches.size(); ++i) {
+        line(output_img,
+             frame_cur->keypoints()[matches[i].trainIdx].pt,
+             frame_pre->keypoints()[matches[i].queryIdx].pt,
+             cv::Scalar(255, 0, 0), thickness);
+      }
+      cv::imshow("result", output_img);
+      cv::waitKey(50);
     }
-
-    cv::imshow("result", output_img);
-    cv::waitKey(50);
 
     frame_pre = std::move(frame_cur);
   }
@@ -106,6 +123,8 @@ int main(int argc, char **argv) {
       option.descriptor = argv[++i];
     } else if (!strcmp(argv[i], "--matcher_type")) {
       option.matcher_type = argv[++i];
+    } else if (!strcmp(argv[i], "--draw_match")) {
+      option.draw_match = true;
     }
   }
 

@@ -53,6 +53,10 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
       // TODO: Add argument
       descriptor_ = cv::ORB::create();
       std::cout << "Created ORB Descriptor.\n";
+    } else if (option.descriptor_type == "FREAK") {
+      descriptor_ = cv::xfeatures2d::FREAK::create();
+      std::cout << "Created FREAK Descriptor.\n";
+
     } else {
       return;
     }

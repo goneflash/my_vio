@@ -19,6 +19,7 @@ class FeatureMatcherOptions {
  public:
   FeatureMatcherOptions()
       : method(GRID_SEARCH),
+        desc_dist_type(NORM_L2),
         ocv_matcher_type("BruteForce"),
         use_ratio_test(true),
         ratio_test_thresh(0.9),
@@ -28,6 +29,7 @@ class FeatureMatcherOptions {
         level_of_confidence(0.999) {}
 
   enum FeatureMatcherMethod { OCV = 0, GRID_SEARCH };
+  enum FeatureMatcherDistType { HAMMING = 0, NORM_L2 };
 
   bool use_ratio_test;
   double ratio_test_thresh;
@@ -39,11 +41,12 @@ class FeatureMatcherOptions {
   double level_of_confidence;
 
   FeatureMatcherMethod method;
+  // Distance type, haming or l2
+  FeatureMatcherDistType desc_dist_type;
+
   // FeatureMatcherOCV
   std::string ocv_matcher_type;
 
-  // FeatureMatcherGridSearch
-  int desc_dist_type;
   double pixel_search_range;
 
   void read(const cv::FileNode &node) {
@@ -59,7 +62,7 @@ class FeatureMatcherOptions {
 
     } else if (method == GRID_SEARCH) {
       std::cout << "Selected Grid Search FeatureMatcher.\n";
-      desc_dist_type = (int)node["DistType"];
+      desc_dist_type = static_cast<FeatureMatcherDistType>((int)node["DistType"]);
       pixel_search_range = (double)node["PixelSearchRange"];
     }
   }
@@ -81,7 +84,8 @@ class FeatureMatcher {
       : max_match_per_desc_(2),
         max_dist_to_epipolar_line_(option.max_dist_to_epipolar_line),
         level_of_confidence_(option.level_of_confidence),
-        nn_match_ratio_(option.ratio_test_thresh) {}
+        nn_match_ratio_(option.ratio_test_thresh),
+        dist_type_(option.desc_dist_type) {}
 
   static std::unique_ptr<FeatureMatcher> CreateFeatureMatcher(
       FeatureMatcherOptions option);
@@ -106,10 +110,11 @@ class FeatureMatcher {
                           const std::vector<cv::KeyPoint> &cur_kp,
                           std::vector<cv::DMatch> &matches);
 
-  double nn_match_ratio_;
   int max_match_per_desc_;
   double max_dist_to_epipolar_line_;
   double level_of_confidence_;
+  double nn_match_ratio_;
+  FeatureMatcherOptions::FeatureMatcherDistType dist_type_;
 };
 
 }  // vio
