@@ -28,6 +28,12 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
   } else if (option.detector_type == "FAST") {
     detector_ = cv::FastFeatureDetector::create();
     std::cout << "Created FAST Detector.\n";
+  } else if (option.detector_type == "SURF") {
+    detector_ = cv::xfeatures2d::SURF::create();
+    std::cout << "Created SURF Detector.\n";
+  } else if (option.detector_type == "SIFT") {
+    detector_ = cv::xfeatures2d::SIFT::create();
+    std::cout << "Created SIFT Detector.\n";
   } else {
     return;
   }
@@ -56,7 +62,12 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
     } else if (option.descriptor_type == "FREAK") {
       descriptor_ = cv::xfeatures2d::FREAK::create();
       std::cout << "Created FREAK Descriptor.\n";
-
+    } else if (option.descriptor_type == "SURF") {
+      descriptor_ = cv::xfeatures2d::SURF::create();
+      std::cout << "Created SURF Descriptor.\n";
+    } else if (option.descriptor_type == "SIFT") {
+      descriptor_ = cv::xfeatures2d::SIFT::create();
+      std::cout << "Created SIFT Descriptor.\n";
     } else {
       return;
     }

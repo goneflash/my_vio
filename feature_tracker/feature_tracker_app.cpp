@@ -90,7 +90,7 @@ int TestFramesInFolder(Options option) {
       drawMatches(frame_pre->GetImage(), frame_pre->keypoints(),
                   frame_cur->GetImage(), frame_cur->keypoints(),
                   matches, output_img, cv::Scalar(255, 0, 0),
-                  cv::Scalar(255, 0, 0));
+                  cv::Scalar(5, 255, 0));
       cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
       cv::imshow("result", output_img);
       cv::waitKey(0);
