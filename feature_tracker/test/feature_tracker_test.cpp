@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "feature_tracker.hpp"
+#include "util.hpp"
 
 class FeatureTrackerTest : public ::testing::Test {
  protected:
@@ -27,6 +28,21 @@ class FeatureTrackerTest : public ::testing::Test {
     frames.push_back(std::move(frame1));
   }
 
+  void CreateLongSequenceTestData() {
+#ifndef __linux__
+    ASSERT_TRUE(false);
+#endif
+    std::vector<std::string> images;
+    ASSERT_TRUE(GetImageNamesInFolder(
+          "../feature_tracker/test/test_data/long_seq", "jpg", images));
+    for (auto img : images) {
+      cv::Mat image = cv::imread(img);
+      ASSERT_TRUE(image.data);
+      std::unique_ptr<vio::ImageFrame> frame(new vio::ImageFrame(image));
+      frames.push_back(std::move(frame));
+    }
+  }
+
   vio::FeatureMatcherOptions feature_matcher_option_;
   std::unique_ptr<vio::FeatureMatcher> feature_matcher_;
 
@@ -46,7 +62,7 @@ TEST_F(FeatureTrackerTest, TestTwoFrameDefault_ORB_DAISY) {
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[0], *frames[1], matches));
-  ASSERT_EQ(matches.size(), 1063);
+  ASSERT_EQ(matches.size(), 1082);
 }
 
 TEST_F(FeatureTrackerTest, TestTwoFrameOCV_ORB_DAISY) {
@@ -88,7 +104,24 @@ TEST_F(FeatureTrackerTest, TestTwoFrameFAST_DAISY) {
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[0], *frames[1], matches));
-  ASSERT_EQ(matches.size(), 2254);
+  ASSERT_EQ(matches.size(), 2270);
+}
+
+TEST_F(FeatureTrackerTest, TestLongSequenceFAST_DAISY) {
+  feature_tracker_option_.method =
+      vio::FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR;
+  feature_tracker_option_.detector_type = "FAST";
+  feature_tracker_option_.descriptor_type = "DAISY";
+  CreateTracker();
+  CreateLongSequenceTestData();
+
+  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames[0]));
+  //ASSERT_EQ(frames[0]->keypoints().size(), 3812);
+
+  for (int i = 1; i < frames.size(); ++i) {
+    std::vector<cv::DMatch> matches;
+    ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[i - 1], *frames[i], matches));
+  }
 }
 
 int main(int argc, char **argv) {
