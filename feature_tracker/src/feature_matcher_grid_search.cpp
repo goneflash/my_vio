@@ -11,7 +11,11 @@ std::unique_ptr<FeatureMatcher> FeatureMatcher::CreateFeatureMatcherGridSearch(
 
 FeatureMatcherGridSearch::FeatureMatcherGridSearch(FeatureMatcherOptions option)
     : FeatureMatcher(option), pixel_search_range_(option.pixel_search_range) {
-  std::cout << "Created Grid Search Matcher.\n";
+  std::cout << "Created Grid Search Matcher with distance type: ";
+  if (dist_type_ == FeatureMatcherOptions::HAMMING)
+    std::cout << "Hamming.\n";
+  else
+    std::cout << "Norm_L2.\n";
 }
 
 bool FeatureMatcherGridSearch::Match(const ImageFrame &frame0,

@@ -17,11 +17,11 @@ FeatureMatcherOCV::FeatureMatcherOCV(FeatureMatcherOptions option)
   // Hamming-distance works only for binary feature-types like ORB, FREAK
   if (option.desc_dist_type == FeatureMatcherOptions::HAMMING) {
     matcher_ = cv::DescriptorMatcher::create("BruteForce-Hamming");
+    std::cout << "Created OCV Matcher BruteForce-Hamming.\n";
   } else if (option.desc_dist_type == FeatureMatcherOptions::NORM_L2) {
-    matcher_ = cv::DescriptorMatcher::create(option.ocv_matcher_type);
+    std::cout << "Created OCV Matcher " << option.ocv_matcher_type << std::endl;
   }
 
-  std::cout << "Created OCV Matcher " << option.ocv_matcher_type << std::endl;
   // matcher_ = cv::DescriptorMatcher::create("FlannBased");
 }
 

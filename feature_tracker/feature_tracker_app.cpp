@@ -51,6 +51,7 @@ int TestFramesInFolder(Options option) {
     tracker_options.detector_type = option.detector;
   if (option.descriptor.size())
     tracker_options.descriptor_type = option.descriptor;
+  tracker_options.max_num_feature = 2000;
 
   // Change distance function for binary descriptors.
   if (tracker_options.descriptor_type == "ORB" ||
@@ -103,7 +104,7 @@ int TestFramesInFolder(Options option) {
              cv::Scalar(255, 0, 0), thickness);
       }
       cv::imshow("result", output_img);
-      cv::waitKey(50);
+      cv::waitKey(0);
     }
 
     frame_pre = std::move(frame_cur);
