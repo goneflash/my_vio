@@ -96,6 +96,12 @@ class Mapdata {
   const std::vector<Landmark> &landmarks() { return landmarks_; }
   const Landmark &landmark(int i) { return landmarks_[i]; }
 
+  // Each unordered_map belongs to an uninited landmark.
+  // Each map <a, b> in the hashmap records this landmark's feature id
+  // is b in keyframe a.
+  const std::vector<std::unordered_map<int, int> > &uninited_landmarks() {
+    return uninited_landmark_to_feature_; }
+
  private:
   bool AddCoordToUninitedPoints(const std::vector<cv::Point3f> &points3d,
                                 const std::vector<bool> &points3d_mask);
@@ -117,6 +123,8 @@ class Mapdata {
   std::vector<std::unordered_map<int, int> > landmark_to_feature_;
   // Temporary landmarks that generated from feature matches
   std::vector<std::unordered_map<int, int> > uninited_landmark_to_feature_;
+  // Last frame feature id to uninited landmarks
+  std::unordered_map<int, int> last_frame_feature_to_uninited_landmark_;
 
   // feature_to_landmark[i][j] is the no. of landmark of ith feature in
   // keyframe[j]

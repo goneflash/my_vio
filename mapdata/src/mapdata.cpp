@@ -40,16 +40,28 @@ bool Mapdata::AddNewKeyframeMatchToLastKeyframe(
       match_edges_.back().second_frame_index;  // new frame index
 
   feature_to_landmark_.resize(n_index + 1);
+
+  std::unordered_map<int, int> new_frame_feature_to_uninited_landmark;
   for (int i = 0; i < matches.size(); ++i) {
     // Find existing landmark
     auto ld_id_ptr = feature_to_landmark_[l_index].find(matches[i].queryIdx);
     // If the feature is not a landmark yet
     if (ld_id_ptr == feature_to_landmark_[l_index].end()) {
-      // Add a new landmark
-      const int num_uninited_ld = uninited_landmark_to_feature_.size();
-      uninited_landmark_to_feature_.resize(num_uninited_ld + 1);
-      uninited_landmark_to_feature_.back()[n_index] = matches[i].trainIdx;
-      uninited_landmark_to_feature_.back()[l_index] = matches[i].queryIdx;
+      // Find if this feature extends an uninited feature tracks
+      auto uninited_id_ptr = last_frame_feature_to_uninited_landmark_.find(matches[i].queryIdx);
+      if (uninited_id_ptr == last_frame_feature_to_uninited_landmark_.end()) { 
+        // Not found, Add a new landmark
+        const int num_uninited_ld = uninited_landmark_to_feature_.size();
+        uninited_landmark_to_feature_.resize(num_uninited_ld + 1);
+        uninited_landmark_to_feature_.back()[n_index] = matches[i].trainIdx;
+        uninited_landmark_to_feature_.back()[l_index] = matches[i].queryIdx;
+        new_frame_feature_to_uninited_landmark[matches[i].trainIdx] = num_uninited_ld;
+      } else {
+        // Found an uninited feature
+        int uninited_id = uninited_id_ptr->second;
+        uninited_landmark_to_feature_[uninited_id][n_index] = matches[i].trainIdx;
+        new_frame_feature_to_uninited_landmark[matches[i].trainIdx] = uninited_id;
+      }
     } else {
       int landmark_id = ld_id_ptr->second;
       // Link a feature to a landmark
@@ -58,6 +70,7 @@ bool Mapdata::AddNewKeyframeMatchToLastKeyframe(
       landmark_to_feature_[landmark_id][n_index] = matches[i].trainIdx;
     }
   }
+  last_frame_feature_to_uninited_landmark_ = std::move(new_frame_feature_to_uninited_landmark);
 
   match_edges_.back().matches = std::move(matches);
   if (map_state_ == WAIT_FOR_SECONDFRAME) map_state_ = WAIT_FOR_INIT;
@@ -94,6 +107,7 @@ bool Mapdata::DropLastKeyframe() {
   feature_to_landmark_.pop_back();
   match_edges_.pop_back();
   keyframes_.pop_back();
+  // TODO: This will drop all uninited landmarks, not only last frame.
   uninited_landmark_to_feature_.clear();
 
   return true;
@@ -123,6 +137,7 @@ bool Mapdata::PrepareInitializationData(
       const cv::KeyPoint &kp = (keyframes_[ld_feature_id.first]
                                     ->image_frame()
                                     .keypoints())[ld_feature_id.second];
+      // TODO: Here feature_vectors will have element longer than 2 features.
       feature_vectors[ld_feature_id.first][ld_id] = cv::Vec2d(kp.pt.x, kp.pt.y);
     }
   }

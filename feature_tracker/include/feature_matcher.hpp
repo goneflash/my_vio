@@ -26,7 +26,8 @@ class FeatureMatcherOptions {
         use_symmetry_test(true),
         use_remove_outliers(true),
         max_dist_to_epipolar_line(0.5),
-        level_of_confidence(0.999) {}
+        level_of_confidence(0.999),
+        pixel_search_range(30) {}
 
   enum FeatureMatcherMethod { OCV = 0, GRID_SEARCH };
   enum FeatureMatcherDistType { HAMMING = 0, NORM_L2 };

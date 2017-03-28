@@ -108,7 +108,7 @@ int TestFramesInFolder(Options option) {
              cv::Scalar(255, 0, 0), thickness);
       }
       cv::imshow("result", output_img);
-      cv::waitKey(0);
+      cv::waitKey(20);
     }
 
     // Store feature tracks.
@@ -119,6 +119,23 @@ int TestFramesInFolder(Options option) {
       vio_map.AddNewKeyframeMatchToLastKeyframe(std::move(keyframe), matches);
 
     frame_pre = std::move(frame_cur);
+  }
+  // TODO: Add test for this.
+  // Analyze feature tracks.
+  const std::vector<std::unordered_map<int, int> > &uninited_landmarks =
+    vio_map.uninited_landmarks();
+  unordered_map<int, int> feature_length_count;
+  for (const auto &uninited : uninited_landmarks) {
+    int len = uninited.size();
+    auto len_ptr = feature_length_count.find(len);
+    if (len_ptr == feature_length_count.end())
+      feature_length_count[len] = 1;
+    else
+      feature_length_count[len]++;
+  }
+  cout << "Stats of feature tracks:\n";
+  for (auto feat_len : feature_length_count) {
+    cout << "Length " << feat_len.first << " : " << feat_len.second << std::endl;
   }
 
 }
