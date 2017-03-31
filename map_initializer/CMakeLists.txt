@@ -1,3 +1,12 @@
+if(Ceres_FOUND)
+  add_definitions("-DCERES_FOUND=1")
+  message(STATUS "Ceres is supported. Used in Landmark Initialization.")
+else()
+  add_definitions("-DCERES_FOUND=0")
+  message(STATUS "CERES support is disabled. Ceres Solver for reconstruction API is required.")
+  return()
+endif()
+
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -7,12 +16,12 @@ file(GLOB SOURCE_FILE
     "src/*.cpp"
 )
 
-set(TARGET "feature_tracker")
+set(TARGET "map_initializer")
 
 add_library(${TARGET} STATIC ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
-                       ${OpenCV_LIBS} 
-                       mapdata )
+                       multiview_helper
+                       ${OpenCV_LIBS} )
 
 target_include_directories(${TARGET} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/include 
@@ -24,11 +33,6 @@ install(FILES ${headers}
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/)
 install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
-
-# Add application
-add_executable(${TARGET}_app ${TARGET}_app.cpp)
-target_link_libraries(${TARGET}_app ${TARGET} mapdata util gtest gtest_main)
-
 if (USE_TEST)
   file(GLOB TEST_SOURCE_FILE
       "test/*.cpp" )
@@ -36,7 +40,5 @@ if (USE_TEST)
   add_executable(${TARGET}_test ${TEST_SOURCE_FILE})
   target_link_libraries(${TARGET}_test ${TARGET}
     gtest gtest_main
-    util mapdata
     ${OpenCV_LIBS} )
-# TODO Run test in with cmake when : make test
 endif()

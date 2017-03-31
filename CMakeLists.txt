@@ -34,6 +34,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 find_package( OpenCV REQUIRED )
 find_package( Eigen3 REQUIRED )
+find_package( Ceres )
 
 include_directories(
   ${OpenCV_INCLUDE_DIRS}
@@ -51,3 +52,4 @@ add_subdirectory(util)
 add_subdirectory(mapdata)
 add_subdirectory(feature_tracker)
 add_subdirectory(multiview_helper)
+add_subdirectory(map_initializer)
