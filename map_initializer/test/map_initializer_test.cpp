@@ -54,6 +54,38 @@ class MapInitializerTest : public ::testing::Test {
     K_ = cv::Matx33d(1, 0, 0, 0, 1, 0, 0, 0, 1); 
   }
 
+  void GetFeatureVectorFromTracks() {
+    std::ifstream myfile("../map_initializer/test/test_data/backyard_tracks.txt");
+    ASSERT_TRUE(myfile.is_open());
+    double x, y;
+    std::string line_str;
+    int num_frames = 0, n_tracks = 0;
+    std::vector<std::vector<cv::Vec2d> > tracks;
+         
+    for ( ; getline(myfile,line_str); ++n_tracks) {
+      std::istringstream line(line_str);
+      std::vector<cv::Vec2d> track;
+      for ( n_frames = 0; line >> x >> y; ++n_frames) {
+        if ( x > 0 && y > 0)
+          track.push_back(Vec2d(x,y));
+        else
+          track.push_back(Vec2d(-1));
+      }
+      tracks.push_back(track);
+    }
+    for (int i = 0; i < n_frames; ++i) {
+      Mat_<double> frame(2, n_tracks);
+      for (int j = 0; j < n_tracks; ++j)
+      {
+        frame(0,j) = tracks[j][i][0];
+        frame(1,j) = tracks[j][i][1];
+      }
+      points2d.push_back(Mat(frame));
+    }
+    myfile.close();
+    K_ = cv::Matx33d(1, 0, 0, 0, 1, 0, 0, 0, 1); 
+  }
+
   void RunInitializer() {
     std::vector<cv::Point3f> points3d;
     std::vector<bool> points3d_mask;
