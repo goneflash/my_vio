@@ -38,5 +38,5 @@ if (USE_TEST)
     gtest gtest_main
     util mapdata
     ${OpenCV_LIBS} )
-# TODO Run test in with cmake when : make test
+  add_test( FeatureTrackerTest ${TARGET}_test )
 endif()

@@ -3,7 +3,6 @@
 #include <opencv2/opencv.hpp>
 
 #include "multiview.hpp"
-// #include "../../multiview_helper/include/multiview.hpp"
 
 namespace vio {
 
@@ -72,7 +71,9 @@ class MapInitializer {
 
   static MapInitializer *CreateMapInitializer(MapInitializerOptions option);
 
+#ifdef CERES_FOUND
   static MapInitializer *CreateMapInitializerLIBMV();
+#endif
   static MapInitializer *CreateMapInitializer8Point(
       MapInitializerOptions option);
   static MapInitializer *CreateMapInitializerORBSLAM(

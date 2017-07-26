@@ -1,3 +1,5 @@
+#ifdef CERES_FOUND
+
 #include "map_initializer.hpp"
 
 #include <opencv2/sfm.hpp>
@@ -23,3 +25,5 @@ class MapInitializerLIBMV : public MapInitializer {
 };
 
 }  // vio
+
+#endif // CERES_FOUND

@@ -34,7 +34,15 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 find_package( OpenCV REQUIRED )
 find_package( Eigen3 REQUIRED )
-find_package( Ceres )
+
+# TODO: Fix ceres in workstation 
+#find_package( Ceres )
+if(Ceres_FOUND)
+  add_definitions("-DCERES_FOUND")
+  message(STATUS "Ceres is supported. Used in Landmark Initialization.")
+else()
+  message(WARNING "CERES support is disabled. Ceres Solver for reconstruction API is required.")
+endif()
 
 include_directories(
   ${OpenCV_INCLUDE_DIRS}

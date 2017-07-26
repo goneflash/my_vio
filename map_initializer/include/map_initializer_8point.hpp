@@ -1,7 +1,5 @@
 #include "map_initializer.hpp"
 
-#include <opencv2/sfm.hpp>
-
 namespace vio {
 
 class MapInitializer8Point : public MapInitializer {

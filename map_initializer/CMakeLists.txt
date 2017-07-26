@@ -1,12 +1,3 @@
-if(Ceres_FOUND)
-  add_definitions("-DCERES_FOUND=1")
-  message(STATUS "Ceres is supported. Used in Landmark Initialization.")
-else()
-  add_definitions("-DCERES_FOUND=0")
-  message(STATUS "CERES support is disabled. Ceres Solver for reconstruction API is required.")
-  return()
-endif()
-
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )

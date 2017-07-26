@@ -1,3 +1,5 @@
+#ifdef CERES_FOUND
+
 #include "map_initializer_libmv.hpp"
 
 #include <iostream>
@@ -123,3 +125,5 @@ bool MapInitializerLIBMV::InitializeTwoFrames(
 }
 
 }  // vio
+
+#endif
