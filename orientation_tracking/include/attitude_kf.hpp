@@ -7,6 +7,7 @@
 #include "imu_integrator.hpp"
 
 namespace vio {
+
 /*
  * Follows paper: "Indirect Kalman filter for 3D Attitude Estimation".
  * State has 7 elements, 4 for quaternion, 3 for gyro bias
@@ -19,23 +20,39 @@ namespace vio {
  * Angular velocity (omega) format : [ wx wy wz ]
  *
  */
-class AttitudeKalmanFilter {
+
+class AttitudeKalmanFilterBase {
  public:
-  AttitudeKalmanFilter(const Eigen::Quaterniond &init_state)
-      : q_(init_state) {}
+  AttitudeKalmanFilterBase(const Eigen::Vector4d &init_state)
+      : q_(init_state),
+        delta_q_(1, 0, 0, 0),
+        b_(0, 0, 0),
+        delta_b_(0, 0, 0) {}
 
-  bool Propagate(const Eigen::Vector3d &omega, double delta_t);
+  virtual bool Propagate(const Eigen::Vector3d &omega, double delta_t) = 0;
 
-  bool GetCurrentState(Eigen::Quaterniond &state) const;
+  virtual bool GetCurrentState(Eigen::Vector4d &state) const = 0;
+
  private:
-  // orientation quaternion
-  Eigen::Quaterniond q_;
+  // orientation quaternion, [ x, y, z, w ]
+  Eigen::Vector4d q_;
   // error state quaternion
-  Eigen::Quaterniond delta_q_;
+  Eigen::Vector4d delta_q_;
   // bias of gyro
   Eigen::Vector3d b_;
   // error state bias of gyro
   Eigen::Vector3d delta_b_;
+};
+
+class NominalStateFilter : AttitudeKalmanFilterBase {
+ public:
+  NominalStateFilter();
+
+  bool Propagate(const Eigen::Vector3d &omega, double delta_t) override;
+
+  bool GetCurrentState(Eigen::Vector4d &state) const override;
+
+ private:
 };
 
 } // vio

@@ -1,6 +1,7 @@
 #ifndef IMU_INTEGRATOR_IMU_INTEGRATOR_HPP_
 #define IMU_INTEGRATOR_IMU_INTEGRATOR_HPP_
 
+// TODO: Figure out which header is the minimum to include.
 #include <Eigen/Dense>
 
 namespace vio {
@@ -9,10 +10,10 @@ class ImuIntegrator {
  public:
   ImuIntegrator() {}
 
-  bool ZerothOrderIntegration(const Eigen::Quaterniond &start_q,
+  bool ZerothOrderIntegration(const Eigen::Vector4d &start_q,
                               const Eigen::Vector3d &omega,
                               double delta_t,
-                              Eigen::Quaterniond &end_q);
+                              Eigen::Vector4d &end_q);
  private:  
 };
 
