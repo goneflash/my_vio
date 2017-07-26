@@ -18,14 +18,14 @@ class FeatureTrackerTest : public ::testing::Test {
   }
 
   void CreateTwoImageTestData() {
-    cv::Mat image0 = cv::imread("../feature_tracker/test/test_data/close/frame0.png");
-    cv::Mat image1 = cv::imread("../feature_tracker/test/test_data/close/frame1.png");
+    cv::Mat image0 = cv::imread("../../feature_tracker/test/test_data/close/frame0.png");
+    cv::Mat image1 = cv::imread("../../feature_tracker/test/test_data/close/frame1.png");
     ASSERT_TRUE(image0.data);
     ASSERT_TRUE(image1.data);
     std::unique_ptr<vio::ImageFrame> frame0(new vio::ImageFrame(image0));
     std::unique_ptr<vio::ImageFrame> frame1(new vio::ImageFrame(image1));
-    frames.push_back(std::move(frame0));
-    frames.push_back(std::move(frame1));
+    frames_.push_back(std::move(frame0));
+    frames_.push_back(std::move(frame1));
   }
 
   void CreateLongSequenceTestData() {
@@ -34,12 +34,17 @@ class FeatureTrackerTest : public ::testing::Test {
 #endif
     std::vector<std::string> images;
     ASSERT_TRUE(GetImageNamesInFolder(
-          "../feature_tracker/test/test_data/long_seq", "jpg", images));
+          "../../feature_tracker/test/test_data/long_seq", "jpg", images));
+    int num_img_to_test = 5;
     for (auto img : images) {
       cv::Mat image = cv::imread(img);
       ASSERT_TRUE(image.data);
       std::unique_ptr<vio::ImageFrame> frame(new vio::ImageFrame(image));
-      frames.push_back(std::move(frame));
+      frames_.push_back(std::move(frame));
+
+      if (frames_.size() == num_img_to_test) {
+        break;
+      }
     }
   }
 
@@ -49,7 +54,7 @@ class FeatureTrackerTest : public ::testing::Test {
   vio::FeatureTrackerOptions feature_tracker_option_;
   vio::FeatureTracker *feature_tracker_;
 
-  std::vector<std::unique_ptr<vio::ImageFrame>> frames;
+  std::vector<std::unique_ptr<vio::ImageFrame>> frames_;
 };
 
 TEST_F(FeatureTrackerTest, TestTwoFrameDefault_ORB_DAISY) {
@@ -57,11 +62,11 @@ TEST_F(FeatureTrackerTest, TestTwoFrameDefault_ORB_DAISY) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames[0]));
-  ASSERT_EQ(frames[0]->keypoints().size(), 3037);
+  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
+  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
 
   std::vector<cv::DMatch> matches;
-  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[0], *frames[1], matches));
+  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
   ASSERT_EQ(matches.size(), 1082);
 }
 
@@ -70,11 +75,11 @@ TEST_F(FeatureTrackerTest, TestTwoFrameOCV_ORB_DAISY) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames[0]));
-  ASSERT_EQ(frames[0]->keypoints().size(), 3037);
+  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
+  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
 
   std::vector<cv::DMatch> matches;
-  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[0], *frames[1], matches));
+  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
   ASSERT_EQ(matches.size(), 1092);
 }
 
@@ -83,11 +88,11 @@ TEST_F(FeatureTrackerTest, TestTwoFrameORBPipeline) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames[0]));
-  ASSERT_EQ(frames[0]->keypoints().size(), 3037);
+  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
+  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
 
   std::vector<cv::DMatch> matches;
-  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[0], *frames[1], matches));
+  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
   //ASSERT_EQ(matches.size(), 1608);
 }
 
@@ -99,11 +104,11 @@ TEST_F(FeatureTrackerTest, TestTwoFrameFAST_DAISY) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames[0]));
-  ASSERT_EQ(frames[0]->keypoints().size(), 3812);
+  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
+  ASSERT_EQ(frames_[0]->keypoints().size(), 3812);
 
   std::vector<cv::DMatch> matches;
-  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[0], *frames[1], matches));
+  ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
   ASSERT_EQ(matches.size(), 2270);
 }
 
@@ -115,12 +120,11 @@ TEST_F(FeatureTrackerTest, TestLongSequenceFAST_DAISY) {
   CreateTracker();
   CreateLongSequenceTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames[0]));
-  //ASSERT_EQ(frames[0]->keypoints().size(), 3812);
+  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
 
-  for (int i = 1; i < frames.size(); ++i) {
+  for (int i = 1; i < frames_.size(); ++i) {
     std::vector<cv::DMatch> matches;
-    ASSERT_TRUE(feature_tracker_->TrackFrame(*frames[i - 1], *frames[i], matches));
+    ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[i - 1], *frames_[i], matches));
   }
 }
 
