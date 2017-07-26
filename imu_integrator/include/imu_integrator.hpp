@@ -10,7 +10,7 @@ class ImuIntegrator {
  public:
   ImuIntegrator() {}
 
-  bool zerothOrderIntegration(const Eigen::Vector4d &start_q,
+  bool ZerothOrderIntegration(const Eigen::Vector4d &start_q,
                               const Eigen::Vector3d &w,
                               double delta_t,
                               Eigen::Vector4d &end_q);
