@@ -17,7 +17,7 @@ class MapInitializerTest : public ::testing::Test {
   void GetFeatureVectorFromMatchFile() {
     cv::Mat_<double> x1, x2;
     int num_pts;
-    std::ifstream myfile("../map_initializer/test/test_data/recon2v_checkerboards.txt");
+    std::ifstream myfile("../../map_initializer/test/test_data/recon2v_checkerboards.txt");
     ASSERT_TRUE(myfile.is_open());
 
     feature_vectors_.resize(2);
@@ -53,7 +53,7 @@ class MapInitializerTest : public ::testing::Test {
     myfile.close();
     K_ = cv::Matx33d(1, 0, 0, 0, 1, 0, 0, 0, 1); 
   }
-
+/*
   void GetFeatureVectorFromTracks() {
     std::ifstream myfile("../map_initializer/test/test_data/backyard_tracks.txt");
     ASSERT_TRUE(myfile.is_open());
@@ -65,27 +65,27 @@ class MapInitializerTest : public ::testing::Test {
     for ( ; getline(myfile,line_str); ++n_tracks) {
       std::istringstream line(line_str);
       std::vector<cv::Vec2d> track;
-      for ( n_frames = 0; line >> x >> y; ++n_frames) {
+      for ( num_frames = 0; line >> x >> y; ++num_frames) {
         if ( x > 0 && y > 0)
-          track.push_back(Vec2d(x,y));
+          track.push_back(cv::Vec2d(x,y));
         else
-          track.push_back(Vec2d(-1));
+          track.push_back(cv::Vec2d(-1));
       }
       tracks.push_back(track);
     }
-    for (int i = 0; i < n_frames; ++i) {
-      Mat_<double> frame(2, n_tracks);
+    for (int i = 0; i < num_frames; ++i) {
+      cv::Mat frame(cv::Size(2, n_tracks));
       for (int j = 0; j < n_tracks; ++j)
       {
         frame(0,j) = tracks[j][i][0];
         frame(1,j) = tracks[j][i][1];
       }
-      points2d.push_back(Mat(frame));
+      points2d.push_back(frame);
     }
     myfile.close();
     K_ = cv::Matx33d(1, 0, 0, 0, 1, 0, 0, 0, 1); 
   }
-
+*/
   void RunInitializer() {
     std::vector<cv::Point3f> points3d;
     std::vector<bool> points3d_mask;
@@ -105,6 +105,7 @@ class MapInitializerTest : public ::testing::Test {
   cv::Matx33d K_;
 };
 
+#ifdef CERES_FOUND
 TEST_F(MapInitializerTest, TestLibmv_TwoFrame_MatchFile) {
   options_.method = vio::MapInitializerOptions::LIBMV;
   CreateInitializer();
@@ -112,6 +113,7 @@ TEST_F(MapInitializerTest, TestLibmv_TwoFrame_MatchFile) {
 
   RunInitializer();
 }
+#endif
 
 TEST_F(MapInitializerTest, Test8Point_TwoFrame_MatchFile) {
   options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
