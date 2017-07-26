@@ -31,7 +31,7 @@ class AttitudeKalmanFilter {
   // orientation quaternion
   Eigen::Quaterniond q_;
   // error state quaternion
-  Eigen::Quaternion delta_q_;
+  Eigen::Quaterniond delta_q_;
   // bias of gyro
   Eigen::Vector3d b_;
   // error state bias of gyro
