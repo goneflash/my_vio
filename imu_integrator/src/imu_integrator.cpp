@@ -13,7 +13,7 @@ namespace vio {
  * |delta_t| is the time between current orientation and timestamp of |w|,
  * |end_q| is the predicted orientation at timestamp of |w|
  */ 
-bool ImuIntegrator::ZerothOrderIntegration(const Eigen::Vector4d &start_q,
+bool ImuIntegrator::zerothOrderIntegration(const Eigen::Vector4d &start_q,
     const Eigen::Vector3d &w,
     double delta_t,
     Eigen::Vector4d &end_q) {

@@ -26,22 +26,24 @@ class AttitudeKalmanFilterBase {
   AttitudeKalmanFilterBase(const Eigen::Vector4d &init_state)
       : q_(init_state),
         delta_q_(1, 0, 0, 0),
-        b_(0, 0, 0),
+        bias_(0, 0, 0),
         delta_b_(0, 0, 0) {}
 
   virtual bool Propagate(const Eigen::Vector3d &omega, double delta_t) = 0;
 
   virtual bool GetCurrentState(Eigen::Vector4d &state) const = 0;
 
- private:
+ protected:
   // orientation quaternion, [ x, y, z, w ]
   Eigen::Vector4d q_;
   // error state quaternion
   Eigen::Vector4d delta_q_;
   // bias of gyro
-  Eigen::Vector3d b_;
+  Eigen::Vector3d bias_;
   // error state bias of gyro
   Eigen::Vector3d delta_b_;
+
+  ImuIntegrator imu_integrator_;
 };
 
 class NominalStateFilter : AttitudeKalmanFilterBase {
