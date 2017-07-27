@@ -50,8 +50,8 @@ class PinholeCameraModel : CameraModel<ParamsType, 4> {
   PinholeCameraModel(
       int image_height, int image_width, const ParamsArray &params)
       : CameraModelType(image_height, image_width, params) {
-    K_ << params(0),         0, params(2),
-                  0, params(1), params(3),
+    K_ << params[0],         0, params[2],
+                  0, params[1], params[3],
                   0,         0,         1;
   }
 
