@@ -24,8 +24,8 @@ class CameraModel {
   // Return false is the point is out of camera's view, e.g. behind the camera.
   // TODO: Use Eigen::Ref<> for reference type of Eigen.
   bool ProjectPoint(const Eigen::Vector3d &point,
-                    Eigen::Vector2d &pixel) {
-    return static_cast<DerivedCameraModel *>(this)->ProjectPointToPixel(
+                    Eigen::Vector2d &pixel) const {
+    return static_cast<const DerivedCameraModel *>(this)->ProjectPointToPixel(
         point, pixel);
   }
 
@@ -73,9 +73,29 @@ class PinholeCameraModel :
 
   bool ProjectPointToPixel(const Eigen::Vector3d &point,
                            Eigen::Vector2d &pixel) const;
+
  private:
   Eigen::Matrix<ParamsType, 3, 3> K_;
 };
+
+template <typename ParamsType>
+bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
+    const Eigen::Vector3d &point, Eigen::Vector2d &pixel) const {
+  // TODO: Eigen could use both () and [] to access elements?
+  if (point(2) <= 0.0) {
+    return false;
+  }
+
+  const ParamsType fx = params_[0];
+  const ParamsType fy = params_[1];
+  const ParamsType cx = params_[2];
+  const ParamsType cy = params_[3];
+
+  pixel(0) = fx * (point(0) / point(2)) + cx;
+  pixel(1) = fy * (point(1) / point(2)) + cy;
+
+  return true;
+}
 
 } // namespace vio
 

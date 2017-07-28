@@ -5,12 +5,12 @@
 class CameraModelTest : public ::testing::Test {
  protected:
   template<class CameraModel>
-  void TestProjectPoint(CameraModel &camera,
+  void TestProjectPoint(const CameraModel &camera,
                         const Eigen::Vector3d &point,
                         const Eigen::Vector2d &expected_pixel) {
     Eigen::Vector2d pixel;
     camera.image_height();
-    //camera.ProjectPoint(point, pixel);
+    camera.ProjectPoint(point, pixel);
   }
 };
 
