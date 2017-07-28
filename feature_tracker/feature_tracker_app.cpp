@@ -2,8 +2,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "gtest/gtest.h"
-
 #include "feature_tracker.hpp"
 #include "mapdata.hpp"
 #include "util.hpp"

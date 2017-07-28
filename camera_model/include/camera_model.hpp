@@ -11,7 +11,7 @@ template<class DerivedCameraModel, typename ParamsType,
          std::size_t NumParams>
 class CameraModel {
  public:
-  typedef Eigen::Array<ParamsType, 4, 1> ParamsArray;
+  typedef Eigen::Array<ParamsType, NumParams, 1> ParamsArray;
 
   CameraModel(
       int image_height, int image_width, const ParamsArray &params)
@@ -34,6 +34,8 @@ class CameraModel {
     return false;
   }
 
+  bool SetParams(const ParamsArray &params) { params_ = params; }
+
   int image_height() const { return image_height_; }
   int image_width() const { return image_width_; }
 
@@ -42,7 +44,7 @@ class CameraModel {
   int image_width_;
 
   // Parameters of camera model.
-  Eigen::Array<ParamsType, NumParams, 1> params_;
+  ParamsArray params_;
 };
 
 /*
@@ -77,6 +79,7 @@ template <typename ParamsType>
 bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
     const Eigen::Vector3d &point, Eigen::Vector2d &pixel) const {
   // TODO: Eigen could use both () and [] to access elements?
+  // Point should not behind the camera center.
   if (point(2) <= 0.0) {
     return false;
   }
@@ -88,6 +91,10 @@ bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
 
   pixel(0) = fx * (point(0) / point(2)) + cx;
   pixel(1) = fy * (point(1) / point(2)) + cy;
+
+  if (pixel(0) < 0 || pixel(0) >= CameraModelType::image_width() ||
+      pixel(1) < 0 || pixel(1) >= CameraModelType::image_height())
+    return false;
 
   return true;
 }
