@@ -29,6 +29,11 @@ class CameraModel {
         point, pixel);
   }
 
+  bool ProjectPointToPixel(const Eigen::Vector3d &point,
+                           Eigen::Vector2d &pixel) const {
+    return false;
+  }
+
   int image_height() const { return image_height_; }
   int image_width() const { return image_width_; }
 
@@ -51,7 +56,7 @@ class CameraModel {
  */
 template <typename ParamsType>
 class PinholeCameraModel :
-  CameraModel<PinholeCameraModel<ParamsType>, ParamsType, 4> {
+  public CameraModel<PinholeCameraModel<ParamsType>, ParamsType, 4> {
  public:
   // using typename CameraModel<PinholeCameraModel, ParamsType, 4>::ParamsArray;
   typedef CameraModel<PinholeCameraModel, ParamsType, 4> CameraModelType;
@@ -67,7 +72,7 @@ class PinholeCameraModel :
   }
 
   bool ProjectPointToPixel(const Eigen::Vector3d &point,
-                           Eigen::Vector2d &pixel) const override;
+                           Eigen::Vector2d &pixel) const;
  private:
   Eigen::Matrix<ParamsType, 3, 3> K_;
 };

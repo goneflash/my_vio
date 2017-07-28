@@ -25,8 +25,7 @@ if (USE_TEST)
        
   add_executable(${TARGET}_test ${TEST_SOURCE_FILE})
   target_link_libraries(${TARGET}_test ${TARGET}
-    gtest gtest_main
-    util mapdata
-    ${OpenCV_LIBS} )
+    ${EIGEN3_LIBS}
+    gtest gtest_main )
   add_test( CameraModelTest ${TARGET}_test )
 endif()
