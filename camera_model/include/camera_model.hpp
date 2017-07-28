@@ -65,17 +65,12 @@ class PinholeCameraModel :
 
   PinholeCameraModel(
       int image_height, int image_width, const ParamsArray &params)
-      : CameraModelType(image_height, image_width, params) {
-    K_ << params[0],         0, params[2],
-                  0, params[1], params[3],
-                  0,         0,         1;
-  }
+      : CameraModelType(image_height, image_width, params) {}
 
   bool ProjectPointToPixel(const Eigen::Vector3d &point,
                            Eigen::Vector2d &pixel) const;
 
  private:
-  Eigen::Matrix<ParamsType, 3, 3> K_;
 };
 
 template <typename ParamsType>
