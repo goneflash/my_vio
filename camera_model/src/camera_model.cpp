@@ -3,7 +3,7 @@
 namespace vio {
 
 template <typename ParamsType>
-bool PinholeCameraModel<ParamsType>::ProjectPointToImagePlane(
+bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
     const Eigen::Vector3d &point, Eigen::Vector2d &pixel) const {
   // TODO: Eigen could use both () and [] to access elements?
   if (point(2) <= 0.0) {

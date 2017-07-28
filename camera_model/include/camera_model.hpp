@@ -4,8 +4,11 @@
 #include <Eigen/Dense>
 
 namespace vio {
-
-template<typename ParamsType, std::size_t NumParams>
+/*
+ * Use CRTP pattern.
+ */
+template<class DerivedCameraModel, typename ParamsType,
+         std::size_t NumParams>
 class CameraModel {
  public:
   typedef Eigen::Array<ParamsType, 4, 1> ParamsArray;
@@ -20,8 +23,11 @@ class CameraModel {
 
   // Return false is the point is out of camera's view, e.g. behind the camera.
   // TODO: Use Eigen::Ref<> for reference type of Eigen.
-  virtual bool ProjectPointToImagePlane(const Eigen::Vector3d &point,
-                                        Eigen::Vector2d &pixel) const = 0;
+  bool ProjectPoint(const Eigen::Vector3d &point,
+                    Eigen::Vector2d &pixel) {
+    return static_cast<DerivedCameraModel *>(this)->ProjectPointToPixel(
+        point, pixel);
+  }
 
   int image_height() const { return image_height_; }
   int image_width() const { return image_width_; }
@@ -40,12 +46,17 @@ class CameraModel {
  *        0 fy cy
  *        0  0  1 ]
  * Number of parameters is 4: [fx, fy, cx, cy].
+ *
+ * Here in the template parameter list, must use PinholeCameraModel<ParamsType>.
  */
 template <typename ParamsType>
-class PinholeCameraModel : CameraModel<ParamsType, 4> {
+class PinholeCameraModel :
+  CameraModel<PinholeCameraModel<ParamsType>, ParamsType, 4> {
  public:
-  using typename CameraModel<ParamsType, 4>::ParamsArray;
-  typedef CameraModel<ParamsType, 4> CameraModelType;
+  // using typename CameraModel<PinholeCameraModel, ParamsType, 4>::ParamsArray;
+  typedef CameraModel<PinholeCameraModel, ParamsType, 4> CameraModelType;
+  using CameraModelType::params_;
+  using typename CameraModelType::ParamsArray;
 
   PinholeCameraModel(
       int image_height, int image_width, const ParamsArray &params)
@@ -55,8 +66,8 @@ class PinholeCameraModel : CameraModel<ParamsType, 4> {
                   0,         0,         1;
   }
 
-  bool ProjectPointToImagePlane(const Eigen::Vector3d &point,
-                                Eigen::Vector2d &pixel) const override;
+  bool ProjectPointToPixel(const Eigen::Vector3d &point,
+                           Eigen::Vector2d &pixel) const override;
  private:
   Eigen::Matrix<ParamsType, 3, 3> K_;
 };
