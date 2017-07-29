@@ -1,0 +1,8 @@
+%YAML:1.0
+CameraModel
+  NumParams: 4
+  Params: !!opencv-matrix
+      rows: 4
+      cols: 1
+      dt: d
+      data: [350, 350, 240, 360]

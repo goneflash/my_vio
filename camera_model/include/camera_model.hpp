@@ -4,16 +4,30 @@
 #include <Eigen/Dense>
 
 namespace vio {
+
+/*
+ * Abstract class for camera.
+ */
+template<typename ParamsType>
+class CameraModel {
+ public:
+  virtual bool ProjectPointToPixel(const Eigen::Vector3d &point,
+                                   Eigen::Vector2d &pixel) const = 0;
+
+  virtual int image_height() const = 0;
+  virtual int image_width() const = 0;
+};
+
 /*
  * Use CRTP pattern.
  */
 template<class DerivedCameraModel, typename ParamsType,
          std::size_t NumParams>
-class CameraModel {
+class CameraModelBase : public CameraModel<ParamsType> {
  public:
   typedef Eigen::Array<ParamsType, NumParams, 1> ParamsArray;
 
-  CameraModel(
+  CameraModelBase(
       int image_height, int image_width, const ParamsArray &params)
       : image_height_(image_height),
         image_width_(image_width) {
@@ -27,11 +41,6 @@ class CameraModel {
                     Eigen::Vector2d &pixel) const {
     return static_cast<const DerivedCameraModel *>(this)->ProjectPointToPixel(
         point, pixel);
-  }
-
-  bool ProjectPointToPixel(const Eigen::Vector3d &point,
-                           Eigen::Vector2d &pixel) const {
-    return false;
   }
 
   bool SetParams(const ParamsArray &params) { params_ = params; }
@@ -58,10 +67,9 @@ class CameraModel {
  */
 template <typename ParamsType>
 class PinholeCameraModel :
-  public CameraModel<PinholeCameraModel<ParamsType>, ParamsType, 4> {
+  public CameraModelBase<PinholeCameraModel<ParamsType>, ParamsType, 4> {
  public:
-  // using typename CameraModel<PinholeCameraModel, ParamsType, 4>::ParamsArray;
-  typedef CameraModel<PinholeCameraModel, ParamsType, 4> CameraModelType;
+  typedef CameraModelBase<PinholeCameraModel, ParamsType, 4> CameraModelType;
   using CameraModelType::params_;
   using typename CameraModelType::ParamsArray;
 
@@ -70,7 +78,7 @@ class PinholeCameraModel :
       : CameraModelType(image_height, image_width, params) {}
 
   bool ProjectPointToPixel(const Eigen::Vector3d &point,
-                           Eigen::Vector2d &pixel) const;
+                           Eigen::Vector2d &pixel) const override;
 
  private:
 };
