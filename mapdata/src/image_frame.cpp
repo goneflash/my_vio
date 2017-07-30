@@ -27,6 +27,7 @@ bool ImageFrame::CreateGridKeypointIndex() {
     keypoint_bin_coords_[kp_id].y = y_grid_index;
   }
   has_grid_keypoints_ = true;
+  return true;
 }
 
 bool ImageFrame::GetNeighborKeypointsInRadius(

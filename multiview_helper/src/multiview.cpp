@@ -234,6 +234,7 @@ bool MakeMatrixInhomogeneous(cv::Mat &M) {
   for (int i = 0; i < 3; ++i)
     for (int j = 0; j < 3; ++j)
       M.at<double>(i, j) = M.at<double>(i, j) / M.at<double>(2, 2);
+  return true;
 }
 
 bool SolveProjectionFromF(const cv::Mat &F, cv::Mat &P1, cv::Mat &P2) {

@@ -19,6 +19,7 @@ bool Mapdata::AddFirstKeyframe(std::unique_ptr<Keyframe> frame) {
   keyframes_[0]->set_pose(R, t);
 
   map_state_ = WAIT_FOR_SECONDFRAME;
+  return true;
 }
 
 bool Mapdata::AddNewKeyframeMatchToLastKeyframe(
@@ -264,6 +265,7 @@ bool Mapdata::AddInitedPoints(const std::vector<cv::Point3f> &points3d,
 bool Mapdata::SetLastFramePose(const cv::Mat &R, const cv::Mat &t) {
   keyframes_.back()->set_pose_inited(true);
   keyframes_.back()->set_pose(R, t);
+  return true;
 };
 
 bool Mapdata::PrepareOptimization(std::vector<cv::Mat> &Rs,
@@ -332,6 +334,7 @@ bool Mapdata::PrintStats() {
   std::cout << "\nMap stats:\n"
             << "Keyframes: " << keyframes_.size() << std::endl
             << "Landmarks: " << landmarks_.size() << "\n\n";
+  return true;
 }
 
 bool Mapdata::AddCoordToUninitedPoints(const std::vector<cv::Point3f> &points3d,
