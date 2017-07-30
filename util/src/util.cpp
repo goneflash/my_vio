@@ -22,6 +22,7 @@ bool GetImageNamesInFolder(const std::string &path, const std::string &format,
   return true;
 }
 
+#ifdef USE_VISUALIZATION
 void VisualizeCamerasAndPoints(const cv::Matx33d &K,
                                const std::vector<cv::Mat> &Rs,
                                const std::vector<cv::Mat> &ts,
@@ -171,3 +172,5 @@ void VisualizeCamerasAndPoints(
 
   window.spin();
 }
+
+#endif

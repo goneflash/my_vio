@@ -15,7 +15,7 @@ endif()
 option(USE_TEST "Build tests." OFF)
 option(PROFILE_CPU "Profile CPU." OFF)
 
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
@@ -23,6 +23,10 @@ if (USE_TEST)
   enable_testing()
   include_directories(thirdparty/googletest/googletest/include)
   add_subdirectory(thirdparty/googletest/googletest)
+endif()
+
+if (ENABLE_VIZ)
+  add_definitions("-DUSE_VISUALIZATION")
 endif()
 
 if (PROFILE_CPU)
@@ -37,7 +41,7 @@ find_package( Eigen3 REQUIRED )
 
 # TODO: Fix ceres in workstation 
 #find_package( Ceres )
-if(Ceres_FOUND)
+if (Ceres_FOUND)
   add_definitions("-DCERES_FOUND")
   message(STATUS "Ceres is supported. Used in Landmark Initialization.")
 else()
