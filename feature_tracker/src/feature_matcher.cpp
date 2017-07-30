@@ -39,6 +39,7 @@ bool FeatureMatcher::SymmetryTestFilter(
                                          (*matchIterator).distance));
     }
   }
+  return true;
 }
 
 bool FeatureMatcher::RatioTestFilter(

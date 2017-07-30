@@ -2,6 +2,17 @@
 
 bool GetImageNamesInFolder(const std::string &path, const std::string &format,
                            std::vector<std::string> &images) {
+
+#if defined(__linux__) || defined(__APPLE__)
+  return GetImageNamesInFolderUnix(path, format, images);
+#endif
+  return false;
+
+}
+
+#if defined(__linux__) || defined(__APPLE__)
+bool GetImageNamesInFolderUnix(const std::string &path, const std::string &format,
+                           std::vector<std::string> &images) {
   struct dirent **file_list;
   int n = scandir(path.c_str(), &file_list, 0, alphasort);
   if (n < 0) {
@@ -21,6 +32,7 @@ bool GetImageNamesInFolder(const std::string &path, const std::string &format,
   free(file_list);
   return true;
 }
+#endif
 
 #ifdef USE_VISUALIZATION
 void VisualizeCamerasAndPoints(const cv::Matx33d &K,

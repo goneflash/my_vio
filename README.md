@@ -23,3 +23,5 @@ Now run
 The difference is OCV matching has more long feature tracks than grid search method. Maybe increase the search region? Although grid is much faster than OCV
 TODO: Evaluate how to decide use which method.
 
+##OSX CMake not use homebrew
+export CMAKE_PREFIX_PATH=/usr/local

@@ -1,6 +1,4 @@
-#ifdef __linux__
 #include <dirent.h>
-#endif
 
 #include <cstring>
 #include <iostream>
@@ -13,6 +11,11 @@
 
 bool GetImageNamesInFolder(const std::string &path, const std::string &format,
                            std::vector<std::string> &images);
+
+#if defined(__linux__) || defined(__APPLE__)
+bool GetImageNamesInFolderUnix(const std::string &path, const std::string &format,
+    std::vector<std::string> &images);
+#endif
 
 #ifdef USE_VISUALIZATION
 void VisualizeCamerasAndPoints(const cv::Matx33d &K,

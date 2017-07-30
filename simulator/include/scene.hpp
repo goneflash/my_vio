@@ -27,6 +27,7 @@ class Scene {
     if (!model)
       return false;
     camera = std::move(model);
+    return true;
   }
 
   std::unique_ptr<CameraModel<double>> camera;

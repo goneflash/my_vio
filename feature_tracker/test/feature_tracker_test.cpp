@@ -29,9 +29,6 @@ class FeatureTrackerTest : public ::testing::Test {
   }
 
   void CreateLongSequenceTestData() {
-#ifndef __linux__
-    ASSERT_TRUE(false);
-#endif
     std::vector<std::string> images;
     ASSERT_TRUE(GetImageNamesInFolder(
           "../../feature_tracker/test/test_data/long_seq", "jpg", images));

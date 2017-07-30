@@ -130,6 +130,7 @@ bool FeatureMatcherGridSearch::FindMatchNearFeatures(
     match.push_back(cv::DMatch(i, near_f_id[best_id[1]], best_dist[1]));
     matches.push_back(match);
   }
+  return true;
 }
 
 inline double FeatureMatcherGridSearch::ComputeDistance(const cv::Mat &mat0,
@@ -138,6 +139,7 @@ inline double FeatureMatcherGridSearch::ComputeDistance(const cv::Mat &mat0,
     return cv::norm(mat0, mat1, cv::NORM_L2);
   else if (dist_type_ == FeatureMatcherOptions::HAMMING)
     return cv::norm(mat0, mat1, cv::NORM_HAMMING); 
+  return -1;
 }
 
 }  // vio

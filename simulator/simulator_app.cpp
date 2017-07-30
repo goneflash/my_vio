@@ -22,6 +22,7 @@ bool LoadCameraModel(const cv::FileNode &node, vio::Scene &scene) {
   } else {
     return false;
   }
+  return true;
 }
 
 bool LoadSceneFromConfigFile(const std::string &scene_file_name,
