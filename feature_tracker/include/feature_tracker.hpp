@@ -35,6 +35,8 @@ class FeatureTracker {
                           std::vector<cv::DMatch> &matches) = 0;
 
  protected:
+
+
   // matcher for tracking
   std::unique_ptr<FeatureMatcher> matcher_;
   // TODO: Make an argument to create tracker.

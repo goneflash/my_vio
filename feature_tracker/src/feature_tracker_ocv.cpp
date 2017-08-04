@@ -139,23 +139,17 @@ void FeatureTrackerOCV::ComputeFeatures(ImageFrame &frame) {
   Timer timer;
   timer.Start();
 
+  std::vector<cv::KeyPoint> kp;
+  cv::Mat desc;
   if (detector_type_ == DETECTORONLY) {
-    std::vector<cv::KeyPoint> kp;
-    cv::Mat desc;
     detector_->detectAndCompute(frame.GetImage(), cv::noArray(), kp, desc);
-
-    frame.set_keypoints(kp);
-    frame.set_descriptors(desc);
   } else if (detector_type_ == DETECTORDESCRIPTOR) {
-    std::vector<cv::KeyPoint> kp;
-    cv::Mat desc;
     detector_->detect(frame.GetImage(), kp);
     descriptor_->compute(frame.GetImage(), kp, desc);
-
-    frame.set_keypoints(kp);
-    frame.set_descriptors(desc);
   }
 
+  frame.set_keypoints(kp);
+  frame.set_descriptors(desc);
   timer.Stop();
   std::cout << "Detect and compute used " << timer.GetInMs() << "ms.\n";
 }
