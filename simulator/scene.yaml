@@ -1,8 +1,18 @@
 %YAML:1.0
-CameraModel
+CameraModel:
+  CameraType: "Pinhole"
   NumParams: 4
   Params: !!opencv-matrix
       rows: 4
       cols: 1
       dt: d
       data: [350, 350, 240, 360]
+Landmarks:
+  NumLandmarks: 2
+  Positions: !!opencv-matrix
+      rows: 3
+      cols: 2
+      dt: d
+      data: [1, 2, 3,
+             4, 5, 6]
+
