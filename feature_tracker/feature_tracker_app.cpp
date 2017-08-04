@@ -22,12 +22,6 @@ class Options {
 };
 
 int TestFramesInFolder(Options option) {
-#ifndef __linux__
-  cout << "Error: Test folder Not supported. Currently only support ";
-  cout << "Linux.\n";
-  return -1;
-
-#else
   vector<string> images;
   if (!GetImageNamesInFolder(option.path, option.format, images)) return -1;
   if (images.size() < 2) {
@@ -137,7 +131,7 @@ int TestFramesInFolder(Options option) {
   for (auto feat_len : feature_length_count) {
     cout << "Length " << feat_len.first << " : " << feat_len.second << std::endl;
   }
-#endif
+  return 0;
 }
 
 int main(int argc, char **argv) {

@@ -10,8 +10,8 @@ CameraModel:
 Landmarks:
   NumLandmarks: 2
   Positions: !!opencv-matrix
-      rows: 3
-      cols: 2
+      rows: 2
+      cols: 3
       dt: d
       data: [1, 2, 3,
              4, 5, 6]
