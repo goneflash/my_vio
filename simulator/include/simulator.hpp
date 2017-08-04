@@ -28,24 +28,6 @@ class Simulator {
       std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame);
 };
 
-bool Simulator::GenerateFeatureTracksFromTranslationTrajectory(
-    const Scene &scene,
-    std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame) {
-  feature_pos_each_frame.clear();
-  for (const auto camera_center : scene.trajectory) {
-    std::vector<Eigen::Vector2d> features;
-    for (const auto landmark : scene.landmarks) {
-      Eigen::Vector2d pixel;
-      if (!scene.camera->ProjectPointToPixel(landmark, pixel))
-        return false;
-      features.push_back(pixel);
-    }
-    feature_pos_each_frame.push_back(features);
-  }
-
-  return true;
-}
-
 } // namespace vio
 
 #endif

@@ -41,7 +41,7 @@ class MapInitializerTest : public ::testing::Test {
       std::stringstream s(line);
       std::string cord;
       s >> cord; x1(0, i) = atof(cord.c_str());
-      s >> cord; x1(0, i) = atof(cord.c_str());
+      s >> cord; x1(1, i) = atof(cord.c_str());
       s >> cord; x2(0, i) = atof(cord.c_str());
       s >> cord; x2(1, i) = atof(cord.c_str());
 
@@ -52,6 +52,7 @@ class MapInitializerTest : public ::testing::Test {
     }
     myfile.close();
     K_ = cv::Matx33d(1, 0, 0, 0, 1, 0, 0, 0, 1); 
+    // K_ = cv::Matx33d(350, 0, 240, 0, 350, 360, 0, 0, 1); 
   }
 /*
   void GetFeatureVectorFromTracks() {

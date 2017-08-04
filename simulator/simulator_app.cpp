@@ -45,9 +45,22 @@ bool LoadLandmarks(const cv::FileNode &node, vio::Scene &scene) {
     scene.landmarks[i][0] = landmarks_cv.at<double>(i, 0);
     scene.landmarks[i][1] = landmarks_cv.at<double>(i, 1);
     scene.landmarks[i][2] = landmarks_cv.at<double>(i, 2);
-    std::cout << scene.landmarks[i][0] << std::endl;
-    std::cout << scene.landmarks[i][1] << std::endl;
-    std::cout << scene.landmarks[i][2] << std::endl;
+  }
+
+  return true;
+}
+
+bool LoadCameraPoses(const cv::FileNode &node, vio::Scene &scene) {
+  int num_poses = (int)node["NumPoses"];
+  scene.trajectory.resize(num_poses);
+  cv::Mat poses_cv;
+  node["Poses"] >> poses_cv;
+  for (int i = 0; i < num_poses; ++i) {
+    vio::CameraPose new_pose;
+    new_pose.timestamp = i;
+    new_pose.position[0] = poses_cv.at<double>(i, 0);
+    new_pose.position[1] = poses_cv.at<double>(i, 1);
+    new_pose.position[2] = poses_cv.at<double>(i, 2);
   }
 
   return true;
@@ -65,6 +78,8 @@ bool LoadSceneFromConfigFile(const std::string &scene_file_name,
   if (!LoadCameraModel(scene_config["CameraModel"], scene))
     return false;
   if (!LoadLandmarks(scene_config["Landmarks"], scene))
+    return false;
+  if (!LoadCameraPoses(scene_config["CameraPoses"], scene))
     return false;
   return true;
 }
