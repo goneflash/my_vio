@@ -56,6 +56,12 @@ bool FeatureMatcher::RatioTestFilter(
 bool FeatureMatcher::RemoveOutlierMatch(const std::vector<cv::KeyPoint> &pre_kp,
                                         const std::vector<cv::KeyPoint> &cur_kp,
                                         std::vector<cv::DMatch> &matches) {
+  if (matches.size() < 8) {
+    std::cout << "Skipped Remove Outlier. Only " << matches.size();
+    std::cout << " pairs of matches are provided.\n";
+    // TODO: Does this function need to return value?
+    return true;
+  }
   // TODO: Check the speed.
   std::vector<cv::Point2f> pre_matched_kp, cur_matched_kp;
   for (int i = 0; i < matches.size(); ++i) {

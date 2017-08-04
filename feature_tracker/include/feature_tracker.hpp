@@ -15,7 +15,7 @@ namespace vio {
 
 class FeatureTracker {
  public:
-  FeatureTracker() {}
+  FeatureTracker() : num_bin_col_(25), num_bin_row_(25), max_num_feature_(100) {}
   ~FeatureTracker() {}
 
   static FeatureTracker *CreateFeatureTracker(FeatureTrackerOptions option,
@@ -46,12 +46,17 @@ class FeatureTracker {
   // Detect features in the entire image.
   void ComputeFeatures(ImageFrame &frame);
 
-  void GenerateDistributedFeatures(ImageFrame &frame);
+  void ComputeDistributedFeatures(ImageFrame &frame);
 
+ protected:
   // matcher for tracking
   std::unique_ptr<FeatureMatcher> matcher_;
   // TODO: Make an argument to create tracker.
   std::unique_ptr<FeatureMatcher> long_term_matcher_;
+
+  int num_bin_col_;
+  int num_bin_row_;
+  int max_num_feature_;
 };
 
 }  // vio

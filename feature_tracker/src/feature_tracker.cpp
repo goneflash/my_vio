@@ -20,8 +20,12 @@ void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
   Timer timer;
   timer.Start();
 
+  //cv::Mat mask = cv::Mat::zeros(frame.GetImage().size(), CV_8U);
   cv::Mat mask(frame.GetImage().size(), CV_8U);
   mask = cv::Scalar(255);
+
+  //cv::Mat roi(mask, cv::Rect(0, 0, 200, 200));
+  //roi = cv::Scalar(255);
 
   std::vector<cv::KeyPoint> kp;
   DetectFeatures(frame, kp, mask);
@@ -36,7 +40,14 @@ void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
   std::cout << "Detect and compute used " << timer.GetInMs() << "ms.\n";
 }
 
-void FeatureTracker::GenerateDistributedFeatures(ImageFrame &frame) {
+void FeatureTracker::ComputeDistributedFeatures(ImageFrame &frame) {
+  // Split the image to |num_bin_col_| x |num_bin_row_| grids.
+  const int max_num_feat_per_grid =
+      max_num_feature_ / num_bin_col_ / num_bin_row_;
+
+  cv::Mat mask(frame.GetImage().size(), CV_8U);
+  cv::Mat roi(mask, cv::Rect(0, 0, 10, 10));
+  roi = cv::Scalar(255);
 }
 
 }  // vio

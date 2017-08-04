@@ -34,7 +34,8 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
     // int threshold=10
     // bool nonmaxSuppression=true
     // int type=FastFeatureDetector::TYPE_9_16
-    detector_ = cv::FastFeatureDetector::create();
+    // TODO: Adjust parameters.
+    detector_ = cv::FastFeatureDetector::create(50);
     std::cout << "Created FAST Detector.\n";
   } else if (option.detector_type == "SURF") {
     detector_ = cv::xfeatures2d::SURF::create();
