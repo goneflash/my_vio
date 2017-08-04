@@ -19,6 +19,7 @@ cmake .. -DUSE_TEST=ON && make
 Now run
 ./feature_tracker/feature_tracker_app -p ../feature_tracker/test/test_data/long_seq/ -f jpg --detector FAST --descriptor DAISY --matcher_type GRID
 ./feature_tracker/feature_tracker_app -p ../feature_tracker/test/test_data/long_seq/ -f jpg --detector FAST --descriptor DAISY --matcher_type OCV
+./feature_tracker/feature_tracker_app -p ../feature_tracker/test/test_data/long_seq/ -f jpg --detector ORB --matcher_type GRID
 
 The difference is OCV matching has more long feature tracks than grid search method. Maybe increase the search region? Although grid is much faster than OCV
 TODO: Evaluate how to decide use which method.

@@ -24,7 +24,12 @@ class FeatureTrackerOCV : public FeatureTracker {
                           std::vector<cv::DMatch> &matches) override;
 
  protected:
-  void ComputeFeatures(ImageFrame &frame);
+  bool DetectFeatures(const ImageFrame &frame,
+                      std::vector<cv::KeyPoint> &kp,
+                      const cv::Mat &mask) override;
+  bool ComputeDescriptors(const ImageFrame &frame,
+                          std::vector<cv::KeyPoint> &kp,
+                          cv::Mat &desc) override;
 
   DetectorType detector_type_;
   int max_feature_per_frame_;

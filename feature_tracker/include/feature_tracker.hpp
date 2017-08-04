@@ -35,7 +35,18 @@ class FeatureTracker {
                           std::vector<cv::DMatch> &matches) = 0;
 
  protected:
+  virtual bool DetectFeatures(const ImageFrame &frame,
+                              std::vector<cv::KeyPoint> &kp,
+                              const cv::Mat &mask) = 0;
+  virtual bool ComputeDescriptors(const ImageFrame &frame,
+                                  std::vector<cv::KeyPoint> &kp,
+                                  cv::Mat &desc) = 0;
 
+
+  // Detect features in the entire image.
+  void ComputeFeatures(ImageFrame &frame);
+
+  void GenerateDistributedFeatures(ImageFrame &frame);
 
   // matcher for tracking
   std::unique_ptr<FeatureMatcher> matcher_;

@@ -99,7 +99,7 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
 }
 
 bool FeatureTrackerOCV::TrackFirstFrame(ImageFrame &output_frame) {
-  ComputeFeatures(output_frame);
+  FeatureTracker::ComputeFeatures(output_frame);
   return true;
 }
 bool FeatureTrackerOCV::TrackFrame(const ImageFrame &prev_frame,
@@ -109,7 +109,7 @@ bool FeatureTrackerOCV::TrackFrame(const ImageFrame &prev_frame,
     std::cerr << "Error: FeatureMatcher not set up.\n";
     return false;
   }
-  ComputeFeatures(new_frame);
+  FeatureTracker::ComputeFeatures(new_frame);
 
   Timer timer;
   timer.Start();
@@ -129,29 +129,30 @@ bool FeatureTrackerOCV::MatchFrame(const ImageFrame &prev_frame,
     std::cerr << "Error: Long term FeatureMatcher not set up.\n";
     return false;
   }
-  ComputeFeatures(new_frame);
+  FeatureTracker::ComputeFeatures(new_frame);
   if (!long_term_matcher_->Match(prev_frame, new_frame, matches)) return false;
 
   return true;
 }
 
-void FeatureTrackerOCV::ComputeFeatures(ImageFrame &frame) {
-  Timer timer;
-  timer.Start();
+bool FeatureTrackerOCV::DetectFeatures(const ImageFrame &frame,
+                                       std::vector<cv::KeyPoint> &kp,
+                                       const cv::Mat &mask) {
+  detector_->detect(frame.GetImage(), kp, mask);
+  return true;
+}
 
-  std::vector<cv::KeyPoint> kp;
-  cv::Mat desc;
+bool FeatureTrackerOCV::ComputeDescriptors(const ImageFrame &frame,
+                                           std::vector<cv::KeyPoint> &kp,
+                                           cv::Mat &desc) {
   if (detector_type_ == DETECTORONLY) {
-    detector_->detectAndCompute(frame.GetImage(), cv::noArray(), kp, desc);
+    detector_->compute(frame.GetImage(), kp, desc);
+    // detector_->detectAndCompute(frame.GetImage(), cv::noArray(), kp, desc);
   } else if (detector_type_ == DETECTORDESCRIPTOR) {
-    detector_->detect(frame.GetImage(), kp);
+    // detector_->detect(frame.GetImage(), kp);
     descriptor_->compute(frame.GetImage(), kp, desc);
   }
-
-  frame.set_keypoints(kp);
-  frame.set_descriptors(desc);
-  timer.Stop();
-  std::cout << "Detect and compute used " << timer.GetInMs() << "ms.\n";
+  return true;
 }
 
 }  // vio
