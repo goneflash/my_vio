@@ -60,7 +60,7 @@ TEST_F(FeatureTrackerTest, TestTwoFrameDefault_ORB_DAISY) {
   CreateTwoImageTestData();
 
   ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
-  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
+  ASSERT_GE(frames_[0]->keypoints().size(), 200);
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
@@ -102,11 +102,11 @@ TEST_F(FeatureTrackerTest, TestTwoFrameFAST_DAISY) {
   CreateTwoImageTestData();
 
   ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
-  ASSERT_EQ(frames_[0]->keypoints().size(), 3812);
+  ASSERT_GE(frames_[0]->keypoints().size(), 200);
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
-  ASSERT_EQ(matches.size(), 2270);
+  ASSERT_GE(matches.size(), 50);
 }
 
 TEST_F(FeatureTrackerTest, TestLongSequenceFAST_DAISY) {

@@ -40,6 +40,7 @@ void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
   std::cout << "Detect and compute used " << timer.GetInMs() << "ms.\n";
 }
 
+// TODO: Finish when the odometry is done. 
 void FeatureTracker::ComputeDistributedFeatures(ImageFrame &frame) {
   // Split the image to |num_bin_col_| x |num_bin_row_| grids.
   const int max_num_feat_per_grid =
