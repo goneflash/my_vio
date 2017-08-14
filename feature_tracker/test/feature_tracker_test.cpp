@@ -59,11 +59,9 @@ TEST_F(FeatureTrackerTest, TestTwoFrameDefault_ORB_DAISY) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
-  ASSERT_GE(frames_[0]->keypoints().size(), 200);
-
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
+  ASSERT_GE(frames_[0]->keypoints().size(), 200);
   ASSERT_EQ(matches.size(), 1082);
 }
 
@@ -72,11 +70,9 @@ TEST_F(FeatureTrackerTest, TestTwoFrameOCV_ORB_DAISY) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
-  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
-
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
+  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
   ASSERT_EQ(matches.size(), 1092);
 }
 
@@ -85,11 +81,9 @@ TEST_F(FeatureTrackerTest, TestTwoFrameORBPipeline) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
-  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
-
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
+  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
   //ASSERT_EQ(matches.size(), 1608);
 }
 
@@ -101,11 +95,9 @@ TEST_F(FeatureTrackerTest, TestTwoFrameFAST_DAISY) {
   CreateTracker();
   CreateTwoImageTestData();
 
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
-  ASSERT_GE(frames_[0]->keypoints().size(), 200);
-
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
+  ASSERT_GE(frames_[0]->keypoints().size(), 200);
   ASSERT_GE(matches.size(), 50);
 }
 
@@ -116,8 +108,6 @@ TEST_F(FeatureTrackerTest, TestLongSequenceFAST_DAISY) {
   feature_tracker_option_.descriptor_type = "DAISY";
   CreateTracker();
   CreateLongSequenceTestData();
-
-  ASSERT_TRUE(feature_tracker_->TrackFirstFrame(*frames_[0]));
 
   for (int i = 1; i < frames_.size(); ++i) {
     std::vector<cv::DMatch> matches;

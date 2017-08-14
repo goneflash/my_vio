@@ -24,10 +24,8 @@ class FeatureTracker {
   static FeatureTracker *CreateFeatureTrackerOCV(FeatureTrackerOptions option,
                                                  std::unique_ptr<FeatureMatcher> matcher);
 
-  // TODO: Could change to const.
-  virtual bool TrackFirstFrame(ImageFrame &output_frame) = 0;
   // TODO: Might need to use customized Match class.
-  virtual bool TrackFrame(const ImageFrame &prev_frame,
+  virtual bool TrackFrame(ImageFrame &prev_frame,
                           ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) = 0;
   virtual bool MatchFrame(const ImageFrame &prev_frame,

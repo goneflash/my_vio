@@ -70,7 +70,6 @@ int TestFramesInFolder(Options option) {
   // Track first frame.
   cv::Mat image0 = cv::imread(images[0]);
   std::unique_ptr<vio::ImageFrame> frame_pre(new vio::ImageFrame(image0));
-  tracker->TrackFirstFrame(*frame_pre);
 
   for (int i = 1; i < images.size(); ++i) {
     cv::Mat image = cv::imread(images[i]);

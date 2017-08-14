@@ -29,12 +29,10 @@ void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
 
   std::vector<cv::KeyPoint> kp;
   DetectFeatures(frame, kp, mask);
-
   cv::Mat desc;
   ComputeDescriptors(frame, kp, desc);
 
-  frame.set_keypoints(kp);
-  frame.set_descriptors(desc);
+  frame.set_features(kp, desc);
 
   timer.Stop();
   std::cout << "Detect and compute used " << timer.GetInMs() << "ms.\n";

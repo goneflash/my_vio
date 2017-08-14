@@ -19,16 +19,7 @@ class ImageFrame {
                     cv::Mat &descriptors) {
     set_keypoints(keypoints);
     set_descriptors(descriptors);
-  }
-
-  const std::vector<cv::KeyPoint> &keypoints() const { return keypoints_; }
-  void set_keypoints(std::vector<cv::KeyPoint> &keypoints) {
-    keypoints_ = std::move(keypoints);
-    CreateGridKeypointIndex();
-  }
-  const cv::Mat &descriptors() const { return descriptors_; }
-  void set_descriptors(cv::Mat &descriptors) {
-    descriptors.copyTo(descriptors_);
+    feature_computed_ = true;
   }
 
   void SetGridSize(int width, int height);
@@ -36,11 +27,27 @@ class ImageFrame {
                                     double dist_thresh,
                                     std::vector<int> &candidates_id) const;
 
+  const std::vector<cv::KeyPoint> &keypoints() const { return keypoints_; }
+  const cv::Mat &descriptors() const { return descriptors_; }
+  bool feature_computed() const { return feature_computed_; }
+
  private:
+  // inline?
+  void set_keypoints(std::vector<cv::KeyPoint> &keypoints) {
+    keypoints_ = std::move(keypoints);
+    CreateGridKeypointIndex();
+  }
+
+  // inline?
+  void set_descriptors(cv::Mat &descriptors) {
+    descriptors.copyTo(descriptors_);
+  }
+
   bool CreateGridKeypointIndex();
 
   cv::Mat image_;
 
+  bool feature_computed_;
   std::vector<cv::KeyPoint> keypoints_;
   cv::Mat descriptors_;
 

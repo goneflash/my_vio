@@ -99,18 +99,19 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
       FeatureMatcher::CreateFeatureMatcher(long_term_matcher_option);
 }
 
-bool FeatureTrackerOCV::TrackFirstFrame(ImageFrame &output_frame) {
-  FeatureTracker::ComputeFeatures(output_frame);
-  return true;
-}
-bool FeatureTrackerOCV::TrackFrame(const ImageFrame &prev_frame,
+bool FeatureTrackerOCV::TrackFrame(ImageFrame &prev_frame,
                                    ImageFrame &new_frame,
                                    std::vector<cv::DMatch> &matches) {
   if (!matcher_) {
     std::cerr << "Error: FeatureMatcher not set up.\n";
     return false;
   }
-  FeatureTracker::ComputeFeatures(new_frame);
+  if (!prev_frame.feature_computed()) {
+    FeatureTracker::ComputeFeatures(prev_frame);
+  }
+  if (!new_frame.feature_computed()) {
+    FeatureTracker::ComputeFeatures(new_frame);
+  }
 
   Timer timer;
   timer.Start();
