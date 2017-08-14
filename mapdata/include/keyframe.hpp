@@ -3,14 +3,24 @@
 
 #include <memory>
 
+#include <Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
 #include "image_frame.hpp"
 
 namespace vio {
 
-struct FramePose {
-  cv::Mat R, t;
+class FramePose {
+ public:
+  FramePose() : timestamp(0) {
+    position << 0, 0, 0;
+    orientation << 0, 0, 0, 1;
+  }
+
+  // TODO: Will forget set timestamp.
+  double timestamp;
+  Eigen::Vector3d position;
+  Eigen::Vector4d orientation;
 };
 
 class Keyframe {
@@ -28,6 +38,13 @@ class Keyframe {
   int frame_id() const { return frame_id_; };
 
   const ImageFrame &image_frame() const { return *image_frame_; }
+
+  void SetPose(const FramePose &pose) {
+    pose_ = pose;
+    pose_inited_ = true;
+  }
+
+/*
   void set_pose(const cv::Mat &R, const cv::Mat &t) {
     R.copyTo(pose_.R);
     t.copyTo(pose_.t);
@@ -35,6 +52,7 @@ class Keyframe {
   const FramePose &pose() const { return pose_; }
   const cv::Mat &GetRot() const { return pose_.R; };
   const cv::Mat &GetT() const { return pose_.t; };
+*/
 
   bool pose_inited() const { return pose_inited_; };
   void set_pose_inited(bool inited) { pose_inited_ = inited; }

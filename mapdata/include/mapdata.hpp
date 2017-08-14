@@ -38,45 +38,6 @@ class Mapdata {
   bool AddFirstKeyframe(std::unique_ptr<Keyframe> frame);
   bool AddNewKeyframeMatchToLastKeyframe(std::unique_ptr<Keyframe> frame,
                                          std::vector<cv::DMatch> &matches);
-  bool DropLastKeyframe();
-  /* ---------------- Initialization ----------------------------------------*/
-
-  // TODO: Add format descriptor of |feature_vector|
-  bool PrepareInitializationData(
-      std::vector<std::vector<cv::Vec2d> > &feature_vectors);
-  // This should be called after using PrepareInitializationData and initialized
-  // point cloud.
-  bool AddInitialization(const std::vector<cv::Point3f> &points3d,
-                         const std::vector<bool> &points3d_mask,
-                         const std::vector<cv::Mat> &Rs,
-                         const std::vector<cv::Mat> &ts);
-
-  /* ---------------- PnP Tracker ------------------------------------------*/
-  bool PrepareEstimateLastFramePoseData(std::vector<cv::Point3f> &points3d,
-                                        std::vector<cv::Point2f> &points2d,
-                                        std::vector<int> &points_index);
-  bool SetLastFramePose(const cv::Mat &R, const cv::Mat &t);
-  bool AddPoseEdge(int first_frame_id, int second_frame_id, const cv::Mat &R,
-                   const cv::Mat &t);
-
-  /*-----------------New Lanmdarks-----------------------------------------*/
-  bool PrepareUninitedPointsFromLastTwoFrames(std::vector<cv::Vec2d> &kp0,
-                                              std::vector<cv::Vec2d> &kp1,
-                                              FramePose &p0, FramePose &p1);
-  bool AddInitedPoints(const std::vector<cv::Point3f> &points3d,
-                       const std::vector<bool> &points3d_mask);
-
-  /* ---------------Bundle adjustment-------------------------------------*/
-  // TODO: Only apply optimization on last several frames.
-  bool PrepareOptimization(std::vector<cv::Mat> &Rs, std::vector<cv::Mat> &ts,
-                           std::vector<cv::Point3f> &points,
-                           std::vector<int> &obs_camera_idx,
-                           std::vector<int> &obs_point_idx,
-                           std::vector<cv::Vec2d> &obs_feature);
-
-  bool ApplyOptimization(const std::vector<cv::Mat> &Rs,
-                         const std::vector<cv::Mat> &ts,
-                         const std::vector<cv::Point3f> &points);
 
   bool PrintStats();
 
@@ -103,8 +64,6 @@ class Mapdata {
     return uninited_landmark_to_feature_; }
 
  private:
-  bool AddCoordToUninitedPoints(const std::vector<cv::Point3f> &points3d,
-                                const std::vector<bool> &points3d_mask);
   bool PruneShortTrackLandmarks();
 
   MapState map_state_;
