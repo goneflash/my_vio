@@ -14,6 +14,11 @@ cmake .. -DUSE_TEST=ON && make
 
 ##Log:
 
+10/02/2017
+
+Now set default to use FAST and FREAK.
+./build/feature_tracker/feature_tracker_app -p feature_tracker/test/test_data/long_seq/ -f jpg
+
 03/28/2017
 
 Now run

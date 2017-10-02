@@ -53,6 +53,10 @@ int TestFramesInFolder(Options option) {
   if (tracker_options.descriptor_type == "ORB" ||
       tracker_options.descriptor_type == "FREAK")
     matcher_options.desc_dist_type = FeatureMatcherOptions::HAMMING;
+  if (tracker_options.descriptor_type == "DAISY" ||
+      tracker_options.descriptor_type == "SIFT" ||
+      tracker_options.descriptor_type == "SURF")
+    matcher_options.desc_dist_type = FeatureMatcherOptions::NORM_L2;
 
   std::unique_ptr<FeatureMatcher> matcher =
       FeatureMatcher::CreateFeatureMatcher(matcher_options);

@@ -152,7 +152,10 @@ bool FeatureTrackerOCV::ComputeDescriptors(const ImageFrame &frame,
     // detector_->detectAndCompute(frame.GetImage(), cv::noArray(), kp, desc);
   } else if (detector_type_ == DETECTORDESCRIPTOR) {
     // detector_->detect(frame.GetImage(), kp);
-    descriptor_->compute(frame.GetImage(), kp, desc);
+    cv::Mat gray_image;
+    cv::cvtColor(frame.GetImage(), gray_image, CV_BGR2GRAY);
+    descriptor_->compute(gray_image, kp, desc);
+    // descriptor_->compute(frame.GetImage(), kp, desc);
   }
   return true;
 }

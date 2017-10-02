@@ -19,7 +19,7 @@ class FeatureMatcherOptions {
  public:
   FeatureMatcherOptions()
       : method(GRID_SEARCH),
-        desc_dist_type(NORM_L2),
+        desc_dist_type(HAMMING),
         ocv_matcher_type("BruteForce"),
         use_ratio_test(true),
         ratio_test_thresh(0.9),

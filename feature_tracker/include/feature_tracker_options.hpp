@@ -10,9 +10,9 @@ class FeatureTrackerOptions {
  public:
   FeatureTrackerOptions()
       : method(OCV_BASIC_DETECTOR_EXTRACTOR),
-        detector_type("ORB"),
-        max_num_feature(10000),
-        descriptor_type("DAISY") {}
+        detector_type("FAST"),
+        max_num_feature(1000),
+        descriptor_type("FREAK") {}
 
   enum FeatureTrackerMethod {
     OCV_BASIC_DETECTOR = 0,
