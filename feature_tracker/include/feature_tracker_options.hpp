@@ -11,7 +11,7 @@ class FeatureTrackerOptions {
   FeatureTrackerOptions()
       : method(OCV_BASIC_DETECTOR_EXTRACTOR),
         detector_type("FAST"),
-        max_num_feature(1000),
+        max_num_feature(2000),
         descriptor_type("FREAK") {}
 
   enum FeatureTrackerMethod {

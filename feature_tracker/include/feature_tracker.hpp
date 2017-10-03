@@ -15,7 +15,7 @@ namespace vio {
 
 class FeatureTracker {
  public:
-  FeatureTracker() : num_bin_col_(25), num_bin_row_(25), max_num_feature_(100) {}
+  FeatureTracker() : num_bin_col_(25), num_bin_row_(25), max_num_feature_(2000) {}
   ~FeatureTracker() {}
 
   static FeatureTracker *CreateFeatureTracker(FeatureTrackerOptions option,

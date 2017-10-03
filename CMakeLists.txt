@@ -69,3 +69,5 @@ add_subdirectory(imu_integrator)
 add_subdirectory(orientation_tracking)
 add_subdirectory(multiview_helper)
 add_subdirectory(map_initializer)
+
+export(PACKAGE my_vio)
