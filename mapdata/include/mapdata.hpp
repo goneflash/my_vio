@@ -100,7 +100,8 @@ class Mapdata {
   // Each map <a, b> in the hashmap records this landmark's feature id
   // is b in keyframe a.
   const std::vector<std::unordered_map<int, int> > &uninited_landmarks() {
-    return uninited_landmark_to_feature_; }
+    return uninited_landmark_to_feature_;
+  }
 
  private:
   bool AddCoordToUninitedPoints(const std::vector<cv::Point3f> &points3d,

@@ -9,7 +9,8 @@ std::unique_ptr<FeatureMatcher> FeatureMatcher::CreateFeatureMatcherGridSearch(
   return std::unique_ptr<FeatureMatcher>(new FeatureMatcherGridSearch(option));
 }
 
-FeatureMatcherGridSearch::FeatureMatcherGridSearch(const FeatureMatcherOptions &option)
+FeatureMatcherGridSearch::FeatureMatcherGridSearch(
+    const FeatureMatcherOptions &option)
     : FeatureMatcher(option), pixel_search_range_(option.pixel_search_range) {
   std::cout << "Created Grid Search Matcher with distance type: ";
   if (dist_type_ == FeatureMatcherOptions::HAMMING)
@@ -138,7 +139,7 @@ inline double FeatureMatcherGridSearch::ComputeDistance(const cv::Mat &mat0,
   if (dist_type_ == FeatureMatcherOptions::NORM_L2)
     return cv::norm(mat0, mat1, cv::NORM_L2);
   else if (dist_type_ == FeatureMatcherOptions::HAMMING)
-    return cv::norm(mat0, mat1, cv::NORM_HAMMING); 
+    return cv::norm(mat0, mat1, cv::NORM_HAMMING);
   return -1;
 }
 

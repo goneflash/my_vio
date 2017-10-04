@@ -63,7 +63,8 @@ class FeatureMatcherOptions {
 
     } else if (method == GRID_SEARCH) {
       std::cout << "Selected Grid Search FeatureMatcher.\n";
-      desc_dist_type = static_cast<FeatureMatcherDistType>((int)node["DistType"]);
+      desc_dist_type =
+          static_cast<FeatureMatcherDistType>((int)node["DistType"]);
       pixel_search_range = (double)node["PixelSearchRange"];
     }
   }

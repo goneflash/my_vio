@@ -49,19 +49,23 @@ bool Mapdata::AddNewKeyframeMatchToLastKeyframe(
     // If the feature is not a landmark yet
     if (ld_id_ptr == feature_to_landmark_[l_index].end()) {
       // Find if this feature extends an uninited feature tracks
-      auto uninited_id_ptr = last_frame_feature_to_uninited_landmark_.find(matches[i].queryIdx);
-      if (uninited_id_ptr == last_frame_feature_to_uninited_landmark_.end()) { 
+      auto uninited_id_ptr =
+          last_frame_feature_to_uninited_landmark_.find(matches[i].queryIdx);
+      if (uninited_id_ptr == last_frame_feature_to_uninited_landmark_.end()) {
         // Not found, Add a new landmark
         const int num_uninited_ld = uninited_landmark_to_feature_.size();
         uninited_landmark_to_feature_.resize(num_uninited_ld + 1);
         uninited_landmark_to_feature_.back()[n_index] = matches[i].trainIdx;
         uninited_landmark_to_feature_.back()[l_index] = matches[i].queryIdx;
-        new_frame_feature_to_uninited_landmark[matches[i].trainIdx] = num_uninited_ld;
+        new_frame_feature_to_uninited_landmark[matches[i].trainIdx] =
+            num_uninited_ld;
       } else {
         // Found an uninited feature
         int uninited_id = uninited_id_ptr->second;
-        uninited_landmark_to_feature_[uninited_id][n_index] = matches[i].trainIdx;
-        new_frame_feature_to_uninited_landmark[matches[i].trainIdx] = uninited_id;
+        uninited_landmark_to_feature_[uninited_id][n_index] =
+            matches[i].trainIdx;
+        new_frame_feature_to_uninited_landmark[matches[i].trainIdx] =
+            uninited_id;
       }
     } else {
       int landmark_id = ld_id_ptr->second;
@@ -71,7 +75,8 @@ bool Mapdata::AddNewKeyframeMatchToLastKeyframe(
       landmark_to_feature_[landmark_id][n_index] = matches[i].trainIdx;
     }
   }
-  last_frame_feature_to_uninited_landmark_ = std::move(new_frame_feature_to_uninited_landmark);
+  last_frame_feature_to_uninited_landmark_ =
+      std::move(new_frame_feature_to_uninited_landmark);
 
   match_edges_.back().matches = std::move(matches);
   if (map_state_ == WAIT_FOR_SECONDFRAME) map_state_ = WAIT_FOR_INIT;

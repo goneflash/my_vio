@@ -21,10 +21,12 @@ FeatureTracker *FeatureTracker::CreateFeatureTrackerOCV(
 
 FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
                                      std::unique_ptr<FeatureMatcher> matcher)
-    : detector_type_(DETECTORONLY), max_feature_per_frame_(option.max_num_feature) {
+    : detector_type_(DETECTORONLY),
+      max_feature_per_frame_(option.max_num_feature) {
   if (option.detector_type == "ORB") {
     // Parameters:
-    // int nfeatures=500, float scaleFactor=1.2f, int nlevels=8, int edgeThreshold=31,
+    // int nfeatures=500, float scaleFactor=1.2f, int nlevels=8, int
+    // edgeThreshold=31,
     // int firstLevel=0, int WTA_K=2, int scoreType=ORB::HARRIS_SCORE,
     // int patchSize=31, int fastThreshold=20
     detector_ = cv::ORB::create(max_feature_per_frame_);

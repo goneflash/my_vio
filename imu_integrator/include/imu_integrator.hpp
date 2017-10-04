@@ -11,13 +11,12 @@ class ImuIntegrator {
   ImuIntegrator() {}
 
   bool ZerothOrderIntegration(const Eigen::Vector4d &start_q,
-                              const Eigen::Vector3d &w,
-                              double delta_t,
+                              const Eigen::Vector3d &w, double delta_t,
                               Eigen::Vector4d &end_q);
- private:  
+
+ private:
 };
 
-} // vio
+}  // vio
 
 #endif
-

@@ -15,18 +15,18 @@ namespace vio {
 
 class FeatureTracker {
  public:
-  FeatureTracker() : num_bin_col_(25), num_bin_row_(25), max_num_feature_(2000) {}
+  FeatureTracker()
+      : num_bin_col_(25), num_bin_row_(25), max_num_feature_(2000) {}
   ~FeatureTracker() {}
 
-  static FeatureTracker *CreateFeatureTracker(FeatureTrackerOptions option,
-                                              std::unique_ptr<FeatureMatcher> matcher);
+  static FeatureTracker *CreateFeatureTracker(
+      FeatureTrackerOptions option, std::unique_ptr<FeatureMatcher> matcher);
 
-  static FeatureTracker *CreateFeatureTrackerOCV(FeatureTrackerOptions option,
-                                                 std::unique_ptr<FeatureMatcher> matcher);
+  static FeatureTracker *CreateFeatureTrackerOCV(
+      FeatureTrackerOptions option, std::unique_ptr<FeatureMatcher> matcher);
 
   // TODO: Might need to use customized Match class.
-  virtual bool TrackFrame(ImageFrame &prev_frame,
-                          ImageFrame &output_frame,
+  virtual bool TrackFrame(ImageFrame &prev_frame, ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) = 0;
   virtual bool MatchFrame(const ImageFrame &prev_frame,
                           ImageFrame &output_frame,
@@ -39,7 +39,6 @@ class FeatureTracker {
   virtual bool ComputeDescriptors(const ImageFrame &frame,
                                   std::vector<cv::KeyPoint> &kp,
                                   cv::Mat &desc) = 0;
-
 
   // Detect features in the entire image.
   void ComputeFeatures(ImageFrame &frame);

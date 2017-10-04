@@ -26,4 +26,4 @@ class MapInitializerLIBMV : public MapInitializer {
 
 }  // vio
 
-#endif // CERES_FOUND
+#endif  // CERES_FOUND

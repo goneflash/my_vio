@@ -8,7 +8,7 @@ namespace vio {
 /*
  * Abstract class for camera.
  */
-template<typename ParamsType>
+template <typename ParamsType>
 class CameraModel {
  public:
   virtual bool ProjectPointToPixel(const Eigen::Vector3d &point,
@@ -21,16 +21,13 @@ class CameraModel {
 /*
  * Use CRTP pattern.
  */
-template<class DerivedCameraModel, typename ParamsType,
-         std::size_t NumParams>
+template <class DerivedCameraModel, typename ParamsType, std::size_t NumParams>
 class CameraModelBase : public CameraModel<ParamsType> {
  public:
   typedef Eigen::Array<ParamsType, NumParams, 1> ParamsArray;
 
-  CameraModelBase(
-      int image_height, int image_width, const ParamsArray &params)
-      : image_height_(image_height),
-        image_width_(image_width) {
+  CameraModelBase(int image_height, int image_width, const ParamsArray &params)
+      : image_height_(image_height), image_width_(image_width) {
     // TODO: Add CHECK_EQ params.rows() NumParams
     params_ = params;
   }
@@ -39,8 +36,8 @@ class CameraModelBase : public CameraModel<ParamsType> {
   // TODO: Use Eigen::Ref<> for reference type of Eigen.
   bool ProjectPoint(const Eigen::Vector3d &point,
                     Eigen::Vector2d &pixel) const {
-    return static_cast<const DerivedCameraModel *>(this)->ProjectPointToPixel(
-        point, pixel);
+    return static_cast<const DerivedCameraModel *>(this)
+        ->ProjectPointToPixel(point, pixel);
   }
 
   bool SetParams(const ParamsArray &params) { params_ = params; }
@@ -66,15 +63,15 @@ class CameraModelBase : public CameraModel<ParamsType> {
  * Here in the template parameter list, must use PinholeCameraModel<ParamsType>.
  */
 template <typename ParamsType>
-class PinholeCameraModel :
-  public CameraModelBase<PinholeCameraModel<ParamsType>, ParamsType, 4> {
+class PinholeCameraModel
+    : public CameraModelBase<PinholeCameraModel<ParamsType>, ParamsType, 4> {
  public:
   typedef CameraModelBase<PinholeCameraModel, ParamsType, 4> CameraModelType;
   using CameraModelType::params_;
   using typename CameraModelType::ParamsArray;
 
-  PinholeCameraModel(
-      int image_height, int image_width, const ParamsArray &params)
+  PinholeCameraModel(int image_height, int image_width,
+                     const ParamsArray &params)
       : CameraModelType(image_height, image_width, params) {}
 
   bool ProjectPointToPixel(const Eigen::Vector3d &point,
@@ -107,6 +104,6 @@ bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
   return true;
 }
 
-} // namespace vio
+}  // namespace vio
 
 #endif

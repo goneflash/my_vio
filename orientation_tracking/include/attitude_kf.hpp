@@ -57,6 +57,6 @@ class NominalStateFilter : AttitudeKalmanFilterBase {
  private:
 };
 
-} // vio
+}  // vio
 
-#endif // ORIENTATION_TRACKING_ATTITUDE_KF_FILTER_HPP_
+#endif  // ORIENTATION_TRACKING_ATTITUDE_KF_FILTER_HPP_

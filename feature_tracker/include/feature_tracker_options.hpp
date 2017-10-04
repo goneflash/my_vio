@@ -5,7 +5,6 @@
 
 namespace vio {
 
-
 class FeatureTrackerOptions {
  public:
   FeatureTrackerOptions()

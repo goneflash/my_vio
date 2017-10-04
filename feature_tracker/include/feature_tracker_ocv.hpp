@@ -14,8 +14,7 @@ class FeatureTrackerOCV : public FeatureTracker {
                     std::unique_ptr<FeatureMatcher> matcher);
   FeatureTrackerOCV() = delete;
 
-  virtual bool TrackFrame(ImageFrame &prev_frame,
-                          ImageFrame &output_frame,
+  virtual bool TrackFrame(ImageFrame &prev_frame, ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) override;
   // Use match approach when lost tracking.
   virtual bool MatchFrame(const ImageFrame &prev_frame,
@@ -23,8 +22,7 @@ class FeatureTrackerOCV : public FeatureTracker {
                           std::vector<cv::DMatch> &matches) override;
 
  protected:
-  bool DetectFeatures(const ImageFrame &frame,
-                      std::vector<cv::KeyPoint> &kp,
+  bool DetectFeatures(const ImageFrame &frame, std::vector<cv::KeyPoint> &kp,
                       const cv::Mat &mask) override;
   bool ComputeDescriptors(const ImageFrame &frame,
                           std::vector<cv::KeyPoint> &kp,

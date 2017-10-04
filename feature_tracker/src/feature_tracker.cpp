@@ -14,18 +14,18 @@ FeatureTracker *FeatureTracker::CreateFeatureTracker(
       return nullptr;
   }
 }
-  
+
 // Detect features in the entire image.
 void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
   Timer timer;
   timer.Start();
 
-  //cv::Mat mask = cv::Mat::zeros(frame.GetImage().size(), CV_8U);
+  // cv::Mat mask = cv::Mat::zeros(frame.GetImage().size(), CV_8U);
   cv::Mat mask(frame.GetImage().size(), CV_8U);
   mask = cv::Scalar(255);
 
-  //cv::Mat roi(mask, cv::Rect(0, 0, 200, 200));
-  //roi = cv::Scalar(255);
+  // cv::Mat roi(mask, cv::Rect(0, 0, 200, 200));
+  // roi = cv::Scalar(255);
 
   std::vector<cv::KeyPoint> kp;
   DetectFeatures(frame, kp, mask);
@@ -38,7 +38,7 @@ void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
   std::cout << "Detect and compute used " << timer.GetInMs() << "ms.\n";
 }
 
-// TODO: Finish when the odometry is done. 
+// TODO: Finish when the odometry is done.
 void FeatureTracker::ComputeDistributedFeatures(ImageFrame &frame) {
   // Split the image to |num_bin_col_| x |num_bin_row_| grids.
   const int max_num_feat_per_grid =

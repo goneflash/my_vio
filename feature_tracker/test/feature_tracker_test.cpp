@@ -13,13 +13,15 @@ class FeatureTrackerTest : public ::testing::Test {
     ASSERT_TRUE(feature_matcher_.get() != NULL);
 
     feature_tracker_ = vio::FeatureTracker::CreateFeatureTracker(
-      feature_tracker_option_, std::move(feature_matcher_));
+        feature_tracker_option_, std::move(feature_matcher_));
     ASSERT_TRUE(feature_tracker_ != NULL);
   }
 
   void CreateTwoImageTestData() {
-    cv::Mat image0 = cv::imread("../../feature_tracker/test/test_data/close/frame0.png");
-    cv::Mat image1 = cv::imread("../../feature_tracker/test/test_data/close/frame1.png");
+    cv::Mat image0 =
+        cv::imread("../../feature_tracker/test/test_data/close/frame0.png");
+    cv::Mat image1 =
+        cv::imread("../../feature_tracker/test/test_data/close/frame1.png");
     ASSERT_TRUE(image0.data);
     ASSERT_TRUE(image1.data);
     std::unique_ptr<vio::ImageFrame> frame0(new vio::ImageFrame(image0));
@@ -31,7 +33,7 @@ class FeatureTrackerTest : public ::testing::Test {
   void CreateLongSequenceTestData() {
     std::vector<std::string> images;
     ASSERT_TRUE(GetImageNamesInFolder(
-          "../../feature_tracker/test/test_data/long_seq", "jpg", images));
+        "../../feature_tracker/test/test_data/long_seq", "jpg", images));
     int num_img_to_test = 5;
     for (auto img : images) {
       cv::Mat image = cv::imread(img);
@@ -77,14 +79,15 @@ TEST_F(FeatureTrackerTest, TestTwoFrameOCV_ORB_DAISY) {
 }
 
 TEST_F(FeatureTrackerTest, TestTwoFrameORBPipeline) {
-  feature_tracker_option_.method = vio::FeatureTrackerOptions::OCV_BASIC_DETECTOR;
+  feature_tracker_option_.method =
+      vio::FeatureTrackerOptions::OCV_BASIC_DETECTOR;
   CreateTracker();
   CreateTwoImageTestData();
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
   ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
-  //ASSERT_EQ(matches.size(), 1608);
+  // ASSERT_EQ(matches.size(), 1608);
 }
 
 TEST_F(FeatureTrackerTest, TestTwoFrameFAST_DAISY) {
@@ -111,11 +114,12 @@ TEST_F(FeatureTrackerTest, TestLongSequenceFAST_DAISY) {
 
   for (int i = 1; i < frames_.size(); ++i) {
     std::vector<cv::DMatch> matches;
-    ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[i - 1], *frames_[i], matches));
+    ASSERT_TRUE(
+        feature_tracker_->TrackFrame(*frames_[i - 1], *frames_[i], matches));
   }
 }
 
 int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-      return RUN_ALL_TESTS();
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

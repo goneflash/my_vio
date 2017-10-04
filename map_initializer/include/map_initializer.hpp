@@ -19,10 +19,10 @@ struct MapInitializerOptions {
 
   enum MapInitializerMethod {
     LIBMV,
-    //PTAM,
-    //ORBSLAM_F_OR_H,
-    //FIVEPOINT,
-    //FIVEPOINTEASY,
+    // PTAM,
+    // ORBSLAM_F_OR_H,
+    // FIVEPOINT,
+    // FIVEPOINTEASY,
     NORMALIZED8POINTFUNDAMENTAL
   };
 
