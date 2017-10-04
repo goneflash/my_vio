@@ -1,0 +1,9 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+DerivePointerAlignment: false
+PointerAlignment: Right
+AllowShortIfStatementsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+...
