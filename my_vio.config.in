@@ -1,0 +1,18 @@
+#######################################################
+# my_vio source dir
+set( my_vio_SOURCE_DIR "@CMAKE_CURRENT_SOURCE_DIR@")
+
+#######################################################
+# Fast build dir
+set( my_vio_DIR "@CMAKE_CURRENT_BINARY_DIR@")
+
+#######################################################
+set( my_vio_INCLUDE_DIR  "@CMAKE_INSTALL_PREFIX@/include" )
+set( my_vio_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include" )
+
+set( my_vio_LIBRARIES    "@CMAKE_INSTALL_PREFIX@/lib" )
+set( my_vio_LIBRARY      "@CMAKE_INSTALL_PREFIX@/lib" )
+
+set( my_vio_LIBRARY_DIR  "@my_vio_LIBRARY_DIR@" )
+set( my_vio_LIBRARY_DIRS "@my_vio_LIBRARY_DIR@" )
+

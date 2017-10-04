@@ -33,3 +33,8 @@ if (USE_TEST)
     gtest gtest_main )
   add_test( CameraModelTest ${TARGET}_test )
 endif()
+
+#file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+#install(FILES ${headers} 
+#        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/)
+#install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )

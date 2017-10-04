@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-project(my_vio)
+set(PROJECT_NAME my_vio)
+project( ${PROJECT_NAME})
 
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
@@ -69,3 +70,8 @@ add_subdirectory(imu_integrator)
 add_subdirectory(orientation_tracking)
 add_subdirectory(multiview_helper)
 add_subdirectory(map_initializer)
+
+###########################################################################
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/my_vio.config.in
+  ${CMAKE_CURRENT_BINARY_DIR}/my_vioConfig.cmake @ONLY IMMEDIATE)
+export(PACKAGE my_vio)
