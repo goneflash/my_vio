@@ -1,0 +1,12 @@
+get_filename_component(my_vio_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+include("${my_vio_CMAKE_DIR}/@PROJECT_NAME@Targets.cmake")
+
+set( my_vio_INCLUDE_DIR  "@CMAKE_INSTALL_PREFIX@/include" )
+set( my_vio_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include" )
+
+unset( my_vio_LIBRARIES )
+list( APPEND my_vio_LIBRARIES mapdata feature_tracker)
+
+#set( my_vio_LIBRARIES    "@CMAKE_INSTALL_PREFIX@/lib" )
+#set( my_vio_LIBS         ${my_vio_LIBRARIES} )

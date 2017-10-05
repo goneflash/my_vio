@@ -18,16 +18,25 @@ target_include_directories(${TARGET} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include 
 )
 
-file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-
-install(FILES ${headers} 
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/)
-install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
-
-
 # Add application
 add_executable(${TARGET}_app ${TARGET}_app.cpp)
 target_link_libraries(${TARGET}_app ${TARGET} mapdata util )
+
+file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+# Headers
+# TODO: Change to use {PROJECT_NAME}/{TARGET} as include directory.
+install(FILES ${headers} 
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+# Libraries
+install(TARGETS ${TARGET}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+# Executables
+install(TARGETS ${TARGET}_app
+  EXPORT ${PROJECT_NAME}Targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+
+
 
 if (USE_TEST)
   file(GLOB TEST_SOURCE_FILE

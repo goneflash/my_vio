@@ -19,9 +19,9 @@ class FeatureTrackerTest : public ::testing::Test {
 
   void CreateTwoImageTestData() {
     cv::Mat image0 =
-        cv::imread("../../feature_tracker/test/test_data/close/frame0.png");
+        cv::imread("../feature_tracker/test/test_data/close/frame0.png");
     cv::Mat image1 =
-        cv::imread("../../feature_tracker/test/test_data/close/frame1.png");
+        cv::imread("../feature_tracker/test/test_data/close/frame1.png");
     ASSERT_TRUE(image0.data);
     ASSERT_TRUE(image1.data);
     std::unique_ptr<vio::ImageFrame> frame0(new vio::ImageFrame(image0));

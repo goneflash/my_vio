@@ -72,6 +72,15 @@ add_subdirectory(multiview_helper)
 add_subdirectory(map_initializer)
 
 ###########################################################################
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/my_vio.config.in
-  ${CMAKE_CURRENT_BINARY_DIR}/my_vioConfig.cmake @ONLY IMMEDIATE)
+# Export the package for use from the build-tree
+# (this registers the build-tree with a global CMake-registry)
 export(PACKAGE my_vio)
+
+# Add all targets to the build-tree export set
+export(TARGETS 
+  mapdata
+  feature_tracker 
+  FILE "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/my_vioConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/my_vioConfig.cmake @ONLY IMMEDIATE)
