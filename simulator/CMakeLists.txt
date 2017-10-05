@@ -9,7 +9,7 @@ file(GLOB SOURCE_FILE
 
 set(TARGET "simulator")
 
-add_library(${TARGET} STATIC ${SOURCE_FILE})
+add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        ${EIGEN3_LIBS}
                        camera_model )

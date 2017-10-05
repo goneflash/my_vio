@@ -14,7 +14,7 @@ file(GLOB SOURCE_FILE
 # TODO: Find other way than use as library
 set(TARGET "util")
 
-add_library(${TARGET} STATIC ${SOURCE_FILE})
+add_library(${TARGET} SHARED ${SOURCE_FILE})
 
 target_include_directories(${TARGET} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/include 

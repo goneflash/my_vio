@@ -11,7 +11,7 @@ message(STATUS "${SOURCE_FILE}")
 
 set(TARGET "mapdata")
 
-add_library(${TARGET} STATIC ${SOURCE_FILE})
+add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        ${OpenCV_LIBS} )
 
