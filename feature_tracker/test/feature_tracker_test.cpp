@@ -33,7 +33,7 @@ class FeatureTrackerTest : public ::testing::Test {
   void CreateLongSequenceTestData() {
     std::vector<std::string> images;
     ASSERT_TRUE(GetImageNamesInFolder(
-        "../../feature_tracker/test/test_data/long_seq", "jpg", images));
+        "../feature_tracker/test/test_data/long_seq", "jpg", images));
     int num_img_to_test = 5;
     for (auto img : images) {
       cv::Mat image = cv::imread(img);
@@ -56,38 +56,54 @@ class FeatureTrackerTest : public ::testing::Test {
   std::vector<std::unique_ptr<vio::ImageFrame>> frames_;
 };
 
-TEST_F(FeatureTrackerTest, TestTwoFrameDefault_ORB_DAISY) {
+TEST_F(FeatureTrackerTest, TestTwoFrameDefault_FAST_FREAK) {
   // Use default setup.
   CreateTracker();
   CreateTwoImageTestData();
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
-  ASSERT_GE(frames_[0]->keypoints().size(), 200);
-  ASSERT_EQ(matches.size(), 1082);
+  // Default maximum feature number is 2000.
+  ASSERT_GE(frames_[0]->keypoints().size(), 100);
+  ASSERT_LE(frames_[0]->keypoints().size(), 2000);
+  ASSERT_GE(frames_[1]->keypoints().size(), 100);
+  ASSERT_LE(frames_[1]->keypoints().size(), 2000);
+  ASSERT_GE(matches.size(), 100);
 }
 
 TEST_F(FeatureTrackerTest, TestTwoFrameOCV_ORB_DAISY) {
+  feature_tracker_option_.detector_type = "ORB";
+  feature_tracker_option_.descriptor_type = "DAISY";
   feature_matcher_option_.method = vio::FeatureMatcherOptions::OCV;
+  feature_matcher_option_.desc_dist_type = vio::FeatureMatcherOptions::NORM_L2;
   CreateTracker();
   CreateTwoImageTestData();
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
-  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
-  ASSERT_EQ(matches.size(), 1092);
+  ASSERT_GE(frames_[0]->keypoints().size(), 100);
+  ASSERT_LE(frames_[0]->keypoints().size(), 2000);
+  ASSERT_GE(frames_[1]->keypoints().size(), 100);
+  ASSERT_LE(frames_[1]->keypoints().size(), 2000);
+  ASSERT_GE(matches.size(), 100);
 }
 
 TEST_F(FeatureTrackerTest, TestTwoFrameORBPipeline) {
   feature_tracker_option_.method =
       vio::FeatureTrackerOptions::OCV_BASIC_DETECTOR;
+  feature_tracker_option_.detector_type = "ORB";
+  feature_tracker_option_.descriptor_type = "ORB";
+  feature_matcher_option_.desc_dist_type = vio::FeatureMatcherOptions::NORM_L2;
   CreateTracker();
   CreateTwoImageTestData();
 
   std::vector<cv::DMatch> matches;
   ASSERT_TRUE(feature_tracker_->TrackFrame(*frames_[0], *frames_[1], matches));
-  ASSERT_EQ(frames_[0]->keypoints().size(), 3037);
-  // ASSERT_EQ(matches.size(), 1608);
+  ASSERT_GE(frames_[0]->keypoints().size(), 100);
+  ASSERT_LE(frames_[0]->keypoints().size(), 2000);
+  ASSERT_GE(frames_[1]->keypoints().size(), 100);
+  ASSERT_LE(frames_[1]->keypoints().size(), 2000);
+  ASSERT_GE(matches.size(), 100);
 }
 
 TEST_F(FeatureTrackerTest, TestTwoFrameFAST_DAISY) {
@@ -95,6 +111,7 @@ TEST_F(FeatureTrackerTest, TestTwoFrameFAST_DAISY) {
       vio::FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR;
   feature_tracker_option_.detector_type = "FAST";
   feature_tracker_option_.descriptor_type = "DAISY";
+  feature_matcher_option_.desc_dist_type = vio::FeatureMatcherOptions::NORM_L2;
   CreateTracker();
   CreateTwoImageTestData();
 
@@ -109,6 +126,7 @@ TEST_F(FeatureTrackerTest, TestLongSequenceFAST_DAISY) {
       vio::FeatureTrackerOptions::OCV_BASIC_DETECTOR_EXTRACTOR;
   feature_tracker_option_.detector_type = "FAST";
   feature_tracker_option_.descriptor_type = "DAISY";
+  feature_matcher_option_.desc_dist_type = vio::FeatureMatcherOptions::NORM_L2;
   CreateTracker();
   CreateLongSequenceTestData();
 
