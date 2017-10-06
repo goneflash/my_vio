@@ -1,4 +1,4 @@
-#ifdef CERES_FOUND
+#ifdef SFM_FOUND
 
 #include "map_initializer_libmv.hpp"
 

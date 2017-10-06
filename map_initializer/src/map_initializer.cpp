@@ -5,7 +5,7 @@ namespace vio {
 MapInitializer *MapInitializer::CreateMapInitializer(
     MapInitializerOptions option) {
   switch (option.method) {
-#ifdef CERES_FOUND
+#ifdef SFM_FOUND
     case MapInitializerOptions::LIBMV:
       return CreateMapInitializerLIBMV();
 #endif

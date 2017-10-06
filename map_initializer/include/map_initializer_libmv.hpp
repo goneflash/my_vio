@@ -1,4 +1,4 @@
-#ifdef CERES_FOUND
+#ifdef SFM_FOUND
 
 #include "map_initializer.hpp"
 
@@ -26,4 +26,4 @@ class MapInitializerLIBMV : public MapInitializer {
 
 }  // vio
 
-#endif  // CERES_FOUND
+#endif  // SFM_FOUND

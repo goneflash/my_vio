@@ -71,7 +71,7 @@ class MapInitializer {
 
   static MapInitializer *CreateMapInitializer(MapInitializerOptions option);
 
-#ifdef CERES_FOUND
+#ifdef SFM_FOUND
   static MapInitializer *CreateMapInitializerLIBMV();
 #endif
   static MapInitializer *CreateMapInitializer8Point(

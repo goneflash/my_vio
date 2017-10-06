@@ -112,7 +112,7 @@ class MapInitializerTest : public ::testing::Test {
   cv::Matx33d K_;
 };
 
-#ifdef CERES_FOUND
+#ifdef SFM_FOUND
 TEST_F(MapInitializerTest, TestLibmv_TwoFrame_MatchFile) {
   options_.method = vio::MapInitializerOptions::LIBMV;
   CreateInitializer();
