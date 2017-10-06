@@ -1,0 +1,3 @@
+#include <string>
+
+const std::string root_path = "@CMAKE_CURRENT_SOURCE_DIR@";

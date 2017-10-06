@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include "config.hpp"
 #include "feature_tracker.hpp"
 #include "util.hpp"
 
@@ -18,10 +19,10 @@ class FeatureTrackerTest : public ::testing::Test {
   }
 
   void CreateTwoImageTestData() {
-    cv::Mat image0 =
-        cv::imread("../feature_tracker/test/test_data/close/frame0.png");
-    cv::Mat image1 =
-        cv::imread("../feature_tracker/test/test_data/close/frame1.png");
+    cv::Mat image0 = cv::imread(
+        root_path + "/feature_tracker/test/test_data/close/frame0.png");
+    cv::Mat image1 = cv::imread(
+        root_path + "/feature_tracker/test/test_data/close/frame1.png");
     ASSERT_TRUE(image0.data);
     ASSERT_TRUE(image1.data);
     std::unique_ptr<vio::ImageFrame> frame0(new vio::ImageFrame(image0));
@@ -33,7 +34,7 @@ class FeatureTrackerTest : public ::testing::Test {
   void CreateLongSequenceTestData() {
     std::vector<std::string> images;
     ASSERT_TRUE(GetImageNamesInFolder(
-        "../feature_tracker/test/test_data/long_seq", "jpg", images));
+        root_path + "/feature_tracker/test/test_data/long_seq", "jpg", images));
     int num_img_to_test = 5;
     for (auto img : images) {
       cv::Mat image = cv::imread(img);

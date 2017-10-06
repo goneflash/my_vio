@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "config.hpp"
 #include "map_initializer.hpp"
 
 class MapInitializerTest : public ::testing::Test {
@@ -18,7 +19,8 @@ class MapInitializerTest : public ::testing::Test {
     cv::Mat_<double> x1, x2;
     int num_pts;
     std::ifstream myfile(
-        "../map_initializer/test/test_data/recon2v_checkerboards.txt");
+        root_path +
+        "/map_initializer/test/test_data/recon2v_checkerboards.txt");
     ASSERT_TRUE(myfile.is_open());
 
     feature_vectors_.resize(2);

@@ -24,6 +24,13 @@ if (USE_TEST)
   enable_testing()
   include_directories(thirdparty/googletest/googletest/include)
   add_subdirectory(thirdparty/googletest/googletest)
+
+  # Configure path for test data
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.hpp.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/config.hpp @ONLY IMMEDIATE)
+
+  install(FILES config.hpp 
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/)
 endif()
 
 if (ENABLE_VIZ)
@@ -61,6 +68,9 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "Eigen library status:")
 message(STATUS "    include path: ${EIGEN3_INCLUDE_DIR}")
 
+# For config.hpp used in tests in subdirectories.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 add_subdirectory(util)
 add_subdirectory(mapdata)
 add_subdirectory(camera_model)
@@ -84,5 +94,5 @@ export(TARGETS
 
 message(STATUS "Added Include Directory: ${CMAKE_INSTALL_PREFIX}")
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/my_vioConfig.cmake.in
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/my_vioConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/my_vioConfig.cmake @ONLY IMMEDIATE)
