@@ -12,6 +12,7 @@ set(TARGET "simulator")
 add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        ${EIGEN3_LIBS}
+                       ${OpenCV_LIBS}
                        camera_model )
 
 target_include_directories(${TARGET} PUBLIC 

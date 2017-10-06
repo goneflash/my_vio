@@ -25,5 +25,9 @@ clang-format -style=file -i multiview_helper/src/*.cpp
 clang-format -style=file -i orientation_tracking/include/*.hpp
 clang-format -style=file -i orientation_tracking/src/*.cpp
 
+clang-format -style=file -i simulator/include/*.hpp
+clang-format -style=file -i simulator/src/*.cpp
+clang-format -style=file -i simulator/*.cpp
+
 clang-format -style=file -i util/include/*.hpp
 clang-format -style=file -i util/src/*.cpp

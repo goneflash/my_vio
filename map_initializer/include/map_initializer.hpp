@@ -15,6 +15,7 @@ struct MapInitializerOptions {
         f_ransac_confidence(0.99),
         f_ransac_max_dist_to_epipolar(2),
         reprojection_error_thres(5),
+        parallax_thresh(0.9998),
         verbose(false) {}
 
   enum MapInitializerMethod {

@@ -1,6 +1,8 @@
 #ifndef SIMULATOR_SCENE_HPP_
 #define SIMULATOR_SCENE_HPP_
 
+#include <memory>
+
 #include "camera_model.hpp"
 
 namespace vio {
@@ -13,6 +15,10 @@ struct CameraPose {
   double timestamp;
   Eigen::Vector3d position;
   Eigen::Vector4d orientation;
+};
+
+struct Landmark {
+  Eigen::Vector3d position;
 };
 
 /*
@@ -32,7 +38,7 @@ class Scene {
 
   std::unique_ptr<CameraModel<double>> camera;
   std::vector<CameraPose> trajectory;
-  std::vector<Eigen::Vector3d> landmarks;
+  std::vector<Landmark> landmarks;
 };
 
 } // namespace vio

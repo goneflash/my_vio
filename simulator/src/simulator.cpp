@@ -12,15 +12,15 @@ bool Simulator::GenerateFeatureTracksFromTranslationTrajectory(
     std::vector<Eigen::Vector2d> features;
     for (const auto landmark : scene.landmarks) {
       Eigen::Vector2d pixel;
-      if (!scene.camera->ProjectPointToPixel(landmark, pixel)) {
+      if (!scene.camera->ProjectPointToPixel(landmark.position, pixel)) {
         std::cout << "error";
         continue;
         //return false;
       }
     
-      std::cout << landmark[0] << " ";
-      std::cout << landmark[1] << " ";
-      std::cout << landmark[2] << " --> ";
+      std::cout << landmark.position[0] << " ";
+      std::cout << landmark.position[1] << " ";
+      std::cout << landmark.position[2] << " --> ";
       std::cout << pixel[0] << " ";
       std::cout << pixel[1] << std::endl;
 

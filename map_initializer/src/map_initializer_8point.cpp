@@ -43,7 +43,8 @@ bool MapInitializer8Point::InitializeTwoFrames(
   }
 
   cv::Mat F;
-  ComputeFundamental(kp0, kp1, F);
+  if (!ComputeFundamental(kp0, kp1, F))
+    return false;
 
   // TODO: Make tinyxml work
   // TODO: Hand pick matches for two images of calibration board?
@@ -134,18 +135,21 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
                                               cv::Mat &F) {
   if (use_f_ransac_) {
     F = ComputeFundamentalOCV(kp0, kp1);
-    if (verbose_) std::cout << "F from OpenCV: \n" << F << std::endl;
+    std::cout << "F from OpenCV: \n" << F << std::endl;
 
-    /* ------------------------- Obsolete code -------------------------------
+    ///* ------------------------- Obsolete code -------------------------------
 
     // TODO: If K is unknown, find P
     // P1 should be [I | 0]
+    std::vector<cv::Point3f> points3d;
     cv::Mat P1, P2;
     SolveProjectionFromF(F, P1, P2);
     TriangulatePoints(kp0, kp1, P1, P2, points3d);
     std::cout << "Triangulated " << points3d.size() << " points.\n";
+    std::cout << "P0:\n" << P1 << "\nP1:\n" << P2 << std::endl;
 
-    ---------------------------------------------------------------------- */
+
+    //---------------------------------------------------------------------- */
 
   } else {
     std::vector<cv::Vec2d> norm_kp0, norm_kp1;
@@ -153,12 +157,15 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
     Normalize(kp0, norm_kp0, norm_T0);
     Normalize(kp1, norm_kp1, norm_T1);
 
-    if (!ComputeFundamentalDLT(norm_kp0, norm_kp1, F)) return false;
+    if (!ComputeFundamentalDLT(norm_kp0, norm_kp1, F)) {
+      std::cerr << "Failed compute fundamental matrix by DLT.\n";
+      return false;
+    }
     F = norm_T1.t() * F * norm_T0;
 
     // Make last element 1
     MakeMatrixInhomogeneous(F);
-    if (verbose_) std::cout << "F :\n" << F << std::endl;
+    // std::cout << "F :\n" << F << std::endl;
   }
 
   return true;
@@ -252,9 +259,10 @@ int MapInitializer8Point::EvaluateSolutionRT(
     const std::vector<cv::Vec2d> &kp0, const std::vector<cv::Vec2d> &kp1,
     const std::vector<bool> &match_inliers, std::vector<cv::Point3f> &points_3d,
     std::vector<bool> &points3d_mask) {
+  verbose_ = true;
   if (verbose_)
     std::cout << "Evaluating solution:\n"
-              << "R:\n" << R << "\nt:\n" << t << std::endl;
+              << "R:\n" << R << "\nt:\n" << t << "\nK:\n" << K << std::endl;
 
   // Calibration parameters
   const double fx = K.at<double>(0, 0);
