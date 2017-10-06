@@ -41,7 +41,7 @@ find_package( OpenCV REQUIRED )
 find_package( Eigen3 REQUIRED )
 
 # TODO: Fix ceres in workstation 
-#find_package( Ceres )
+# find_package( Ceres )
 if (Ceres_FOUND)
   add_definitions("-DCERES_FOUND")
   message(STATUS "Ceres is supported. Used in Landmark Initialization.")
@@ -81,6 +81,8 @@ export(TARGETS
   mapdata
   feature_tracker 
   FILE "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+
+message(STATUS "Added Include Directory: ${CMAKE_INSTALL_PREFIX}")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/my_vioConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/my_vioConfig.cmake @ONLY IMMEDIATE)
