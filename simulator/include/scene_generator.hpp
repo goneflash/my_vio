@@ -9,8 +9,24 @@ class SceneGenerator {
  public:
   SceneGenerator() {}
 
-  GenerateSceneRandom(int num_landmarks, int num_views, Scene &scene);
+  void GenerateSceneRandom(int num_landmarks, int num_views, Scene &scene);
+
+  // TODO
+  // AddTranslationTrajectory
+  // AddRotationTrajectory
+
+  // TODO
+  // AddOutliers
+  // RandomlyMovePointsAround
+  // RemoveSomeLandmarksInEachView
+
+ private:
+  void GenerateLandmarks(int num_landmarks, Scene &scene);
+  // Generate smooth trajectory of views.
+  void GenerateTrajectory(int num_views, Scene &scene);
+  // Generate separte views in the space.
+  void GenerateViews(int num_views, Scene &scene);
 };
 
-} // vio
-#endif // SCENE_GENERATOR_
+}  // vio
+#endif  // SCENE_GENERATOR_

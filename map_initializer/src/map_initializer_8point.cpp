@@ -43,8 +43,7 @@ bool MapInitializer8Point::InitializeTwoFrames(
   }
 
   cv::Mat F;
-  if (!ComputeFundamental(kp0, kp1, F))
-    return false;
+  if (!ComputeFundamental(kp0, kp1, F)) return false;
 
   // TODO: Make tinyxml work
   // TODO: Hand pick matches for two images of calibration board?
@@ -147,7 +146,6 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
     TriangulatePoints(kp0, kp1, P1, P2, points3d);
     std::cout << "Triangulated " << points3d.size() << " points.\n";
     std::cout << "P0:\n" << P1 << "\nP1:\n" << P2 << std::endl;
-
 
     //---------------------------------------------------------------------- */
 

@@ -2,10 +2,10 @@
 #include "scene.hpp"
 #include "scene_loader.hpp"
 
-namespace vio{
+namespace vio {
 
 bool SceneLoader::LoadSceneFromConfigFile(const std::string &scene_file_name,
-                             vio::Scene &scene) {
+                                          vio::Scene &scene) {
   cv::FileStorage scene_config;
   scene_config.open(scene_file_name, cv::FileStorage::READ);
   if (!scene_config.isOpened()) {
@@ -13,12 +13,9 @@ bool SceneLoader::LoadSceneFromConfigFile(const std::string &scene_file_name,
     return false;
   }
 
-  if (!LoadCameraModel(scene_config["CameraModel"], scene))
-    return false;
-  if (!LoadLandmarks(scene_config["Landmarks"], scene))
-    return false;
-  if (!LoadCameraPoses(scene_config["CameraPoses"], scene))
-    return false;
+  if (!LoadCameraModel(scene_config["CameraModel"], scene)) return false;
+  if (!LoadLandmarks(scene_config["Landmarks"], scene)) return false;
+  if (!LoadCameraPoses(scene_config["CameraPoses"], scene)) return false;
   return true;
 }
 
@@ -76,4 +73,4 @@ bool SceneLoader::LoadCameraPoses(const cv::FileNode &node, vio::Scene &scene) {
 
   return true;
 }
-} // vio
+}  // vio

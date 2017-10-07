@@ -6,8 +6,6 @@
 class SceneLoader {
  public:
   SceneLoader() {}
-
 };
 
-
-#endif // SCENE_LOADER_
+#endif  // SCENE_LOADER_

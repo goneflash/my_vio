@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
   vio::Simulator simulator;
   std::vector<std::vector<Eigen::Vector2d>> feature_pos_each_frame;
   if (!simulator.GenerateFeatureTracksFromTranslationTrajectory(
-        scene, feature_pos_each_frame))
+          scene, feature_pos_each_frame))
     return false;
 
   return 0;
@@ -44,5 +44,6 @@ void PrintUsage() {
   std::cout << "Error. Unknown arguments.\n";
   std::cout << "Usage: \n";
   std::cout << "       simulator_app\n";
-  std::cout << "            -p, --scene_file_path file path of scene to be simulated.\n";
+  std::cout << "            -p, --scene_file_path file path of scene to be "
+               "simulated.\n";
 }

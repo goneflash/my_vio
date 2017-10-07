@@ -238,8 +238,7 @@ int EvaluateSolutionRT(const cv::Mat &R, const cv::Mat &t, const cv::Mat &K,
     double error0 = ComputeReprojectionError(point3d, kp0[i], P0);
     double error1 = ComputeReprojectionError(point3d, kp1[i], P1);
 
-    if (error0 > 5 ||
-        error1 > 5 ) {
+    if (error0 > 5 || error1 > 5) {
       nLargeError++;
       points3d_mask.push_back(false);
       points_3d.push_back(cv::Point3f(0, 0, 0));

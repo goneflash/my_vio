@@ -15,9 +15,9 @@ bool Simulator::GenerateFeatureTracksFromTranslationTrajectory(
       if (!scene.camera->ProjectPointToPixel(landmark.position, pixel)) {
         std::cout << "error";
         continue;
-        //return false;
+        // return false;
       }
-    
+
       std::cout << landmark.position[0] << " ";
       std::cout << landmark.position[1] << " ";
       std::cout << landmark.position[2] << " --> ";
@@ -32,5 +32,4 @@ bool Simulator::GenerateFeatureTracksFromTranslationTrajectory(
   return true;
 }
 
-
-} // namespace vio
+}  // namespace vio

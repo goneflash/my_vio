@@ -14,11 +14,11 @@ class SceneLoader {
 
   bool LoadSceneFromConfigFile(const std::string &scene_file_name,
                                vio::Scene &scene);
+
  private:
   bool LoadCameraModel(const cv::FileNode &node, vio::Scene &scene);
   bool LoadLandmarks(const cv::FileNode &node, vio::Scene &scene);
   bool LoadCameraPoses(const cv::FileNode &node, vio::Scene &scene);
-
 };
-} // vio
-#endif // SCENE_LOADER_
+}  // vio
+#endif  // SCENE_LOADER_

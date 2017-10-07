@@ -18,16 +18,16 @@ namespace vio {
  */
 class Simulator {
  public:
-   /*
-    * Trajectory is a vector of position of camera centers.
-    * Camera direction is always facing axis z, in right hand coordinate system.
-    */
-   // TODO: Add camera model factory.
+  /*
+   * Trajectory is a vector of position of camera centers.
+   * Camera direction is always facing axis z, in right hand coordinate system.
+   */
+  // TODO: Add camera model factory.
   bool GenerateFeatureTracksFromTranslationTrajectory(
       const Scene &scene,
       std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame);
 };
 
-} // namespace vio
+}  // namespace vio
 
 #endif
