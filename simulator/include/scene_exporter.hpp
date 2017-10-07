@@ -1,11 +1,14 @@
-#ifndef SCENE_LOADER_
-#define SCENE_LOADER_
+#ifndef SCENE_EXPORTER_
+#define SCENE_EXPORTER_
 
 #include "scene.hpp"
 
-class SceneLoader {
- public:
-  SceneLoader() {}
-};
+namespace vio {
 
-#endif  // SCENE_LOADER_
+class SceneExporter {
+ public:
+  SceneExporter() {}
+};
+} // vio
+
+#endif  // SCENE_EXPORTER_
