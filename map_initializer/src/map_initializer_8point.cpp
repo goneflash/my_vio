@@ -132,6 +132,7 @@ bool MapInitializer8Point::SelectSolutionRT(
 bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
                                               const std::vector<cv::Vec2d> &kp1,
                                               cv::Mat &F) {
+  use_f_ransac_ = true;
   if (use_f_ransac_) {
     F = ComputeFundamentalOCV(kp0, kp1);
     std::cout << "F from OpenCV: \n" << F << std::endl;
@@ -143,9 +144,9 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
     std::vector<cv::Point3f> points3d;
     cv::Mat P1, P2;
     SolveProjectionFromF(F, P1, P2);
+    std::cout << "P0:\n" << P1 << "\nP1:\n" << P2 << std::endl;
     TriangulatePoints(kp0, kp1, P1, P2, points3d);
     std::cout << "Triangulated " << points3d.size() << " points.\n";
-    std::cout << "P0:\n" << P1 << "\nP1:\n" << P2 << std::endl;
 
     //---------------------------------------------------------------------- */
 

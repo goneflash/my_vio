@@ -8,7 +8,7 @@ inline cv::Vec3d EigenVec3dToCVVec3d(const Eigen::Vector3d &p) {
   cv::Vec3d point;
   point[0] = p[0];
   point[1] = p[1];
-  point[3] = p[2];
+  point[2] = p[2];
   return point;
 }
 

@@ -32,14 +32,18 @@ void SceneGenerator::GenerateLandmarks(int num_landmarks, Scene &scene) {
 void SceneGenerator::GenerateViews(int num_views, Scene &scene) {
   scene.trajectory.resize(num_views);
 
+  // Set first camera.
+  scene.trajectory[0].R = cv::Mat::eye(3, 3, CV_64F);
+  scene.trajectory[0].t = cv::Vec3d(0, 0, 0);
+
   cv::RNG rng;
-  for (int i = 0; i < num_views; ++i) {
+  for (int i = 1; i < num_views; ++i) {
     // ----------------- Add random rotation
     // Get random rotation axis.
     cv::Vec3d vec;
     rng.fill(vec, cv::RNG::UNIFORM, 0, 1);
     // Give a random angle to the rotation vector.
-    vec = vec / cv::norm(vec) * rng.uniform(0.0f, float(2 * CV_PI));
+    vec = vec / cv::norm(vec) * rng.uniform(0.0f, float(CV_PI));
     cv::Rodrigues(vec, scene.trajectory[i].R);
     // ----------------- Add random translation
     scene.trajectory[i].t =
@@ -56,6 +60,7 @@ void SceneGenerator::GenerateViews(int num_views, Scene &scene) {
       point.at<double>(2) = scene.landmarks[ld].position[2];
       cv::Mat transformed_point =
           scene.trajectory[i].R * point + cv::Mat(scene.trajectory[i].t);
+    
       if (ld == 0)
         min_dist = transformed_point.at<double>(2);
       else
