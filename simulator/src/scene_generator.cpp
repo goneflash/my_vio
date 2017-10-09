@@ -8,7 +8,7 @@ void SceneGenerator::GenerateSceneRandom(int num_landmarks, int num_views,
                                          Scene &scene) {
   GenerateLandmarks(num_landmarks, scene);
   GenerateViews(num_views, scene);
-  
+
   // TODO: Add P
   // https://github.com/opencv/opencv_contrib/blob/246ea8f3bdf174a2aad6216c2601e3a93bf75c29/modules/sfm/test/scene.cpp
 }
@@ -19,7 +19,7 @@ void SceneGenerator::GenerateLandmarks(int num_landmarks, Scene &scene) {
   cv::RNG rng;
   cv::Mat_<double> points3d;
   // Generate a bunch of random 3d points in a 0, 1 cube
-  points3d.create(3, num_landmarks);
+  points3d.create(num_landmarks, 3);
   rng.fill(points3d, cv::RNG::UNIFORM, 0, 1);
   // Copy to scene.
   for (int i = 0; i < num_landmarks; ++i) {
@@ -45,10 +45,12 @@ void SceneGenerator::GenerateViews(int num_views, Scene &scene) {
     scene.trajectory[i].t =
         cv::Vec3d(rng.uniform(-0.5f, 0.5f), rng.uniform(-0.5f, 0.5f),
                   rng.uniform(1.0f, 2.0f));
+    std::cout << "Random view generated.\nR:\n" << scene.trajectory[i].R
+              << "\nt:\n" << scene.trajectory[i].t << std::endl;
     // -------------- Make sure all points is in front of the camera
     double min_dist;
     for (int ld = 0; ld < scene.landmarks.size(); ++ld) {
-      cv::Mat point = cv::Mat(1, 3, CV_64F);
+      cv::Mat point = cv::Mat(3, 1, CV_64F);
       point.at<double>(0) = scene.landmarks[ld].position[0];
       point.at<double>(1) = scene.landmarks[ld].position[1];
       point.at<double>(2) = scene.landmarks[ld].position[2];

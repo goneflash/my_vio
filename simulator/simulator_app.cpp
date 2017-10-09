@@ -5,7 +5,9 @@
 
 #include "camera_model.hpp"
 #include "simulator.hpp"
+#include "scene_generator.hpp"
 #include "scene_loader.hpp"
+#include "scene_visualizer.hpp"
 
 struct Options {
  public:
@@ -31,11 +33,20 @@ int main(int argc, char **argv) {
   if (!scene_loader.LoadSceneFromConfigFile(option.scene_file_path, scene))
     return false;
 
+  vio::SceneGenerator generator;
+  vio::Scene new_scene;
+  generator.GenerateSceneRandom(500, 10, new_scene);
+
+  vio::SceneVisualizer visualizer("simple");
+  visualizer.VisualizeScene(new_scene);
+
+  /*
   vio::Simulator simulator;
   std::vector<std::vector<Eigen::Vector2d>> feature_pos_each_frame;
   if (!simulator.GenerateFeatureTracksFromTranslationTrajectory(
           scene, feature_pos_each_frame))
     return false;
+    */
 
   return 0;
 }

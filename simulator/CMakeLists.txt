@@ -9,11 +9,16 @@ file(GLOB SOURCE_FILE
 
 set(TARGET "simulator")
 
+if (OPENCV_VIZ_FOUND)
+  add_definitions("-DOPENCV_VIZ_FOUND")
+endif()
+
 add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        ${EIGEN3_LIBS}
                        ${OpenCV_LIBS}
-                       camera_model )
+                       camera_model
+                       util)
 
 target_include_directories(${TARGET} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/include 

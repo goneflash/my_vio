@@ -9,6 +9,6 @@ class SceneExporter {
  public:
   SceneExporter() {}
 };
-} // vio
+}  // vio
 
 #endif  // SCENE_EXPORTER_
