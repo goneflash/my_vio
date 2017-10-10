@@ -136,8 +136,7 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
     F = ComputeFundamentalOCV(kp0, kp1);
     std::cout << "F from OpenCV: \n" << F << std::endl;
 
-    ///* ------------------------- Obsolete code -------------------------------
-
+    /* ------------------------- Obsolete code -------------------------------
     // TODO: If K is unknown, find P
     // P1 should be [I | 0]
     std::vector<cv::Point3f> points3d;
@@ -162,8 +161,8 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
     F = norm_T1.t() * F * norm_T0;
 
     // Make last element 1
-    // MakeMatrixInhomogeneous(F);
-    std::cout << "F :\n" << F << std::endl;
+    MakeMatrixInhomogeneous(F);
+    // std::cout << "F :\n" << F << std::endl;
   }
 
   return true;

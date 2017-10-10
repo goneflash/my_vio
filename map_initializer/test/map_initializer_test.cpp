@@ -19,14 +19,9 @@ class MapInitializerTest : public ::testing::Test {
     map_initializer_ = vio::MapInitializer::CreateMapInitializer(options_);
   }
 
-  void GetFeatureVectorFromMatchFile() {
+  void GetTwoFrameFeatureTracks() {
     cv::Mat_<double> x1, x2;
     int num_pts;
-    /*
-    std::ifstream myfile(
-        root_path +
-        "/map_initializer/test/test_data/recon2v_checkerboards.txt");
-        */
     std::ifstream myfile(
         root_path +
         "/map_initializer/test/test_data/feature_tracks.txt");
@@ -70,7 +65,6 @@ class MapInitializerTest : public ::testing::Test {
     }
     myfile.close();
     K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
-    // K_ = cv::Matx33d(350, 0, 240, 0, 350, 360, 0, 0, 1);
   }
   /*
     void GetFeatureVectorFromTracks() {
@@ -114,12 +108,21 @@ class MapInitializerTest : public ::testing::Test {
     ASSERT_TRUE(map_initializer_->Initialize(feature_vectors_, cv::Mat(K_),
                                              points3d, points3d_mask, Rs_est,
                                              ts_est));
+    int valid_point_count = 0;
+    for (const auto mask : points3d_mask)
+      if (mask)
+        valid_point_count++;
 
+    // Must have 80% triangulated points.
+    ASSERT_GE(valid_point_count, feature_vectors_[0].size() * 0.8);
+
+    /*
 #ifdef OPENCV_VIZ_FOUND
     vio::SceneVisualizer my_viz("initializer");
     my_viz.SetLandmarks(points3d);
     my_viz.Render();
 #endif
+*/
   }
 
   vio::MapInitializer *map_initializer_;
@@ -131,19 +134,28 @@ class MapInitializerTest : public ::testing::Test {
 };
 
 #ifdef SFM_FOUND
-TEST_F(MapInitializerTest, TestLibmv_TwoFrame_MatchFile) {
+TEST_F(MapInitializerTest, TestLibmv_TwoFrame) {
   options_.method = vio::MapInitializerOptions::LIBMV;
   CreateInitializer();
-  GetFeatureVectorFromMatchFile();
+  GetTwoFrameFeatureTracks();
 
   RunInitializer();
 }
 #endif
 
-TEST_F(MapInitializerTest, Test8Point_TwoFrame_MatchFile) {
+TEST_F(MapInitializerTest, Test8Point_TwoFrame) {
   options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
   CreateInitializer();
-  GetFeatureVectorFromMatchFile();
+  GetTwoFrameFeatureTracks();
+
+  RunInitializer();
+}
+
+TEST_F(MapInitializerTest, Test8Point_TwoFrame_OpenCVRansacF) {
+  options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
+  options_.use_f_ransac = true;
+  CreateInitializer();
+  GetTwoFrameFeatureTracks();
 
   RunInitializer();
 }
