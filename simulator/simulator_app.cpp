@@ -47,6 +47,9 @@ int main(int argc, char **argv) {
           new_scene, feature_pos_each_frame))
     return -1;
 
+  if (!simulator.WriteFeatureTracksToFile(feature_pos_each_frame, "feature_tracks.txt"))
+    return -1;
+
   vio::SceneExporter exporter;
   exporter.WriteSceneToYAMLFile(new_scene, "10_2.yaml");
 

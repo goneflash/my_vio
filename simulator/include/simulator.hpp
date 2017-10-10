@@ -2,6 +2,7 @@
 #define SIMULATOR_HPP_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -22,12 +23,13 @@ class Simulator {
    * Trajectory is a vector of position of camera centers.
    * Camera direction is always facing axis z, in right hand coordinate system.
    */
-  // TODO: Add camera model factory.
   bool GenerateFeatureMeasurementsFromTrajectory(
       const Scene &scene,
       std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame);
 
-  //  bool WriteFeatureTracksTo
+  bool WriteFeatureTracksToFile(
+      std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame,
+      const std::string &file_name);
 };
 
 }  // namespace vio

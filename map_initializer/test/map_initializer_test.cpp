@@ -22,9 +22,14 @@ class MapInitializerTest : public ::testing::Test {
   void GetFeatureVectorFromMatchFile() {
     cv::Mat_<double> x1, x2;
     int num_pts;
+    /*
     std::ifstream myfile(
         root_path +
         "/map_initializer/test/test_data/recon2v_checkerboards.txt");
+        */
+    std::ifstream myfile(
+        root_path +
+        "/map_initializer/test/test_data/feature_tracks.txt");
     ASSERT_TRUE(myfile.is_open());
 
     feature_vectors_.resize(2);
@@ -55,13 +60,16 @@ class MapInitializerTest : public ::testing::Test {
       s >> cord;
       x2(1, i) = atof(cord.c_str());
 
+      if (x1(0, i) < 0 || x1(1, i) < 0 || x2(0, i) < 0 || x2(1, i) < 0)
+        continue;
+
       feature_vectors_[0][i][0] = x1(0, i);
       feature_vectors_[0][i][1] = x1(1, i);
       feature_vectors_[1][i][0] = x2(0, i);
       feature_vectors_[1][i][1] = x2(1, i);
     }
     myfile.close();
-    K_ = cv::Matx33d(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
     // K_ = cv::Matx33d(350, 0, 240, 0, 350, 360, 0, 0, 1);
   }
   /*
