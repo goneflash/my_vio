@@ -38,7 +38,7 @@ class Scene {
  public:
   Scene() {
     vio::PinholeCameraModel<double>::ParamsArray params;
-    params << 1, 1, 0, 0;
+    params << 650, 650, 320, 240;
     camera = std::unique_ptr<vio::CameraModel<double>>(
         new vio::PinholeCameraModel<double>(480, 640, params));
   }

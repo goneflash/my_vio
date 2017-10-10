@@ -38,8 +38,6 @@ void SceneGenerator::GenerateViews(int num_views, Scene &scene) {
 
   cv::RNG rng;
   for (int i = 1; i < num_views; ++i) {
-
-
     /*
     // ----------------- Add random rotation
     // Get random rotation axis.

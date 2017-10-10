@@ -36,7 +36,6 @@ int main(int argc, char **argv) {
     return -1;
     */
 
-
   vio::SceneGenerator generator;
   vio::Scene new_scene;
   generator.GenerateSceneRandom(100, 2, new_scene);
