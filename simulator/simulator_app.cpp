@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
   vio::SceneGenerator generator;
   vio::Scene new_scene;
-  generator.GenerateSceneRandom(100, 2, new_scene);
+  generator.GenerateSceneRandom(100, 3, new_scene);
 
   vio::SceneVisualizer visualizer("simple");
   visualizer.VisualizeScene(scene);
@@ -47,7 +47,8 @@ int main(int argc, char **argv) {
           new_scene, feature_pos_each_frame))
     return -1;
 
-  if (!simulator.WriteFeatureTracksToFile(feature_pos_each_frame, "feature_tracks.txt"))
+  if (!simulator.WriteFeatureTracksToFile(feature_pos_each_frame,
+                                          "feature_tracks.txt"))
     return -1;
 
   vio::SceneExporter exporter;

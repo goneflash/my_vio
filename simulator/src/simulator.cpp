@@ -50,7 +50,7 @@ bool Simulator::GenerateFeatureMeasurementsFromTrajectory(
 bool Simulator::WriteFeatureTracksToFile(
     std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame,
     const std::string &file_name) {
-  std::ofstream output_file(file_name); 
+  std::ofstream output_file(file_name);
   const int num_frames = feature_pos_each_frame.size();
   const int num_features = feature_pos_each_frame[0].size();
   for (int feature_id = 0; feature_id < num_features; ++feature_id) {
@@ -58,9 +58,9 @@ bool Simulator::WriteFeatureTracksToFile(
       // Need to check.
       // if (feature_pos_each_frame[frame_id].size() < feature_id + 1)
       //   return false;
-      const Eigen::Vector2d &feature = feature_pos_each_frame[frame_id][feature_id];
-      if (frame_id != 0)
-        output_file << " ";
+      const Eigen::Vector2d &feature =
+          feature_pos_each_frame[frame_id][feature_id];
+      if (frame_id != 0) output_file << " ";
       output_file << feature[0] << " " << feature[1];
     }
     output_file << std::endl;

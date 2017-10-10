@@ -1,8 +1,10 @@
+#include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
 
 #include "gtest/gtest.h"
 
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -22,9 +24,8 @@ class MapInitializerTest : public ::testing::Test {
   void GetTwoFrameFeatureTracks() {
     cv::Mat_<double> x1, x2;
     int num_pts;
-    std::ifstream myfile(
-        root_path +
-        "/map_initializer/test/test_data/feature_tracks.txt");
+    std::ifstream myfile(root_path +
+                         "/map_initializer/test/test_data/feature_tracks.txt");
     ASSERT_TRUE(myfile.is_open());
 
     feature_vectors_.resize(2);
@@ -35,8 +36,11 @@ class MapInitializerTest : public ::testing::Test {
     getline(myfile, line);
     num_pts = (int)atof(line.c_str());
 
-    feature_vectors_[0].resize(num_pts);
-    feature_vectors_[1].resize(num_pts);
+    // feature_vectors_[0].resize(num_pts);
+    // feature_vectors_[1].resize(num_pts);
+
+    feature_vectors_[0].clear();
+    feature_vectors_[1].clear();
 
     x1 = cv::Mat_<double>(2, num_pts);
     x2 = cv::Mat_<double>(2, num_pts);
@@ -55,16 +59,33 @@ class MapInitializerTest : public ::testing::Test {
       s >> cord;
       x2(1, i) = atof(cord.c_str());
 
+      // Skip missing features.
       if (x1(0, i) < 0 || x1(1, i) < 0 || x2(0, i) < 0 || x2(1, i) < 0)
         continue;
 
+      feature_vectors_[0].push_back(cv::Vec2d(x1(0, i), x1(1, i)));
+      feature_vectors_[1].push_back(cv::Vec2d(x2(0, i), x2(1, i)));
+
+      /*
       feature_vectors_[0][i][0] = x1(0, i);
       feature_vectors_[0][i][1] = x1(1, i);
       feature_vectors_[1][i][0] = x2(0, i);
       feature_vectors_[1][i][1] = x2(1, i);
+      */
     }
     myfile.close();
     K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  }
+
+  // Sigma is in number of pixel.
+  void AddNoiseToFeatureTracks(double sigma) {
+    cv::RNG rng;
+    for (auto &features : feature_vectors_) {
+      for (auto &feature : features) {
+        feature[0] += rng.gaussian(sigma);
+        feature[1] += rng.gaussian(sigma);
+      }
+    }
   }
   /*
     void GetFeatureVectorFromTracks() {
@@ -110,11 +131,13 @@ class MapInitializerTest : public ::testing::Test {
                                              ts_est));
     int valid_point_count = 0;
     for (const auto mask : points3d_mask)
-      if (mask)
-        valid_point_count++;
+      if (mask) valid_point_count++;
 
-    // Must have 80% triangulated points.
-    ASSERT_GE(valid_point_count, feature_vectors_[0].size() * 0.8);
+    // Must have 50% triangulated points.
+    ASSERT_GE(valid_point_count, feature_vectors_[0].size() * 0.5);
+
+    std::cout << "Triangulated " << valid_point_count << " / "
+              << feature_vectors_[0].size() << " points.\n";
 
     /*
 #ifdef OPENCV_VIZ_FOUND
@@ -147,6 +170,15 @@ TEST_F(MapInitializerTest, Test8Point_TwoFrame) {
   options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
   CreateInitializer();
   GetTwoFrameFeatureTracks();
+
+  RunInitializer();
+}
+
+TEST_F(MapInitializerTest, Test8Point_TwoFrame_Noise) {
+  options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
+  CreateInitializer();
+  GetTwoFrameFeatureTracks();
+  AddNoiseToFeatureTracks(3.0);
 
   RunInitializer();
 }

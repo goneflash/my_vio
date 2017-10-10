@@ -81,8 +81,8 @@ bool MapInitializer8Point::SelectSolutionRT(
     const std::vector<bool> &match_inliers,  // not used
     cv::Mat &R_best, cv::Mat &t_best, std::vector<Point3Type> &points_3d,
     std::vector<bool> &points3d_mask) {
-  std::cout << "Selecting solutions ... \n"
-            << "K:\n" << K << std::endl;
+  //std::cout << "Selecting solutions ... \n"
+  //          << "K:\n" << K << std::endl;
   int max_num_point_inlier = 0;
   int best_R_id = -1, best_t_id = -1;
   for (int R_id = 0; R_id < 2; ++R_id) {
@@ -256,7 +256,6 @@ int MapInitializer8Point::EvaluateSolutionRT(
     const std::vector<cv::Vec2d> &kp0, const std::vector<cv::Vec2d> &kp1,
     const std::vector<bool> &match_inliers, std::vector<cv::Point3f> &points_3d,
     std::vector<bool> &points3d_mask) {
-  verbose_ = true;
   if (verbose_)
     std::cout << "Evaluating solution:\n"
               << "R:\n" << R << "\nt:\n" << t << "\nK:\n" << K << std::endl;
