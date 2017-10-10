@@ -168,6 +168,7 @@ TEST_F(MapInitializerTest, TestLibmv_TwoFrame) {
 
 TEST_F(MapInitializerTest, Test8Point_TwoFrame) {
   options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
+  options_.use_f_ransac = false;
   CreateInitializer();
   GetTwoFrameFeatureTracks();
 
@@ -176,6 +177,7 @@ TEST_F(MapInitializerTest, Test8Point_TwoFrame) {
 
 TEST_F(MapInitializerTest, Test8Point_TwoFrame_Noise) {
   options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
+  options_.use_f_ransac = false;
   CreateInitializer();
   GetTwoFrameFeatureTracks();
   AddNoiseToFeatureTracks(3.0);
@@ -191,6 +193,21 @@ TEST_F(MapInitializerTest, Test8Point_TwoFrame_OpenCVRansacF) {
 
   RunInitializer();
 }
+// Doesn't really work.
+/*
+TEST_F(MapInitializerTest, Test8Point_TwoFrame_OpenCVRansacF_Noise) {
+  options_.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
+  options_.use_f_ransac = true;
+  options_.f_ransac_max_dist_to_epipolar = 5;
+  options_.f_ransac_confidence = 0.9;
+  CreateInitializer();
+  GetTwoFrameFeatureTracks();
+  // My F computation is better than OpenCV's!
+  AddNoiseToFeatureTracks(0.2);
+
+  RunInitializer();
+}
+*/
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
