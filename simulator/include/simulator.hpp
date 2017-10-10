@@ -23,9 +23,11 @@ class Simulator {
    * Camera direction is always facing axis z, in right hand coordinate system.
    */
   // TODO: Add camera model factory.
-  bool GenerateFeatureTracksFromTranslationTrajectory(
+  bool GenerateFeatureMeasurementsFromTrajectory(
       const Scene &scene,
       std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame);
+
+  //  bool WriteFeatureTracksTo
 };
 
 }  // namespace vio

@@ -4,16 +4,20 @@
 
 namespace vio {
 
-bool Simulator::GenerateFeatureTracksFromTranslationTrajectory(
+bool Simulator::GenerateFeatureMeasurementsFromTrajectory(
     const Scene &scene,
     std::vector<std::vector<Eigen::Vector2d>> &feature_pos_each_frame) {
   feature_pos_each_frame.clear();
   for (const auto camera_center : scene.trajectory) {
     std::vector<Eigen::Vector2d> features;
     for (const auto landmark : scene.landmarks) {
+      // Transform
+
       Eigen::Vector2d pixel;
       if (!scene.camera->ProjectPointToPixel(landmark.position, pixel)) {
-        std::cout << "error";
+      std::cout << "Measurement is " << pixel[0] << " ";
+      std::cout << pixel[1] << " "; 
+        std::cout << "Warning: point not in camera view.\n";
         continue;
         // return false;
       }

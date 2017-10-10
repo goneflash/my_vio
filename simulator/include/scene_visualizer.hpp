@@ -23,15 +23,16 @@ class SceneVisualizer {
   SceneVisualizer() = delete;
 
   void VisualizeScene(const Scene &scene);
+  void Render();
 
   void SetCameraPoses(const std::vector<CameraPose> &poses);
   void AddCameraPose(const CameraPose &pose);
 
   void SetLandmarks(const std::vector<Landmark> &landmarks);
+  void SetLandmarks(const std::vector<cv::Point3f> &landmarks);
   void AddLandmarks(const std::vector<Landmark> &landmarks);
 
  private:
-  void Render();
   void RenderCameraPoses();
   void RenderPoints();
 

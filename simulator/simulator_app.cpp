@@ -8,6 +8,7 @@
 #include "scene_generator.hpp"
 #include "scene_loader.hpp"
 #include "scene_visualizer.hpp"
+#include "scene_exporter.hpp"
 
 struct Options {
  public:
@@ -28,25 +29,29 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  /*
   vio::Scene scene;
   vio::SceneLoader scene_loader;
   if (!scene_loader.LoadSceneFromConfigFile(option.scene_file_path, scene))
-    return false;
+    return -1;
+    */
+
 
   vio::SceneGenerator generator;
   vio::Scene new_scene;
-  generator.GenerateSceneRandom(500, 10, new_scene);
+  generator.GenerateSceneRandom(100, 2, new_scene);
 
   vio::SceneVisualizer visualizer("simple");
   visualizer.VisualizeScene(new_scene);
 
-  /*
   vio::Simulator simulator;
   std::vector<std::vector<Eigen::Vector2d>> feature_pos_each_frame;
-  if (!simulator.GenerateFeatureTracksFromTranslationTrajectory(
-          scene, feature_pos_each_frame))
-    return false;
-    */
+  if (!simulator.GenerateFeatureMeasurementsFromTrajectory(
+          new_scene, feature_pos_each_frame))
+    return -1;
+
+  vio::SceneExporter exporter;
+  exporter.WriteSceneToYAMLFile(new_scene, "10_2.yaml");
 
   return 0;
 }

@@ -22,6 +22,13 @@ void SceneVisualizer::AddCameraPose(const CameraPose &pose) {
   path_.push_back(cv::Affine3d(pose.R, pose.t));
 }
 
+void SceneVisualizer::SetLandmarks(const std::vector<cv::Point3f> &landmarks) {
+  for (size_t i = 0; i < landmarks.size(); ++i) {
+    point_cloud_.push_back(
+        cv::Vec3d(landmarks[i].x, landmarks[i].y, landmarks[i].z));
+  }
+}
+
 void SceneVisualizer::SetLandmarks(const std::vector<Landmark> &landmarks) {
   for (size_t i = 0; i < landmarks.size(); ++i) {
     point_cloud_.push_back(EigenVec3dToCVVec3d(landmarks[i].position));
@@ -44,8 +51,8 @@ void SceneVisualizer::RenderCameraPoses() {
                                              0.1, cv::viz::Color::green()));
     // TODO: For now, it doesn't matter the K.
     window_->showWidget("cameras_frustums", cv::viz::WTrajectoryFrustums(
-                                                path_, cv::Vec2d(0.78, 0.78), 0.1,
-                                                cv::viz::Color::yellow()));
+                                                path_, cv::Vec2d(0.78, 0.78),
+                                                0.1, cv::viz::Color::yellow()));
     window_->setViewerPose(path_[0]);
   } else {
     std::cout << "Cannot render the cameras: Empty path" << std::endl;

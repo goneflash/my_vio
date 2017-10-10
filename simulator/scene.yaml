@@ -8,9 +8,9 @@ CameraModel:
       dt: d
       data: [300, 300, 200, 200]
 Landmarks:
-  NumLandmarks: 9
+  NumLandmarks: 18
   Positions: !!opencv-matrix
-      rows: 9
+      rows: 18
       cols: 3
       dt: d
       data: [5, 5, 10,
@@ -21,7 +21,16 @@ Landmarks:
              -5, 0, 10,
              5, -5, 10,
              0, -5, 10,
-             -5, -5, 10]
+             -5, -5, 10,
+             5, 5, 5,
+             0, 5, 5,
+             -5, 5, 5,
+             5, 0, 5,
+             0, 0, 5,
+             -5, 0, 5,
+             5, -5, 5,
+             0, -5, 5,
+             -5, -5, 5]
 CameraPoses:
   NumPoses: 2
   Poses: !!opencv-matrix

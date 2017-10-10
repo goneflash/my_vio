@@ -9,10 +9,6 @@ file(GLOB SOURCE_FILE
 
 set(TARGET "simulator")
 
-if (OPENCV_VIZ_FOUND)
-  add_definitions("-DOPENCV_VIZ_FOUND")
-endif()
-
 add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        ${EIGEN3_LIBS}

@@ -32,5 +32,9 @@ if (USE_TEST)
   target_link_libraries(${TARGET}_test ${TARGET}
     gtest gtest_main
     ${OpenCV_LIBS} )
+  if (OPENCV_VIZ_FOUND)
+    target_link_libraries(${TARGET}_test ${TARGET}
+      simulator)
+  endif()
   add_test( MapInitializerTest ${TARGET}_test )
 endif()

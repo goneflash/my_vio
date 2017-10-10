@@ -1,4 +1,3 @@
-
 #include "scene.hpp"
 #include "scene_loader.hpp"
 
@@ -60,7 +59,6 @@ bool SceneLoader::LoadLandmarks(const cv::FileNode &node, vio::Scene &scene) {
 
 bool SceneLoader::LoadCameraPoses(const cv::FileNode &node, vio::Scene &scene) {
   int num_poses = (int)node["NumPoses"];
-  scene.trajectory.resize(num_poses);
   cv::Mat poses_cv;
   node["Poses"] >> poses_cv;
   for (int i = 0; i < num_poses; ++i) {
@@ -69,6 +67,14 @@ bool SceneLoader::LoadCameraPoses(const cv::FileNode &node, vio::Scene &scene) {
     new_pose.position[0] = poses_cv.at<double>(i, 0);
     new_pose.position[1] = poses_cv.at<double>(i, 1);
     new_pose.position[2] = poses_cv.at<double>(i, 2);
+
+    // TODO: Duplicated.
+    new_pose.t[0] = poses_cv.at<double>(i, 0);
+    new_pose.t[1] = poses_cv.at<double>(i, 1);
+    new_pose.t[2] = poses_cv.at<double>(i, 2);
+    new_pose.R = cv::Mat::eye(3, 3, CV_64F);
+
+    scene.trajectory.push_back(new_pose);
   }
 
   return true;

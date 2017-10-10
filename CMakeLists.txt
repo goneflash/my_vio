@@ -63,6 +63,10 @@ else()
   message(WARNING "Libmv reconstruction is disabled. OpenCV sfm for reconstruction API is required.")
 endif()
 
+if (OPENCV_VIZ_FOUND)
+  add_definitions("-DOPENCV_VIZ_FOUND")
+endif()
+
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
 message(STATUS "    libraries: ${OpenCV_LIBS}")

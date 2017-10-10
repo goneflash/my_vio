@@ -132,7 +132,6 @@ bool MapInitializer8Point::SelectSolutionRT(
 bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
                                               const std::vector<cv::Vec2d> &kp1,
                                               cv::Mat &F) {
-  use_f_ransac_ = true;
   if (use_f_ransac_) {
     F = ComputeFundamentalOCV(kp0, kp1);
     std::cout << "F from OpenCV: \n" << F << std::endl;
@@ -163,8 +162,8 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
     F = norm_T1.t() * F * norm_T0;
 
     // Make last element 1
-    MakeMatrixInhomogeneous(F);
-    // std::cout << "F :\n" << F << std::endl;
+    // MakeMatrixInhomogeneous(F);
+    std::cout << "F :\n" << F << std::endl;
   }
 
   return true;

@@ -9,6 +9,10 @@
 #include "config.hpp"
 #include "map_initializer.hpp"
 
+#ifdef OPENCV_VIZ_FOUND
+#include "scene_visualizer.hpp"
+#endif
+
 class MapInitializerTest : public ::testing::Test {
  protected:
   void CreateInitializer() {
@@ -102,6 +106,12 @@ class MapInitializerTest : public ::testing::Test {
     ASSERT_TRUE(map_initializer_->Initialize(feature_vectors_, cv::Mat(K_),
                                              points3d, points3d_mask, Rs_est,
                                              ts_est));
+
+#ifdef OPENCV_VIZ_FOUND
+    vio::SceneVisualizer my_viz("initializer");
+    my_viz.SetLandmarks(points3d);
+    my_viz.Render();
+#endif
   }
 
   vio::MapInitializer *map_initializer_;
