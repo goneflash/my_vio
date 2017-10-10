@@ -29,19 +29,17 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  /*
   vio::Scene scene;
   vio::SceneLoader scene_loader;
   if (!scene_loader.LoadSceneFromConfigFile(option.scene_file_path, scene))
     return -1;
-    */
 
   vio::SceneGenerator generator;
   vio::Scene new_scene;
   generator.GenerateSceneRandom(100, 2, new_scene);
 
   vio::SceneVisualizer visualizer("simple");
-  visualizer.VisualizeScene(new_scene);
+  visualizer.VisualizeScene(scene);
 
   vio::Simulator simulator;
   std::vector<std::vector<Eigen::Vector2d>> feature_pos_each_frame;

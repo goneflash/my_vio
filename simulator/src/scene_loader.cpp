@@ -58,21 +58,17 @@ bool SceneLoader::LoadLandmarks(const cv::FileNode &node, vio::Scene &scene) {
 }
 
 bool SceneLoader::LoadCameraPoses(const cv::FileNode &node, vio::Scene &scene) {
-  int num_poses = (int)node["NumPoses"];
-  cv::Mat poses_cv;
-  node["Poses"] >> poses_cv;
-  for (int i = 0; i < num_poses; ++i) {
+  const int num_poses = (int)node["NumPoses"];
+  const cv::FileNode poses = node["Poses"];
+  int pose_count = 0;
+  for (auto pose_ptr = poses.begin(); pose_ptr != poses.end(); ++pose_ptr) {
+    pose_count++;
     vio::CameraPose new_pose;
-    new_pose.timestamp = i;
-    new_pose.position[0] = poses_cv.at<double>(i, 0);
-    new_pose.position[1] = poses_cv.at<double>(i, 1);
-    new_pose.position[2] = poses_cv.at<double>(i, 2);
+    (*pose_ptr)["R"] >> new_pose.R;
+    (*pose_ptr)["t"] >> new_pose.t;
 
-    // TODO: Duplicated.
-    new_pose.t[0] = poses_cv.at<double>(i, 0);
-    new_pose.t[1] = poses_cv.at<double>(i, 1);
-    new_pose.t[2] = poses_cv.at<double>(i, 2);
-    new_pose.R = cv::Mat::eye(3, 3, CV_64F);
+    std::cout << "Loaded camera " << pose_count << ":\n"
+              << "R:\n" << new_pose.R << "\nt:\n" << new_pose.t << std::endl;
 
     scene.trajectory.push_back(new_pose);
   }

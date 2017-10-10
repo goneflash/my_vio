@@ -5,6 +5,7 @@
 
 namespace vio {
 
+enum CameraModelTypeName { UNKNOWN = 0, PINHOLE, FISHEYE };
 /*
  * Abstract class for camera.
  */
@@ -16,6 +17,7 @@ class CameraModel {
 
   virtual int image_height() const = 0;
   virtual int image_width() const = 0;
+  virtual CameraModelTypeName camera_model_type() const = 0;
 };
 
 /*
@@ -27,7 +29,9 @@ class CameraModelBase : public CameraModel<ParamsType> {
   typedef Eigen::Array<ParamsType, NumParams, 1> ParamsArray;
 
   CameraModelBase(int image_height, int image_width, const ParamsArray &params)
-      : image_height_(image_height), image_width_(image_width) {
+      : image_height_(image_height),
+        image_width_(image_width),
+        camera_type_(UNKNOWN) {
     // TODO: Add CHECK_EQ params.rows() NumParams
     params_ = params;
   }
@@ -44,11 +48,13 @@ class CameraModelBase : public CameraModel<ParamsType> {
 
   int image_height() const { return image_height_; }
   int image_width() const { return image_width_; }
+  CameraModelTypeName camera_model_type() const { return camera_type_; }
 
  protected:
   int image_height_;
   int image_width_;
 
+  CameraModelTypeName camera_type_;
   // Parameters of camera model.
   ParamsArray params_;
 };
@@ -72,10 +78,14 @@ class PinholeCameraModel
 
   PinholeCameraModel(int image_height, int image_width,
                      const ParamsArray &params)
-      : CameraModelType(image_height, image_width, params) {}
+      : CameraModelType(image_height, image_width, params) {
+    CameraModelType::camera_type_ = PINHOLE;
+  }
 
   bool ProjectPointToPixel(const Eigen::Vector3d &point,
                            Eigen::Vector2d &pixel) const override;
+
+  const ParamsArray params() const { return params_; }
 
  private:
 };
