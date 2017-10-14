@@ -20,4 +20,7 @@ target_include_directories(${TARGET} PUBLIC
 
 install(FILES ${headers} 
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/)
-install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+# Libraries
+install(TARGETS ${TARGET}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )

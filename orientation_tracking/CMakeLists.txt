@@ -20,6 +20,11 @@ target_include_directories(${TARGET} PUBLIC
 
 file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
+# Headers
+# TODO: Make this a file to be included
 install(FILES ${headers} 
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/)
-install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+# Libraries
+install(TARGETS ${TARGET}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )

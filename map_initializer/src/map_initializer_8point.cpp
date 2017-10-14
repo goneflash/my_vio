@@ -81,7 +81,7 @@ bool MapInitializer8Point::SelectSolutionRT(
     const std::vector<bool> &match_inliers,  // not used
     cv::Mat &R_best, cv::Mat &t_best, std::vector<Point3Type> &points_3d,
     std::vector<bool> &points3d_mask) {
-  //std::cout << "Selecting solutions ... \n"
+  // std::cout << "Selecting solutions ... \n"
   //          << "K:\n" << K << std::endl;
   int max_num_point_inlier = 0;
   int best_R_id = -1, best_t_id = -1;

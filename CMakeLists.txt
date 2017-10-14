@@ -94,8 +94,11 @@ export(PACKAGE my_vio)
 
 # Add all targets to the build-tree export set
 export(TARGETS 
+  util
   mapdata
   feature_tracker 
+  imu_integrator
+  orientation_tracking
   FILE "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 
 message(STATUS "Added Include Directory: ${CMAKE_INSTALL_PREFIX}")
