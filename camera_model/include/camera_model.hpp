@@ -9,7 +9,6 @@ enum CameraModelTypeName { UNKNOWN = 0, PINHOLE, FISHEYE };
 /*
  * Abstract class for camera.
  */
-template <typename ParamsType>
 class CameraModel {
  public:
   virtual bool ProjectPointToPixel(const Eigen::Vector3d &point,
@@ -24,7 +23,7 @@ class CameraModel {
  * Use CRTP pattern.
  */
 template <class DerivedCameraModel, typename ParamsType, std::size_t NumParams>
-class CameraModelBase : public CameraModel<ParamsType> {
+class CameraModelBase : public CameraModel {
  public:
   typedef Eigen::Array<ParamsType, NumParams, 1> ParamsArray;
 

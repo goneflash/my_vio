@@ -39,17 +39,17 @@ class Scene {
   Scene() {
     vio::PinholeCameraModel<double>::ParamsArray params;
     params << 650, 650, 320, 240;
-    camera = std::unique_ptr<vio::CameraModel<double>>(
+    camera = std::unique_ptr<vio::CameraModel>(
         new vio::PinholeCameraModel<double>(480, 640, params));
   }
 
-  bool SetCameraModel(std::unique_ptr<CameraModel<double>> model) {
+  bool SetCameraModel(std::unique_ptr<CameraModel> model) {
     if (!model) return false;
     camera = std::move(model);
     return true;
   }
 
-  std::unique_ptr<CameraModel<double>> camera;
+  std::unique_ptr<CameraModel> camera;
   std::vector<CameraPose> trajectory;
   std::vector<Landmark> landmarks;
 };

@@ -32,8 +32,8 @@ bool SceneLoader::LoadCameraModel(const cv::FileNode &node, vio::Scene &scene) {
       std::cout << "Param " << i << " : " << params[i] << std::endl;
     }
 
-    std::unique_ptr<vio::CameraModel<double>> camera =
-        std::unique_ptr<vio::CameraModel<double>>(
+    std::unique_ptr<vio::CameraModel> camera =
+        std::unique_ptr<vio::CameraModel>(
             new vio::PinholeCameraModel<double>(480, 640, params));
     scene.SetCameraModel(std::move(camera));
   } else {
