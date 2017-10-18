@@ -1,7 +1,7 @@
 #ifndef UTIL_MATH_HELPER_HPP_
 #define UTIL_MATH_HELPER_HPP_
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 // TODO: Need tests.
 

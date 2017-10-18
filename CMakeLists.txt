@@ -86,6 +86,7 @@ add_subdirectory(imu_integrator)
 add_subdirectory(orientation_tracking)
 add_subdirectory(multiview_helper)
 add_subdirectory(map_initializer)
+add_subdirectory(visual_inertial_odometry)
 
 ###########################################################################
 # Export the package for use from the build-tree

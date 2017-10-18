@@ -4,6 +4,7 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/opencv.hpp>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -19,10 +20,10 @@ class FeatureTracker {
       : num_bin_col_(25), num_bin_row_(25), max_num_feature_(2000) {}
   ~FeatureTracker() {}
 
-  static FeatureTracker *CreateFeatureTracker(
+  static std::unique_ptr<FeatureTracker> CreateFeatureTracker(
       FeatureTrackerOptions option, std::unique_ptr<FeatureMatcher> matcher);
 
-  static FeatureTracker *CreateFeatureTrackerOCV(
+  static std::unique_ptr<FeatureTracker> CreateFeatureTrackerOCV(
       FeatureTrackerOptions option, std::unique_ptr<FeatureMatcher> matcher);
 
   // TODO: Might need to use customized Match class.
@@ -55,6 +56,8 @@ class FeatureTracker {
   int num_bin_row_;
   int max_num_feature_;
 };
+
+typedef std::unique_ptr<FeatureTracker> FeatureTrackerPtr;
 
 }  // vio
 

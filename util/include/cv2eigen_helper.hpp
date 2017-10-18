@@ -2,7 +2,7 @@
 #define CV2EIGEN_HELPER_
 
 #include <opencv2/opencv.hpp>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 inline cv::Vec3d EigenVec3dToCVVec3d(const Eigen::Vector3d &p) {
   cv::Vec3d point;

@@ -1,7 +1,9 @@
 #ifndef CAMERA_MODEL_HPP_
 #define CAMERA_MODEL_HPP_
 
-#include <Eigen/Dense>
+#include <memory>
+
+#include <Eigen/Core>
 
 namespace vio {
 
@@ -18,6 +20,9 @@ class CameraModel {
   virtual int image_width() const = 0;
   virtual CameraModelTypeName camera_model_type() const = 0;
 };
+
+typedef std::shared_ptr<CameraModel> CameraModelPtr;
+typedef std::shared_ptr<const CameraModel> CameraModelConstPtr;
 
 /*
  * Use CRTP pattern.

@@ -2,7 +2,7 @@
 #define IMU_INTEGRATOR_IMU_INTEGRATOR_HPP_
 
 // TODO: Figure out which header is the minimum to include.
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace vio {
 

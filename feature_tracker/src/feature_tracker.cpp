@@ -4,7 +4,7 @@
 
 namespace vio {
 
-FeatureTracker *FeatureTracker::CreateFeatureTracker(
+std::unique_ptr<FeatureTracker> FeatureTracker::CreateFeatureTracker(
     FeatureTrackerOptions option, std::unique_ptr<FeatureMatcher> matcher) {
   switch (option.method) {
     case FeatureTrackerOptions::OCV_BASIC_DETECTOR:

@@ -89,8 +89,11 @@ class FeatureMatcher {
         nn_match_ratio_(option.ratio_test_thresh),
         dist_type_(option.desc_dist_type) {}
 
+  // Call from outside.
   static std::unique_ptr<FeatureMatcher> CreateFeatureMatcher(
       const FeatureMatcherOptions &option);
+
+  // Create different type of matcher.
   static std::unique_ptr<FeatureMatcher> CreateFeatureMatcherOCV(
       const FeatureMatcherOptions &option);
   static std::unique_ptr<FeatureMatcher> CreateFeatureMatcherGridSearch(
@@ -118,6 +121,8 @@ class FeatureMatcher {
   double nn_match_ratio_;
   FeatureMatcherOptions::FeatureMatcherDistType dist_type_;
 };
+
+typedef std::shared_ptr<FeatureMatcher> FeatureMatcherPtr;
 
 }  // vio
 

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include "camera_model.hpp"
 #include "scene.hpp"
