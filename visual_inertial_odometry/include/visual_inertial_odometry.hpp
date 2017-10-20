@@ -26,8 +26,12 @@ class VisualInertialOdometry {
   void ProcessNewImage(cv::Mat &img);
 
   void Start() {
-    std::thread main_work(
-        std::thread(&VisualInertialOdometry::ProcessDataInBuffer, this));
+    main_work_ = std::unique_ptr<std::thread>(
+        new std::thread(&VisualInertialOdometry::ProcessDataInBuffer, this));
+  }
+
+  void Stop() {
+    main_work_->join();
   }
 
  private:
@@ -40,8 +44,8 @@ class VisualInertialOdometry {
   CameraModelPtr camera_;
   FeatureTrackerPtr feature_tracker_;
 
-  // TODO: Use ROS for now.
   VIODataBuffer data_buffer_;
+  std::unique_ptr<std::thread> main_work_;
 };
 
 }  // vio

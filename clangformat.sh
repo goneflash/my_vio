@@ -35,3 +35,5 @@ clang-format -style=file -i util/test/*.cpp
 
 clang-format -style=file -i visual_inertial_odometry/include/*.hpp
 clang-format -style=file -i visual_inertial_odometry/src/*.cpp
+clang-format -style=file -i visual_inertial_odometry/test/*.cpp
+clang-format -style=file -i visual_inertial_odometry/*.cpp

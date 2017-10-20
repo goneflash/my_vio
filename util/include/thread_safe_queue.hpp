@@ -18,9 +18,11 @@ class ThreadSafeQueue {
 
   // To make sure the size stays the same. Return the mutex and release when
   // done with the queue.
+  // TODO: This is definitly not a smart way.
   std::unique_lock<std::mutex> size(size_t &size) {
     std::unique_lock<std::mutex> tmp_lock(mutex_);
     size = queue_.size();
+    std::cout << "Now size: " << size << std::endl;
     return std::move(tmp_lock);
   }
 

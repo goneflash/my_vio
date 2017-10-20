@@ -1,6 +1,8 @@
 #ifndef VIO_DATA_BUFFER_HPP_
 #define VIO_DATA_BUFFER_HPP_
 
+#include <iostream>
+
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -33,9 +35,12 @@ class VIODataBuffer {
       if (size >= image_buffer_size_) {
         // TODO: Drop smartly.
         image_buffer_.Pop(std::move(tmp_lock));
+        std::cout << "Popped an image.\n";
         image_dropped_num_++;
       } else {
+        tmp_lock.unlock();
         image_buffer_.Push(img);
+        std::cout << "Pushed an image.\n";
         break;
       }
     }

@@ -48,5 +48,5 @@ if (USE_TEST)
     gtest gtest_main
     util mapdata
     ${OpenCV_LIBS} )
-  add_test( ${TARGET}Test ${TARGET}_test )
+  add_test( ${TARGET}_test ${TARGET}_test )
 endif()

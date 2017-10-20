@@ -28,6 +28,9 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
 void VisualInertialOdometry::ProcessDataInBuffer() {
   for (;;) {
     cv::Mat new_image = data_buffer_.GetImageData();
+    cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
+    cv::imshow("result", new_image);
+    cv::waitKey(20);
   }
 }
 

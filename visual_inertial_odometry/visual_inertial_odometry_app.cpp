@@ -5,6 +5,7 @@
 #include "feature_tracker.hpp"
 #include "mapdata.hpp"
 #include "util.hpp"
+#include "visual_inertial_odometry.hpp"
 
 using namespace std;
 using namespace cv;
@@ -30,10 +31,28 @@ int TestFramesInFolder(Options option) {
   cv::Mat image0 = cv::imread(images[0]);
   std::unique_ptr<vio::ImageFrame> frame_pre(new vio::ImageFrame(image0));
 
+  vio::CameraModelPtr camera;
+  std::unique_ptr<vio::VisualInertialOdometry> vio;
+
+  vio::PinholeCameraModel<double>::ParamsArray params;
+  // Principal point is camera center.
+  params << 1.0, 2.0, 0, 0;
+  camera = vio::CameraModelPtr(
+      new vio::PinholeCameraModel<double>(480, 640, params));
+
+  vio = std::unique_ptr<vio::VisualInertialOdometry>(
+      new vio::VisualInertialOdometry(camera));
+
+  vio->Start();
+
   for (int i = 1; i < images.size(); ++i) {
     cv::Mat image = cv::imread(images[i]);
 
+    std::cout << "Read an image.\n";
+    vio->ProcessNewImage(image);
   }
+
+  vio->Stop();
   return 0;
 }
 
