@@ -4,6 +4,7 @@
 
 #include "config.hpp"
 #include "camera_model.hpp"
+#include "util.hpp"
 
 class VisualInertialOdometryTest : public ::testing::Test {
  protected:
@@ -17,6 +18,21 @@ class VisualInertialOdometryTest : public ::testing::Test {
     vio = std::unique_ptr<vio::VisualInertialOdometry>(
         new vio::VisualInertialOdometry(camera));
   }
+
+  void Process() {
+    std::vector<std::string> images;
+    ASSERT_TRUE(GetImageNamesInFolder(
+        root_path + "/feature_tracker/test/test_data/long_seq", "jpg", images));
+    int num_img_to_test = 5;
+    for (auto img : images) {
+      cv::Mat image = cv::imread(img);
+
+      vio->ProcessNewImage(image);
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
+
   vio::CameraModelPtr camera;
   std::unique_ptr<vio::VisualInertialOdometry> vio;
 };
@@ -24,6 +40,9 @@ class VisualInertialOdometryTest : public ::testing::Test {
 TEST_F(VisualInertialOdometryTest, Test0) {
   Init();
   vio->Start();
+
+  Process();
+  vio->Stop();
 }
 
 int main(int argc, char **argv) {

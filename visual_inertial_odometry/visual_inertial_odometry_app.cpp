@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -45,11 +46,15 @@ int TestFramesInFolder(Options option) {
 
   vio->Start();
 
+  // Let the vio thread run for a while.
+
   for (int i = 1; i < images.size(); ++i) {
     cv::Mat image = cv::imread(images[i]);
 
-    std::cout << "Read an image.\n";
     vio->ProcessNewImage(image);
+
+    // At 20hz.
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 
   vio->Stop();
