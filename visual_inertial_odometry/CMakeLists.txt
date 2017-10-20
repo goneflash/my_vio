@@ -12,6 +12,7 @@ set(TARGET "visual_inertial_odometry")
 add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        ${OpenCV_LIBS} 
+                       util
                        camera_model
                        mapdata
                        feature_tracker)
@@ -37,3 +38,15 @@ install(TARGETS ${TARGET}
 install(TARGETS ${TARGET}_app
   EXPORT ${PROJECT_NAME}Targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin )
+
+if (USE_TEST)
+  file(GLOB TEST_SOURCE_FILE
+      "test/*.cpp" )
+       
+  add_executable(${TARGET}_test ${TEST_SOURCE_FILE})
+  target_link_libraries(${TARGET}_test ${TARGET}
+    gtest gtest_main
+    util mapdata
+    ${OpenCV_LIBS} )
+  add_test( ${TARGET}Test ${TARGET}_test )
+endif()

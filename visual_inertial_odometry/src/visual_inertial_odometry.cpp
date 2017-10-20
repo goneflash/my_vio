@@ -21,6 +21,14 @@ void VisualInertialOdometry::InitializeFeatureTracker() {
       FeatureTracker::CreateFeatureTracker(tracker_options, std::move(matcher));
 }
 
-void VisualInertialOdometry::ProcessNewImage(const cv::Mat &img) {}
+void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
+  data_buffer_.AddImageData(img);
+}
+
+void VisualInertialOdometry::ProcessDataInBuffer() {
+  for (;;) {
+    cv::Mat new_image = data_buffer_.GetImageData();
+  }
+}
 
 }  // vio

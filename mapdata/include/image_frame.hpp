@@ -8,6 +8,7 @@ namespace vio {
 class ImageFrame {
  public:
   ImageFrame(){};
+  // TODO: Not copy.
   ImageFrame(const cv::Mat &image);
 
   // Disabled for Uint test.

@@ -26,3 +26,15 @@ install(FILES ${headers}
 install(TARGETS ${TARGET}
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+
+if (USE_TEST)
+  file(GLOB TEST_SOURCE_FILE
+      "test/*.cpp" )
+       
+  add_executable(${TARGET}_test ${TEST_SOURCE_FILE})
+  target_link_libraries(${TARGET}_test ${TARGET}
+    gtest gtest_main
+    util mapdata
+    ${OpenCV_LIBS} )
+  add_test( ${TARGET}Test ${TARGET}_test )
+endif()

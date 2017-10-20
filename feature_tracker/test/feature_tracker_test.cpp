@@ -52,7 +52,7 @@ class FeatureTrackerTest : public ::testing::Test {
   std::unique_ptr<vio::FeatureMatcher> feature_matcher_;
 
   vio::FeatureTrackerOptions feature_tracker_option_;
-  vio::FeatureTracker *feature_tracker_;
+  std::unique_ptr<vio::FeatureTracker> feature_tracker_;
 
   std::vector<std::unique_ptr<vio::ImageFrame>> frames_;
 };

@@ -4,6 +4,9 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <thread>
+
+#include "thread_safe_queue.hpp"
 
 namespace vio {
 
@@ -13,39 +16,34 @@ namespace vio {
  */
 class VIODataBuffer {
  public:
+  // TODO: Move buffer size as parameters?
   VIODataBuffer()
-      : image_buffer_size_(5),
+      : image_buffer_size_(10),
         image_total_num_(0),
         image_dropped_num_(0),
-        imu_buffer_size_(20),
+        imu_buffer_size_(50),
         imu_total_num_(0),
         imu_dropped_num_(0) {}
 
   void AddImageData(cv::Mat &img) {
     image_total_num_++;
-    std::lock_guard<std::mutex> buffer_guard(image_buffer_mutex_);
-    while (image_buffer_.size() >= image_buffer_size_) {
-      image_buffer_.pop();
-      image_dropped_num_++;
+    while (true) {
+      size_t size = 0;
+      auto tmp_lock = image_buffer_.size(size);
+      if (size >= image_buffer_size_) {
+        // TODO: Drop smartly.
+        image_buffer_.Pop(std::move(tmp_lock));
+        image_dropped_num_++;
+      } else {
+        image_buffer_.Push(img);
+        break;
+      }
     }
-    // TODO: Use smart way to decide drop current image or the oldest image.
-    // e.g. depend on the rotation and position difference.
-    image_buffer_.push(img);
   }
 
   void AddImuData() {}
 
-  /*
-  cv::Mat GetImageData() {
-    std::lock_guard<std::mutex> buffer_guard(image_buffer_mutex_);
-    if (image_buffer_.empty())
-      return nullptr;
-    // TODO: What if no data is available?
-    cv::Mat image = image_buffer_.front();
-    image_buffer_.pop();
-    return image;
-  }
-  */
+  cv::Mat GetImageData() { return image_buffer_.Pop(); }
 
   // TODO: Interpolate imu data to get synchronous data.
   bool GetLatestDataComb() {}
@@ -56,8 +54,7 @@ class VIODataBuffer {
   int image_total_num_;
   int image_dropped_num_;
 
-  std::mutex image_buffer_mutex_;
-  std::queue<cv::Mat> image_buffer_;
+  ThreadSafeQueue<cv::Mat> image_buffer_;
 
   // IMU data buffer.
   int imu_buffer_size_;
