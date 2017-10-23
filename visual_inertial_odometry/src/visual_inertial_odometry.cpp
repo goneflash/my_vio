@@ -6,6 +6,7 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
     : camera_(camera), last_keyframe_(nullptr), vio_status_(UNINITED) {
   // Setup Feature tracker.
   InitializeFeatureTracker();
+  InitializeVIOInitializer();
   // cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
 }
 
@@ -20,6 +21,14 @@ void VisualInertialOdometry::InitializeFeatureTracker() {
   tracker_options.max_num_feature = 2000;
   feature_tracker_ =
       FeatureTracker::CreateFeatureTracker(tracker_options, std::move(matcher));
+}
+
+void VisualInertialOdometry::InitializeVIOInitializer() {
+  vio::MapInitializerOptions options;
+  options.method = vio::MapInitializerOptions::NORMALIZED8POINTFUNDAMENTAL;
+  options.use_f_ransac = false;
+
+  map_initializer_ = MapInitializer::CreateMapInitializer(options);
 }
 
 void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
@@ -48,8 +57,11 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
       // TODO: Should not be added before.
       const KeyframeId tmp_id = first_keyframe->frame_id;
-      keyframes_[first_keyframe->frame_id] = std::move(first_keyframe);
-      last_keyframe_ = keyframes_[tmp_id].get();
+      {
+        std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
+        keyframes_[first_keyframe->frame_id] = std::move(first_keyframe);
+        last_keyframe_ = keyframes_[tmp_id].get();
+      }
 
       continue;
     }
@@ -76,21 +88,28 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       std::cout << "Skipped a frame with " << matches.size() << " matches.\n";
       continue;
     } else if (matches.size() < 10) {
-      std::cout << "Warning: Lost tracking. Restarting...";
       // TODO
+      std::cout << "Warning: Lost tracking. Restarting...";
     } else {
+      // TODO: Also skip if estimated motion is bad.
       // Add this frame as a new keyframe.
       std::unique_ptr<Keyframe> new_keyframe =
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
 
       // Add tracks.
-      ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
-                                landmarks_);
+      {
+        std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
+        ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
+                                  landmarks_);
+      }
 
       // TODO: Should not be added before.
       const KeyframeId tmp_id = new_keyframe->frame_id;
-      keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
-      last_keyframe_ = keyframes_[tmp_id].get();
+      {
+        std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
+        keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
+        last_keyframe_ = keyframes_[tmp_id].get();
+      }
     }
 
     /*
@@ -98,6 +117,18 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      */
     if (vio_status_ == UNINITED) {
       // Run initilizer on the most recent frames.
+      std::vector<std::vector<cv::Vec2d> > feature_vectors;
+      std::vector<KeyframeId> frame_ids;
+      {
+        // TODO: Deadlock!!?
+        std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
+        std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
+        CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
+                               feature_vectors);
+        std::cout << "Prepared for initialization:\n"
+                  << "Total frames : " << keyframes_.size()
+                  << "\nTotal features: " << feature_vectors[0].size() << "\n";
+      }
     } else {
       // Estmiate the pose of current frame.
     }
@@ -142,9 +173,56 @@ bool ProcessMatchesToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
   return true;
 }
 
+void RemoveShortTrackLengthLandmark(LandmarkId landmark_id,
+                                    Landmarks &landmarks,
+                                    Keyframes &keyframes) {}
+
 void RemoveShortTracks(Landmarks &landmarks, Keyframes &keyframes,
                        KeyframeId &cur_keyframe_id) {
   // TODO
+}
+
+void CopyDataForInitializer(
+    const Landmarks &landmarks, const Keyframes &keyframes,
+    std::vector<KeyframeId> &frame_ids,
+    std::vector<std::vector<cv::Vec2d> > &feature_vectors) {
+  feature_vectors.resize(keyframes.size());
+  frame_ids.resize(keyframes.size());
+  int frame_count = 0;
+  /*
+   * Map KeyframeId to the feature_vectors.
+   *
+   * So for example, there are two frames with id 111 and 222:
+   * feature_ids = { 111, 222 }
+   * keyframe_id_to_id = { 111 -> 0, 222 -> 1 }
+   * feature_vectors = { measurements in 111, measurement in 222 }
+   *
+   */
+  std::unordered_map<KeyframeId, int> keyframe_id_to_id;
+  for (const auto &keyframe_ptr : keyframes) {
+    frame_ids[frame_count] = keyframe_ptr.second->frame_id;
+    keyframe_id_to_id[keyframe_ptr.second->frame_id] = frame_count;
+    frame_count++;
+  }
+
+  for (const auto &landmark_ptr : landmarks) {
+    // TODO: Only add landmarks that are visible to some of the frames.
+    // Now only add landmarks that are visible to all frames.
+    const Landmark &landmark = *(landmark_ptr.second);
+    if (landmark.keyframe_to_feature.size() == keyframes.size()) {
+      for (const auto &measurement_ptr : landmark.keyframe_to_feature) {
+        const KeyframeId &keyframe_id = measurement_ptr.first;
+        if (keyframe_id_to_id.find(keyframe_id) == keyframe_id_to_id.end()) {
+          // TODO: Error! Probably didn't clear previous unused Keyframes well.
+          std::cerr << "Error: Probably didn't clear previous unused Keyframes "
+                       "well.\n";
+          return;
+        }
+        feature_vectors[keyframe_id_to_id[keyframe_id]].push_back(
+            cv::Vec2d(measurement_ptr.second.x, measurement_ptr.second.y));
+      }
+    }
+  }
 }
 
 }  // vio

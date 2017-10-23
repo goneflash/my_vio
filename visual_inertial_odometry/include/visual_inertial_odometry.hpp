@@ -14,6 +14,7 @@
 #include "feature_tracks.hpp"
 #include "keyframe.hpp"
 #include "mapdata_types.hpp"
+#include "map_initializer.hpp"
 
 #include "vio_data_buffer.hpp"
 
@@ -29,33 +30,37 @@ class VisualInertialOdometry {
   VisualInertialOdometry(CameraModelPtr camera);
 
   void ProcessNewImage(cv::Mat &img);
+  // High priority, should update ASAP.
+  void ProcessImuData();
 
   void Start() {
     // TODO: Is this really necessary?
-    std::unique_lock<std::mutex> tmp_lock(running_main_work_mutex_);
-    running_main_work_ = true;
+    std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
+    running_process_buffer_thread_ = true;
     tmp_lock.unlock();
-    main_work_ = std::unique_ptr<std::thread>(
+    process_buffer_thread_ = std::unique_ptr<std::thread>(
         new std::thread(&VisualInertialOdometry::ProcessDataInBuffer, this));
   }
 
   void Stop() {
-    std::unique_lock<std::mutex> tmp_lock(running_main_work_mutex_);
-    running_main_work_ = false;
+    std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
+    running_process_buffer_thread_ = false;
     tmp_lock.unlock();
 
-    main_work_->join();
+    process_buffer_thread_->join();
   }
 
  private:
   void InitializeFeatureTracker();
+  void InitializeVIOInitializer();
+
   void ProcessDataInBuffer();
   void RunInitializer();
 
   bool KeepRunningMainWork() {
     // TODO: Should be atomic
-    std::unique_lock<std::mutex> tmp_lock(running_main_work_mutex_);
-    return running_main_work_;
+    std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
+    return running_process_buffer_thread_;
   }
 
   std::mutex vio_status_mutex_;
@@ -65,8 +70,11 @@ class VisualInertialOdometry {
    *  Functional objects.
    */
   CameraModelPtr camera_;
+
   FeatureTrackerPtr feature_tracker_;
-  Keyframe *last_keyframe_;
+
+  MapInitializerPtr map_initializer_;
+
   /*
    * Data structures.
    */
@@ -74,14 +82,15 @@ class VisualInertialOdometry {
 
   std::mutex keyframes_mutex_;
   Keyframes keyframes_;
+  Keyframe *last_keyframe_;
 
   std::mutex landmarks_mutex_;
   Landmarks landmarks_;
-  LandmarkStats landmark_stats;
+  LandmarkStats landmark_stats_;
 
-  std::unique_ptr<std::thread> main_work_;
-  std::mutex running_main_work_mutex_;
-  bool running_main_work_;
+  std::unique_ptr<std::thread> process_buffer_thread_;
+  std::mutex running_process_buffer_thread_mutex_;
+  bool running_process_buffer_thread_;
 };
 
 void RemoveUnmatchedFeatures(Keyframe *frame);
@@ -90,7 +99,20 @@ bool ProcessMatchesToLandmarks(Keyframe *frame0, Keyframe *frame1,
                                const std::vector<cv::DMatch> &matches,
                                Landmarks &landmarks);
 
+void RemoveShortTrackLengthLandmark(LandmarkId landmark_id,
+                                    Landmarks &landmarks, Keyframes &keyframes);
+
 void RemoveShortTracks(Landmarks &landmarks, KeyframeId &cur_keyframe_id);
+
+/*
+ * Output:
+ *   frame_ids : id of the Keyframes
+ *   feature_vectors : features of the Keyframes.
+ */
+void CopyDataForInitializer(
+    const Landmarks &landmarks, const Keyframes &keyframes,
+    std::vector<KeyframeId> &frame_ids,
+    std::vector<std::vector<cv::Vec2d> > &feature_vectors);
 
 }  // vio
 

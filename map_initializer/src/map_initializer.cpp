@@ -2,7 +2,7 @@
 
 namespace vio {
 
-MapInitializer *MapInitializer::CreateMapInitializer(
+std::unique_ptr<MapInitializer> MapInitializer::CreateMapInitializer(
     MapInitializerOptions option) {
   switch (option.method) {
 #ifdef SFM_FOUND

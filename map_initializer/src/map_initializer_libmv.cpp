@@ -6,9 +6,10 @@
 
 namespace vio {
 
-MapInitializer *MapInitializer::CreateMapInitializerLIBMV() {
-  MapInitializer *initializer = new MapInitializerLIBMV();
-  return initializer;
+std::unique_ptr<MapInitializer> MapInitializer::CreateMapInitializerLIBMV() {
+  std::unique_ptr<MapInitializer> initializer =
+      std::unique_ptr<MapInitializer>(new MapInitializerLIBMV());
+  return std::move(initializer);
 }
 
 bool MapInitializerLIBMV::Initialize(

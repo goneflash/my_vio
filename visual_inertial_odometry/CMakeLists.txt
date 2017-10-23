@@ -15,6 +15,7 @@ target_link_libraries( ${TARGET}
                        util
                        camera_model
                        mapdata
+                       map_initializer
                        feature_tracker)
 
 target_include_directories(${TARGET} PUBLIC 

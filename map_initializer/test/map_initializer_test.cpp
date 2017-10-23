@@ -148,7 +148,7 @@ class MapInitializerTest : public ::testing::Test {
 */
   }
 
-  vio::MapInitializer *map_initializer_;
+  std::unique_ptr<vio::MapInitializer> map_initializer_;
   vio::MapInitializerOptions options_;
 
   std::vector<std::vector<cv::Vec2d> > feature_vectors_;
@@ -190,6 +190,8 @@ TEST_F(MapInitializerTest, Test8Point_TwoFrame_OpenCVRansacF) {
   options_.use_f_ransac = true;
   CreateInitializer();
   GetTwoFrameFeatureTracks();
+  // TODO: Fail when add noise.
+  // AddNoiseToFeatureTracks(3.0);
 
   RunInitializer();
 }

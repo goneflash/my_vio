@@ -1,3 +1,4 @@
+#include <memory>
 #include <vector>
 
 #include <opencv2/opencv.hpp>
@@ -70,14 +71,15 @@ class MapInitializer {
   MapInitializer() {}
   ~MapInitializer() {}
 
-  static MapInitializer *CreateMapInitializer(MapInitializerOptions option);
+  static std::unique_ptr<MapInitializer> CreateMapInitializer(
+      MapInitializerOptions option);
 
 #ifdef SFM_FOUND
-  static MapInitializer *CreateMapInitializerLIBMV();
+  static std::unique_ptr<MapInitializer> CreateMapInitializerLIBMV();
 #endif
-  static MapInitializer *CreateMapInitializer8Point(
+  static std::unique_ptr<MapInitializer> CreateMapInitializer8Point(
       MapInitializerOptions option);
-  static MapInitializer *CreateMapInitializerORBSLAM(
+  static std::unique_ptr<MapInitializer> CreateMapInitializerORBSLAM(
       MapInitializerOptions option);
 
   virtual bool Initialize(
@@ -88,5 +90,7 @@ class MapInitializer {
 
  protected:
 };
+
+typedef std::unique_ptr<MapInitializer> MapInitializerPtr;
 
 }  // vio

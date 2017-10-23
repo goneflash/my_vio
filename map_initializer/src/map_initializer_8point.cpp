@@ -4,10 +4,11 @@
 
 namespace vio {
 
-MapInitializer *MapInitializer::CreateMapInitializer8Point(
+std::unique_ptr<MapInitializer> MapInitializer::CreateMapInitializer8Point(
     MapInitializerOptions option) {
-  MapInitializer *initializer = new MapInitializer8Point(option);
-  return initializer;
+  std::unique_ptr<MapInitializer> initializer =
+      std::unique_ptr<MapInitializer>(new MapInitializer8Point(option));
+  return std::move(initializer);
 }
 
 MapInitializer8Point::MapInitializer8Point(MapInitializerOptions option)
