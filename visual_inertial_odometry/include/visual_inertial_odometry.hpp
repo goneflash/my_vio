@@ -11,6 +11,9 @@
 
 #include "camera_model.hpp"
 #include "feature_tracker.hpp"
+#include "feature_tracks.hpp"
+#include "keyframe.hpp"
+#include "mapdata_types.hpp"
 
 #include "vio_data_buffer.hpp"
 
@@ -61,15 +64,27 @@ class VisualInertialOdometry {
 
   Status vio_status_;
 
+  /*
+   *  Functional objects.
+   */
   CameraModelPtr camera_;
   FeatureTrackerPtr feature_tracker_;
 
+  /*
+   * Data structures.
+   */
   VIODataBuffer data_buffer_;
+  std::unordered_map<KeyframeId, std::unique_ptr<Keyframe>> keyframes_;
+  Landmarks landmarks_;
 
   std::unique_ptr<std::thread> main_work_;
   std::mutex running_main_work_mutex_;
   bool running_main_work_;
 };
+
+bool AddFeatureTracks(Keyframe &frame0, Keyframe &frame1,
+                      const std::vector<cv::DMatch> &matches,
+                      Landmarks &landmarks);
 
 }  // vio
 

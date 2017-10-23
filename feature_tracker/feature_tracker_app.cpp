@@ -3,7 +3,6 @@
 #include <unordered_map>
 
 #include "feature_tracker.hpp"
-#include "mapdata.hpp"
 #include "util.hpp"
 
 using namespace std;
@@ -65,7 +64,7 @@ int TestFramesInFolder(Options option) {
 
   if (tracker == NULL) return -1;
 
-  Mapdata vio_map;
+  // TODO: Add track length count.
 
   // Visualize tracking
   cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
@@ -106,16 +105,13 @@ int TestFramesInFolder(Options option) {
     }
 
     // Store feature tracks.
-    std::unique_ptr<Keyframe> keyframe(new Keyframe(std::move(frame_pre)));
-    if (i == 1)
-      vio_map.AddFirstKeyframe(std::move(keyframe));
-    else
-      vio_map.AddNewKeyframeMatchToLastKeyframe(std::move(keyframe), matches);
+    // std::unique_ptr<Keyframe> keyframe(new Keyframe(std::move(frame_pre)));
 
     frame_pre = std::move(frame_cur);
   }
   // TODO: Add test for this.
   // Analyze feature tracks.
+  /*
   const std::vector<std::unordered_map<int, int> > &uninited_landmarks =
       vio_map.uninited_landmarks();
   unordered_map<int, int> feature_length_count;
@@ -132,6 +128,7 @@ int TestFramesInFolder(Options option) {
     cout << "Length " << feat_len.first << " : " << feat_len.second
          << std::endl;
   }
+  */
   return 0;
 }
 

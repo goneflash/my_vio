@@ -4,7 +4,6 @@
 #include <unordered_map>
 
 #include "feature_tracker.hpp"
-#include "mapdata.hpp"
 #include "util.hpp"
 #include "visual_inertial_odometry.hpp"
 

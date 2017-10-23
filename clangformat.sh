@@ -18,6 +18,7 @@ clang-format -style=file -i map_initializer/test/*.cpp
 
 clang-format -style=file -i mapdata/include/*.hpp
 clang-format -style=file -i mapdata/src/*.cpp
+clang-format -style=file -i mapdata/test/*.cpp
 
 clang-format -style=file -i multiview_helper/include/*.hpp
 clang-format -style=file -i multiview_helper/src/*.cpp
