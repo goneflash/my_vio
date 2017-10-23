@@ -33,7 +33,8 @@ class KeyframeId : public UniqueId {
   static int unique_id_;
 };
 
-bool operator==(const KeyframeId &id0, const KeyframeId &id1) {
+// !!This must inline or implementation in .cpp file
+inline bool operator==(const KeyframeId &id0, const KeyframeId &id1) {
   return id0.id() == id1.id();
 }
 
@@ -46,7 +47,8 @@ class LandmarkId : public UniqueId {
   static int unique_id_;
 };
 
-bool operator==(const LandmarkId &id0, const LandmarkId &id1) {
+// !!This must inline or implementation in .cpp file
+inline bool operator==(const LandmarkId &id0, const LandmarkId &id1) {
   return id0.id() == id1.id();
 }
 }  // vio

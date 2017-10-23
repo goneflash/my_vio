@@ -10,6 +10,8 @@
 
 namespace vio {
 
+typedef int FeatureId;
+
 class Keyframe {
  public:
   Keyframe(std::unique_ptr<ImageFrame> frame)

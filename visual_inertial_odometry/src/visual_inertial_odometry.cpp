@@ -35,6 +35,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     if (!KeepRunningMainWork()) {
       std::cout << "Image buffer stats:\n";
       data_buffer_.image_buffer_stats().Print();
+      LandmarkStats landmark_stats;
+      GetLandmarkStats(landmarks_, landmark_stats);
+      landmark_stats.Print();
       break;
     }
 
@@ -47,8 +50,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       std::unique_ptr<Keyframe> first_keyframe =
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
       // TODO: Should not be added before.
-      last_keyframe_ = first_keyframe.get();
+      const KeyframeId tmp_id = first_keyframe->frame_id;
       keyframes_[first_keyframe->frame_id] = std::move(first_keyframe);
+      last_keyframe_ = keyframes_[tmp_id].get();
 
       continue;
     }
@@ -67,7 +71,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      * 2. Add as new keyframe
      * 3. Lost tracking, need to restart. TODO: or loop closure.
      */
-    if (matches.size() > 300) {
+    if (matches.size() > 1000) {
       // Robust tracking. Skip this frame.
       std::cout << "Skipped a frame with " << matches.size() << " matches.\n";
       continue;
@@ -83,8 +87,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
                                 landmarks_);
 
       // TODO: Should not be added before.
-      last_keyframe_ = keyframes_[new_keyframe->frame_id].get();
+      const KeyframeId tmp_id = new_keyframe->frame_id;
       keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
+      last_keyframe_ = keyframes_[tmp_id].get();
     }
 
     // TODO: Plot tracking result.
@@ -113,11 +118,11 @@ bool ProcessMatchesToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
           cur_frame->frame_id, cur_frame->features[match.trainIdx].measurement);
       // Update keyframe feature point to landmark.
       pre_frame->features[match.queryIdx].landmark_id =
-          new_landmark->landmark_id();
+          new_landmark->landmark_id;
       cur_frame->features[match.trainIdx].landmark_id =
-          new_landmark->landmark_id();
+          new_landmark->landmark_id;
       // Add landmark.
-      landmarks[new_landmark->landmark_id()] = std::move(new_landmark);
+      landmarks[new_landmark->landmark_id] = std::move(new_landmark);
     } else {
       // Handle existing landmark.
       LandmarkId landmark_id = pre_frame->features[match.queryIdx].landmark_id;
