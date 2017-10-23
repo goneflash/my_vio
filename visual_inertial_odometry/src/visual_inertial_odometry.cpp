@@ -3,7 +3,10 @@
 namespace vio {
 
 VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
-    : camera_(camera), last_keyframe_(nullptr), vio_status_(UNINITED) {
+    : camera_(camera),
+      vio_status_(UNINITED),
+      last_keyframe_(nullptr),
+      num_skipped_frames_(0) {
   // Setup Feature tracker.
   InitializeFeatureTracker();
   InitializeVIOInitializer();
@@ -85,7 +88,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      * 2. Add as new keyframe
      * 3. Lost tracking, need to restart. TODO: or loop closure.
      */
-    if (matches.size() > 500) {
+    if (matches.size() > 600 && num_skipped_frames_ < 5) {
       // Robust tracking. Skip this frame.
       std::cout << "Skipped a frame with " << matches.size() << " matches.\n";
       continue;
@@ -152,6 +155,7 @@ void VisualInertialOdometry::RunInitializer(
     std::cerr << "Warning: Initialization failed.\n\n";
   } else {
     std::cerr << "Initialization Success.\n\n";
+    vio_status_ = INITED;
   }
 }
 

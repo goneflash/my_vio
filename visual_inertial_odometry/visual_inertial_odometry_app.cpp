@@ -53,7 +53,7 @@ int TestFramesInFolder(Options option) {
     vio->ProcessNewImage(image);
 
     // At 20hz.
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
   vio->Stop();

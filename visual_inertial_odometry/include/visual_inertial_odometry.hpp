@@ -66,6 +66,7 @@ class VisualInertialOdometry {
   }
 
   std::mutex vio_status_mutex_;
+  // TODO: Multthreading, atomic
   VIOStatus vio_status_;
 
   /*
@@ -86,6 +87,7 @@ class VisualInertialOdometry {
   std::mutex keyframes_mutex_;
   Keyframes keyframes_;
   Keyframe *last_keyframe_;
+  int num_skipped_frames_;
 
   std::mutex landmarks_mutex_;
   Landmarks landmarks_;
