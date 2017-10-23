@@ -55,7 +55,9 @@ class VisualInertialOdometry {
   void InitializeVIOInitializer();
 
   void ProcessDataInBuffer();
-  void RunInitializer();
+  void RunInitializer(
+      const std::vector<KeyframeId> &frame_ids,
+      const std::vector<std::vector<cv::Vec2d> > &feature_vectors);
 
   bool KeepRunningMainWork() {
     // TODO: Should be atomic
@@ -74,6 +76,7 @@ class VisualInertialOdometry {
   FeatureTrackerPtr feature_tracker_;
 
   MapInitializerPtr map_initializer_;
+  std::unique_ptr<std::thread> initializer_thread_;
 
   /*
    * Data structures.

@@ -102,6 +102,13 @@ FeatureTrackerOCV::FeatureTrackerOCV(FeatureTrackerOptions option,
       FeatureMatcher::CreateFeatureMatcher(long_term_matcher_option);
 }
 
+bool FeatureTrackerOCV::ComputeFrame(ImageFrame &frame) {
+  if (!frame.feature_computed()) {
+    FeatureTracker::ComputeFeatures(frame);
+  }
+  return true;
+}
+
 bool FeatureTrackerOCV::TrackFrame(ImageFrame &prev_frame,
                                    ImageFrame &new_frame,
                                    std::vector<cv::DMatch> &matches) {

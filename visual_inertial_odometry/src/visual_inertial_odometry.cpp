@@ -53,6 +53,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      * Handle first frame.
      */
     if (!last_keyframe_) {
+      // TODO: ImageFrame must have features before passing to a keyframe.
+      feature_tracker_->ComputeFrame(*frame_cur);
       std::unique_ptr<Keyframe> first_keyframe =
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
       // TODO: Should not be added before.
@@ -128,10 +130,28 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         std::cout << "Prepared for initialization:\n"
                   << "Total frames : " << keyframes_.size()
                   << "\nTotal features: " << feature_vectors[0].size() << "\n";
+        RunInitializer(frame_ids, feature_vectors);
       }
     } else {
       // Estmiate the pose of current frame.
     }
+  }
+}
+
+void VisualInertialOdometry::RunInitializer(
+    const std::vector<KeyframeId> &frame_ids,
+    const std::vector<std::vector<cv::Vec2d> > &feature_vectors) {
+  // TODO: Start a new thread.
+  std::vector<cv::Point3f> points3d;
+  std::vector<bool> points3d_mask;
+  std::vector<cv::Mat> Rs_est, ts_est;
+
+  cv::Matx33d K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  if (!map_initializer_->Initialize(feature_vectors, cv::Mat(K_), points3d,
+                                    points3d_mask, Rs_est, ts_est)) {
+    std::cerr << "Warning: Initialization failed.\n\n";
+  } else {
+    std::cerr << "Initialization Success.\n\n";
   }
 }
 
