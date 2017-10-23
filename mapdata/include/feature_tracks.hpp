@@ -1,6 +1,7 @@
 #ifndef FEATURE_TRACKS_HPP_
 #define FEATURE_TRACKS_HPP_
 
+#include <memory>
 #include <vector>
 #include <unordered_map>
 
@@ -8,9 +9,6 @@
 
 namespace vio {
 
-struct FeatureMeasurement {
-  Eigen::Vector2f keypoint;
-};
 
 class FeatureTrack {
  public:
@@ -20,11 +18,18 @@ class FeatureTrack {
   std::unordered_map<KeyFrameId, FeatureMeasurement> measurements;
 };
 
-class FeatureTracks {
- public:
-  std::vector<FeatureTrack> active_tracks;
+/*
+class Landmark {
+  public:
 
-  std::unordered_map<LandmarkId, FeatureTrack> past_tracks;
+  
+};
+*/
+
+class Landmarks {
+ public:
+  std::unordered_set<LandmarkId> active_landmarks;
+  std::unordered_map<LandmarkId, FeatureTrack> tracks;
 };
 
 }  // vio

@@ -13,21 +13,30 @@ struct FramePose {
   cv::Mat R, t;
 };
 
+/*
+struct FeatureMeasurement {
+  Eigen::Vector2f keypoint;
+  // TODO: Change to Eigen.
+  cv::Mat descriptor;
+};
+*/
+
 class Keyframe {
  public:
-  // TODO: Frame no safe
   Keyframe(std::unique_ptr<ImageFrame> frame) : pose_inited_(false) {
     unique_frame_id_++;
     frame_id_ = unique_frame_id_;
 
     image_frame_ = std::move(frame);
+    // TODO: Not transfer ImageFrame, just copy the keypoints and descriptor.
   }
 
   Keyframe() = delete;
 
-  int frame_id() const { return frame_id_; };
+  size_t frame_id() const { return frame_id_; };
 
   const ImageFrame &image_frame() const { return *image_frame_; }
+
   void set_pose(const cv::Mat &R, const cv::Mat &t) {
     R.copyTo(pose_.R);
     t.copyTo(pose_.t);
@@ -40,8 +49,11 @@ class Keyframe {
   void set_pose_inited(bool inited) { pose_inited_ = inited; }
 
  private:
+  size_t frame_id_;
+  size_t pre_frame_id_;
+
+  // Each frame will have a unique Id when initialized.
   static int unique_frame_id_;
-  int frame_id_;
 
   std::unique_ptr<ImageFrame> image_frame_;
 

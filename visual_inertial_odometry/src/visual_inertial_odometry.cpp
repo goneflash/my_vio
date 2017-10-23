@@ -44,8 +44,10 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
               << std::endl;
     std::cout << "Found match " << matches.size() << std::endl;
     frame_pre = std::move(frame_cur);
+    // TODO: Plot tracking result.
     // cv::imshow("result", new_image);
     // cv::waitKey(20);
+    
 
     count++;
     std::cout << "Total image: " << data_buffer_.image_total_num() << std::endl;

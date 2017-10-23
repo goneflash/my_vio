@@ -43,27 +43,6 @@ class ThreadSafeQueue {
     cond_.notify_one();
   }
 
-  /*
-  T front() {
-    std::unique_lock<std::mutex> tmp_lock(mutex_);
-    while (queue_.empty()) {
-      cond_.wait(tmp_lock);
-    }
-    auto data = queue_.front();
-  }
-  */
-
-  /*
-  void Pop(T &data) {
-    std::unique_lock<std::mutex> tmp_lock(mutex_);
-    while (queue_.empty()) {
-      cond_.wait(tmp_lock);
-    }
-    data = queue_.front();
-    queue_.pop();
-  }
-  */
-
   T Pop() {
     std::unique_lock<std::mutex> tmp_lock(mutex_);
     while (queue_.empty()) {
