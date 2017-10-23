@@ -27,17 +27,12 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
 }
 
 void VisualInertialOdometry::ProcessDataInBuffer() {
-  int count = 0;
-
-  cv::Mat first_image = data_buffer_.GetImageData();
-  std::unique_ptr<vio::ImageFrame> frame_pre(new vio::ImageFrame(first_image));
   for (;;) {
     if (!KeepRunningMainWork()) {
       std::cout << "Image buffer stats:\n";
       data_buffer_.image_buffer_stats().Print();
-      LandmarkStats landmark_stats;
-      GetLandmarkStats(landmarks_, landmark_stats);
-      landmark_stats.Print();
+      GetLandmarkStats(landmarks_, landmark_stats_);
+      landmark_stats_.Print();
       break;
     }
 
@@ -45,7 +40,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     std::unique_ptr<vio::ImageFrame> frame_cur(new vio::ImageFrame(new_image));
 
     // TODO: May need to skip the first several frames.
-    // Handle first frame.
+    /*
+     * Handle first frame.
+     */
     if (!last_keyframe_) {
       std::unique_ptr<Keyframe> first_keyframe =
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
@@ -57,6 +54,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       continue;
     }
 
+    /*
+     * Run feature matching for new frame.
+     */
     std::vector<cv::DMatch> matches;
     // TODO: Return tracking evaluation as well.
     feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
@@ -71,12 +71,13 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      * 2. Add as new keyframe
      * 3. Lost tracking, need to restart. TODO: or loop closure.
      */
-    if (matches.size() > 1000) {
+    if (matches.size() > 500) {
       // Robust tracking. Skip this frame.
       std::cout << "Skipped a frame with " << matches.size() << " matches.\n";
       continue;
     } else if (matches.size() < 10) {
       std::cout << "Warning: Lost tracking. Restarting...";
+      // TODO
     } else {
       // Add this frame as a new keyframe.
       std::unique_ptr<Keyframe> new_keyframe =
@@ -92,12 +93,19 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       last_keyframe_ = keyframes_[tmp_id].get();
     }
 
-    // TODO: Plot tracking result.
-    // cv::imshow("result", new_image);
-    // cv::waitKey(20);
-
-    count++;
+    /*
+     * Choose what to do depend on the status of VIO
+     */
+    if (vio_status_ == UNINITED) {
+      // Run initilizer on the most recent frames.
+    } else {
+      // Estmiate the pose of current frame.
+    }
   }
+}
+
+void RemoveUnmatchedFeatures(Keyframe *frame) {
+  // TODO
 }
 
 // TODO: How to use it in FeatureTracker to evaluate tracker?
@@ -133,4 +141,10 @@ bool ProcessMatchesToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
   }
   return true;
 }
+
+void RemoveShortTracks(Landmarks &landmarks, Keyframes &keyframes,
+                       KeyframeId &cur_keyframe_id) {
+  // TODO
+}
+
 }  // vio

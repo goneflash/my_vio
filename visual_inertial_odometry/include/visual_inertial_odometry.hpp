@@ -49,8 +49,8 @@ class VisualInertialOdometry {
 
  private:
   void InitializeFeatureTracker();
-
   void ProcessDataInBuffer();
+  void RunInitializer();
 
   bool KeepRunningMainWork() {
     // TODO: Should be atomic
@@ -58,13 +58,6 @@ class VisualInertialOdometry {
     return running_main_work_;
   }
 
-  /*
-   * TODO: Is there something like a ThreadSafeObjectWrapper:
-   * template <class T>
-   * class ThreadSafeWrapper<T> : T {
-   *
-   * };
-   */
   std::mutex vio_status_mutex_;
   VIOStatus vio_status_;
 
@@ -78,17 +71,26 @@ class VisualInertialOdometry {
    * Data structures.
    */
   VIODataBuffer data_buffer_;
+
+  std::mutex keyframes_mutex_;
   Keyframes keyframes_;
+
+  std::mutex landmarks_mutex_;
   Landmarks landmarks_;
+  LandmarkStats landmark_stats;
 
   std::unique_ptr<std::thread> main_work_;
   std::mutex running_main_work_mutex_;
   bool running_main_work_;
 };
 
+void RemoveUnmatchedFeatures(Keyframe *frame);
+
 bool ProcessMatchesToLandmarks(Keyframe *frame0, Keyframe *frame1,
                                const std::vector<cv::DMatch> &matches,
                                Landmarks &landmarks);
+
+void RemoveShortTracks(Landmarks &landmarks, KeyframeId &cur_keyframe_id);
 
 }  // vio
 
