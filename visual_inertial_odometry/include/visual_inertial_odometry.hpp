@@ -21,7 +21,7 @@ namespace vio {
 
 class VisualInertialOdometry {
  public:
-  enum Status {
+  enum VIOStatus {
     UNINITED = 0,
     INITED,
   };
@@ -45,10 +45,6 @@ class VisualInertialOdometry {
     tmp_lock.unlock();
 
     main_work_->join();
-
-    std::cout << "Total image: " << data_buffer_.image_total_num() << std::endl;
-    std::cout << "Dropped image: " << data_buffer_.image_dropped_num()
-              << std::endl;
   }
 
  private:
@@ -62,14 +58,22 @@ class VisualInertialOdometry {
     return running_main_work_;
   }
 
-  Status vio_status_;
+  /*
+   * TODO: Is there something like a ThreadSafeObjectWrapper:
+   * template <class T>
+   * class ThreadSafeWrapper<T> : T {
+   *
+   * };
+   */
+  std::mutex vio_status_mutex_;
+  VIOStatus vio_status_;
 
   /*
    *  Functional objects.
    */
   CameraModelPtr camera_;
   FeatureTrackerPtr feature_tracker_;
-
+  Keyframe *last_keyframe_;
   /*
    * Data structures.
    */
@@ -82,9 +86,10 @@ class VisualInertialOdometry {
   bool running_main_work_;
 };
 
-bool ConstructAndAddKeyframe(Keyframe &frame0, Keyframe &frame1,
+bool ProcessMatchesToLandmarks(Keyframe *frame0, Keyframe *frame1,
                              const std::vector<cv::DMatch> &matches,
                              Landmarks &landmarks);
+
 
 }  // vio
 
