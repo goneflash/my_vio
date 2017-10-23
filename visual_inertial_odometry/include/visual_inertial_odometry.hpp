@@ -74,17 +74,17 @@ class VisualInertialOdometry {
    * Data structures.
    */
   VIODataBuffer data_buffer_;
-  std::unordered_map<KeyframeId, std::unique_ptr<Keyframe>> keyframes_;
-  std::unordered_map<LandmarkId, std::unique_ptr<Landmark>> landmarks_;
+  Keyframes keyframes_;
+  Landmarks landmarks_;
 
   std::unique_ptr<std::thread> main_work_;
   std::mutex running_main_work_mutex_;
   bool running_main_work_;
 };
 
-bool AddFeatureTracks(Keyframe &frame0, Keyframe &frame1,
-                      const std::vector<cv::DMatch> &matches,
-                      Landmarks &landmarks);
+bool ConstructAndAddKeyframe(Keyframe &frame0, Keyframe &frame1,
+                             const std::vector<cv::DMatch> &matches,
+                             Landmarks &landmarks);
 
 }  // vio
 

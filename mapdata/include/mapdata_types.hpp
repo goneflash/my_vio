@@ -27,6 +27,7 @@ class UniqueId {
 class KeyframeId : public UniqueId {
  public:
   KeyframeId() { id_ = ++unique_id_; }
+  KeyframeId(int id) { id_ = id; }
 
  private:
   static int unique_id_;
@@ -39,6 +40,7 @@ bool operator==(const KeyframeId &id0, const KeyframeId &id1) {
 class LandmarkId : public UniqueId {
  public:
   LandmarkId() { id_ = ++unique_id_; }
+  LandmarkId(int id) { id_ = id; }
 
  private:
   static int unique_id_;
@@ -47,19 +49,6 @@ class LandmarkId : public UniqueId {
 bool operator==(const LandmarkId &id0, const LandmarkId &id1) {
   return id0.id() == id1.id();
 }
-typedef int FeatureId;
-
-// Position of the feature in image.
-struct FeatureMeasurement {
-  float x, y;
-};
-
-struct Feature {
-  FeatureMeasurement measurement;
-  // TODO: Change to Eigen.
-  // cv::Mat descriptor;
-};
-
 }  // vio
 
 // TODO: Is there better way?

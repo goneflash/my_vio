@@ -9,6 +9,21 @@
 
 namespace vio {
 
+typedef int FeatureId;
+
+// Position of the feature in image.
+struct FeatureMeasurement {
+  FeatureMeasurement() : x(-1), y(-1) {}
+  FeatureMeasurement(float _x, float _y) : x(_x), y(_y) {}
+  float x, y;
+};
+
+struct Feature {
+  FeatureMeasurement measurement;
+  // TODO: Change to Eigen.
+  // cv::Mat descriptor;
+};
+
 class Landmark {
  public:
   Landmark() : landmark_id_(CreateNewId<LandmarkId>()) {}
@@ -43,6 +58,7 @@ class Landmark {
   LandmarkId landmark_id_;
 };
 
+typedef std::unordered_map<LandmarkId, std::unique_ptr<Landmark>> Landmarks;
 /*
 class Landmarks {
  public:

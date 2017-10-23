@@ -6,7 +6,6 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
     : camera_(camera) {
   // Setup Feature tracker.
   InitializeFeatureTracker();
-
   // cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
 }
 
@@ -48,6 +47,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     // cv::imshow("result", new_image);
     // cv::waitKey(20);
 
+    //std::unique_ptr<Keyframe> new_keyframe =
+    //    std::unique_ptr<Keyframe>(new Keyframe(std::move());
+
     count++;
     std::cout << "Total image: " << data_buffer_.image_total_num() << std::endl;
     std::cout << "Dropped image: " << data_buffer_.image_dropped_num()
@@ -56,10 +58,37 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
   }
 }
 
-bool AddFeatureTracks(Keyframe &frame0, Keyframe &frame1,
-                      const std::vector<cv::DMatch> &matches,
-                      Landmarks &landmarks) {
-
+// TODO: How to use it in FeatureTracker to evaluate tracker?
+bool ConstructAndAddKeyframe(Keyframe &pre_frame, Keyframe &cur_frame,
+                             const std::vector<cv::DMatch> &matches,
+                             Landmarks &landmarks) {
+  // TODO: Add test.
+  cur_frame.pre_frame_id = pre_frame.frame_id;
+  for (const auto match : matches) {
+    // TODO: How can landmark_id compared to int value? Default constructor!
+    if (pre_frame.features[match.queryIdx].landmark_id == -1) {
+      // New landmark.
+      std::unique_ptr<Landmark> new_landmark =
+          std::unique_ptr<Landmark>(new Landmark());
+      new_landmark->AddMeasurementInKeyframe(
+          pre_frame.frame_id, pre_frame.features[match.queryIdx].measurement);
+      new_landmark->AddMeasurementInKeyframe(
+          cur_frame.frame_id, cur_frame.features[match.trainIdx].measurement);
+      // Update keyframe feature point to landmark.
+      pre_frame.features[match.queryIdx].landmark_id =
+          new_landmark->landmark_id();
+      cur_frame.features[match.trainIdx].landmark_id =
+          new_landmark->landmark_id();
+      // Add landmark.
+      landmarks[new_landmark->landmark_id()] = std::move(new_landmark);
+    } else {
+      // Handle existing landmark.
+      LandmarkId landmark_id = pre_frame.features[match.queryIdx].landmark_id;
+      cur_frame.features[match.trainIdx].landmark_id = landmark_id;
+      landmarks[landmark_id]->AddMeasurementInKeyframe(
+          cur_frame.frame_id, cur_frame.features[match.trainIdx].measurement);
+    }
+  }
+  return true;
 }
-
 }  // vio
