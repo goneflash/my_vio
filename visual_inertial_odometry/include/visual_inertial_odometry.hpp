@@ -87,9 +87,8 @@ class VisualInertialOdometry {
 };
 
 bool ProcessMatchesToLandmarks(Keyframe *frame0, Keyframe *frame1,
-                             const std::vector<cv::DMatch> &matches,
-                             Landmarks &landmarks);
-
+                               const std::vector<cv::DMatch> &matches,
+                               Landmarks &landmarks);
 
 }  // vio
 

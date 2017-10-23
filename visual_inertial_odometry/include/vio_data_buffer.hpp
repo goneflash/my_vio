@@ -31,9 +31,7 @@ struct VIODataBufferStats {
 class VIODataBuffer {
  public:
   // TODO: Move buffer size as parameters?
-  VIODataBuffer()
-      : image_buffer_size_(10),
-        imu_buffer_size_(50) {}
+  VIODataBuffer() : image_buffer_size_(10), imu_buffer_size_(50) {}
 
   void AddImageData(cv::Mat &img) {
     image_buffer_stats_.received_count++;
@@ -59,7 +57,9 @@ class VIODataBuffer {
   // TODO: Interpolate imu data to get synchronous data.
   bool GetLatestDataComb() {}
 
-  const VIODataBufferStats &image_buffer_stats() const { return image_buffer_stats_; }
+  const VIODataBufferStats &image_buffer_stats() const {
+    return image_buffer_stats_;
+  }
 
  private:
   // Image data buffer.

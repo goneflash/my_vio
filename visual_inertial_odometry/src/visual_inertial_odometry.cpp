@@ -55,7 +55,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
 
     std::vector<cv::DMatch> matches;
     // TODO: Return tracking evaluation as well.
-    feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur, matches);
+    feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
+                                 matches);
     std::cout << "Feature number in new frame " << frame_cur->keypoints().size()
               << std::endl;
     std::cout << "Found match " << matches.size() << std::endl;
@@ -66,7 +67,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      * 2. Add as new keyframe
      * 3. Lost tracking, need to restart. TODO: or loop closure.
      */
-    if (matches.size() >  300) {
+    if (matches.size() > 300) {
       // Robust tracking. Skip this frame.
       std::cout << "Skipped a frame with " << matches.size() << " matches.\n";
       continue;
@@ -78,13 +79,12 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
 
       // Add tracks.
-      ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(),
-                                matches, landmarks_);
+      ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
+                                landmarks_);
 
       // TODO: Should not be added before.
       last_keyframe_ = keyframes_[new_keyframe->frame_id].get();
       keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
-
     }
 
     // TODO: Plot tracking result.
@@ -97,8 +97,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
 
 // TODO: How to use it in FeatureTracker to evaluate tracker?
 bool ProcessMatchesToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
-                             const std::vector<cv::DMatch> &matches,
-                             Landmarks &landmarks) {
+                               const std::vector<cv::DMatch> &matches,
+                               Landmarks &landmarks) {
   // TODO: Add test.
   cur_frame->pre_frame_id = pre_frame->frame_id;
   for (const auto match : matches) {
