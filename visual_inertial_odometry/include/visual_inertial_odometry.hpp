@@ -47,6 +47,7 @@ class VisualInertialOdometry {
     running_process_buffer_thread_ = false;
     tmp_lock.unlock();
 
+    initializer_thread_->join();
     process_buffer_thread_->join();
   }
 
@@ -78,6 +79,8 @@ class VisualInertialOdometry {
 
   MapInitializerPtr map_initializer_;
   std::unique_ptr<std::thread> initializer_thread_;
+  std::mutex running_initializer_thread_mutex_;
+  bool running_initializer_thread_;
 
   /*
    * Data structures.

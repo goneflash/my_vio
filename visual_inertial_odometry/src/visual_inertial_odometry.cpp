@@ -6,6 +6,8 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
     : camera_(camera),
       vio_status_(UNINITED),
       last_keyframe_(nullptr),
+      running_process_buffer_thread_(false),
+      running_initializer_thread_(false),
       num_skipped_frames_(0) {
   // Setup Feature tracker.
   InitializeFeatureTracker();
@@ -88,14 +90,16 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      * 2. Add as new keyframe
      * 3. Lost tracking, need to restart. TODO: or loop closure.
      */
-    if (matches.size() > 600 && num_skipped_frames_ < 5) {
+    if (matches.size() > 500 && num_skipped_frames_ < 5) {
       // Robust tracking. Skip this frame.
       std::cout << "Skipped a frame with " << matches.size() << " matches.\n";
+      num_skipped_frames_++;
       continue;
     } else if (matches.size() < 10) {
       // TODO
       std::cout << "Warning: Lost tracking. Restarting...";
     } else {
+      num_skipped_frames_ = 0;
       // TODO: Also skip if estimated motion is bad.
       // Add this frame as a new keyframe.
       std::unique_ptr<Keyframe> new_keyframe =
@@ -114,26 +118,48 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
         keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
         last_keyframe_ = keyframes_[tmp_id].get();
+
+        std::cout << "Now total keyframes is: " << keyframes_.size()
+                  << std::endl;
       }
     }
 
     /*
      * Choose what to do depend on the status of VIO
      */
+    std::unique_lock<std::mutex> status_lock(vio_status_mutex_);
     if (vio_status_ == UNINITED) {
-      // Run initilizer on the most recent frames.
-      std::vector<std::vector<cv::Vec2d> > feature_vectors;
-      std::vector<KeyframeId> frame_ids;
+      status_lock.unlock();
       {
-        // TODO: Deadlock!!?
-        std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
-        std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
-        CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
-                               feature_vectors);
-        std::cout << "Prepared for initialization:\n"
-                  << "Total frames : " << keyframes_.size()
-                  << "\nTotal features: " << feature_vectors[0].size() << "\n";
-        RunInitializer(frame_ids, feature_vectors);
+        std::unique_lock<std::mutex> tmp_lock(
+            running_initializer_thread_mutex_);
+        if (!running_initializer_thread_) {
+          running_initializer_thread_ = true;
+          // TODO: Should unlock here, or remove, just release when end of this
+          // section?
+          tmp_lock.unlock();
+
+          // Run initilizer on the most recent frames.
+          std::vector<std::vector<cv::Vec2d> > feature_vectors;
+          std::vector<KeyframeId> frame_ids;
+          {
+            // TODO: Deadlock!!?
+            std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
+            std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
+            CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
+                                   feature_vectors);
+          }
+          std::cout << "Prepared for initialization:\n"
+                    << "Total frames : " << keyframes_.size()
+                    << "\nTotal features: " << feature_vectors[0].size()
+                    << "\n";
+
+          initializer_thread_ = std::unique_ptr<std::thread>(
+              new std::thread(&VisualInertialOdometry::RunInitializer, this,
+                              frame_ids, feature_vectors));
+        } else {  // already running a initialization thread.
+          tmp_lock.unlock();
+        }
       }
     } else {
       // Estmiate the pose of current frame.
@@ -149,13 +175,17 @@ void VisualInertialOdometry::RunInitializer(
   std::vector<bool> points3d_mask;
   std::vector<cv::Mat> Rs_est, ts_est;
 
+  // TODO: Change this.
   cv::Matx33d K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
   if (!map_initializer_->Initialize(feature_vectors, cv::Mat(K_), points3d,
                                     points3d_mask, Rs_est, ts_est)) {
     std::cerr << "Warning: Initialization failed.\n\n";
   } else {
     std::cerr << "Initialization Success.\n\n";
-    vio_status_ = INITED;
+    {
+      std::unique_lock<std::mutex> status_lock(vio_status_mutex_);
+      vio_status_ = INITED;
+    }
   }
 }
 

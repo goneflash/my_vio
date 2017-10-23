@@ -42,6 +42,7 @@ TEST_F(VisualInertialOdometryTest, Test0) {
   vio->Start();
 
   Process();
+
   vio->Stop();
 }
 
