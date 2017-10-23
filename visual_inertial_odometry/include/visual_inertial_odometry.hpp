@@ -75,7 +75,7 @@ class VisualInertialOdometry {
    */
   VIODataBuffer data_buffer_;
   std::unordered_map<KeyframeId, std::unique_ptr<Keyframe>> keyframes_;
-  Landmarks landmarks_;
+  std::unordered_map<LandmarkId, std::unique_ptr<Landmark>> landmarks_;
 
   std::unique_ptr<std::thread> main_work_;
   std::mutex running_main_work_mutex_;

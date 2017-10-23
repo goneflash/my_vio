@@ -43,8 +43,6 @@ class Landmark {
   LandmarkId landmark_id_;
 };
 
-typedef std::unordered_map<LandmarkId, Landmark> Landmarks;
-
 /*
 class Landmarks {
  public:

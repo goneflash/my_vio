@@ -2,10 +2,6 @@
 
 namespace vio {
 
-bool AddFeatureTracks(Keyframe &frame0, Keyframe &frame1,
-                      const std::vector<cv::DMatch> &matches,
-                      Landmarks &landmarks) {}
-
 VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
     : camera_(camera) {
   // Setup Feature tracker.
@@ -58,6 +54,12 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
               << std::endl;
     std::cout << "processed " << count << std::endl;
   }
+}
+
+bool AddFeatureTracks(Keyframe &frame0, Keyframe &frame1,
+                      const std::vector<cv::DMatch> &matches,
+                      Landmarks &landmarks) {
+
 }
 
 }  // vio
