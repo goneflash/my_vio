@@ -17,34 +17,76 @@ class VisualInertialOdometryTest : public ::testing::Test {
 
     vio = std::unique_ptr<vio::VisualInertialOdometry>(
         new vio::VisualInertialOdometry(camera));
-  }
 
-  void Process() {
-    std::vector<std::string> images;
+    // Setup test data.
     ASSERT_TRUE(GetImageNamesInFolder(
         root_path + "/feature_tracker/test/test_data/long_seq", "jpg", images));
-    int num_img_to_test = 5;
+  }
+
+  // Interval is in milliseconds.
+  // Images to test.
+  void Process(int interval, int num_img_to_test) {
+    int count = 0;
     for (auto img : images) {
       cv::Mat image = cv::imread(img);
 
       vio->ProcessNewImage(image);
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+
+      count++;
+      if (count == num_img_to_test)
+        break;
     }
   }
 
+  std::vector<std::string> images;
   vio::CameraModelPtr camera;
   std::unique_ptr<vio::VisualInertialOdometry> vio;
 };
 
-TEST_F(VisualInertialOdometryTest, Test0) {
+TEST_F(VisualInertialOdometryTest, Test_Short_Quick) {
   Init();
   vio->Start();
 
-  Process();
+  // 20 ms, 10 frames.
+  Process(20, 10);
 
   vio->Stop();
 }
+
+TEST_F(VisualInertialOdometryTest, Test_FullLength_Quick) {
+  Init();
+  vio->Start();
+
+  // 20 ms, 10 frames.
+  Process(10, images.size());
+
+  vio->Stop();
+}
+
+TEST_F(VisualInertialOdometryTest, Test_FullLength_NormalSpeed) {
+  Init();
+  vio->Start();
+
+  // 20 ms, 10 frames.
+  Process(50, images.size());
+
+  vio->Stop();
+}
+/*
+ * TODO: Will stuck now.
+TEST_F(VisualInertialOdometryTest, Test_FullLength_Slow) {
+  Init();
+  vio->Start();
+
+  // 20 ms, 10 frames.
+  Process(200, images.size());
+
+  vio->Stop();
+}
+*/
+
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

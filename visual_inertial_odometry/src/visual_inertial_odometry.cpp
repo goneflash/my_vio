@@ -50,6 +50,10 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       break;
     }
 
+    /* TODO:
+     * When processing is faster than coming images and the images has end, it
+     * will tuck here.
+     */
     cv::Mat new_image = data_buffer_.GetImageData();
     std::unique_ptr<vio::ImageFrame> frame_cur(new vio::ImageFrame(new_image));
 

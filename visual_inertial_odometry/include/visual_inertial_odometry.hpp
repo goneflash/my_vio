@@ -47,7 +47,9 @@ class VisualInertialOdometry {
     running_process_buffer_thread_ = false;
     tmp_lock.unlock();
 
-    initializer_thread_->join();
+    // Check if it's too quick that the initializer hasn't started yet.
+    if (initializer_thread_ != nullptr)
+      initializer_thread_->join();
     process_buffer_thread_->join();
   }
 

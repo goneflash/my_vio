@@ -73,6 +73,7 @@ class VIODataBuffer {
   // ThreadSafeQueue<cv::Mat> imu_buffer_;
   VIODataBufferStats imu_buffer_stats_;
 };
-}
+
+} // vio
 
 #endif  // VIO_DATA_BUFFER_HPP_
