@@ -164,6 +164,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
                     << "\nTotal features: " << feature_vectors[0].size()
                     << "\n";
 
+          // Run independently. If succeeded, write results to the frames and initialize landmarks.
           initializer_thread_ = std::unique_ptr<std::thread>(
               new std::thread(&VisualInertialOdometry::RunInitializer, this,
                               frame_ids, feature_vectors));
@@ -180,7 +181,6 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
 void VisualInertialOdometry::RunInitializer(
     const std::vector<KeyframeId> &frame_ids,
     const std::vector<std::vector<cv::Vec2d> > &feature_vectors) {
-  // TODO: Start a new thread.
   std::vector<cv::Point3f> points3d;
   std::vector<bool> points3d_mask;
   std::vector<cv::Mat> Rs_est, ts_est;

@@ -6,8 +6,11 @@
 #include <vector>
 #include <unordered_map>
 
+#include <Eigen/Core>
+
 #include "mapdata_types.hpp"
 
+// TODO: Rename file to landmark.
 namespace vio {
 
 // Position of the feature in image.
@@ -17,14 +20,10 @@ struct FeatureMeasurement {
   float x, y;
 };
 
-struct Feature {
-  FeatureMeasurement measurement;
-  // TODO: Change to Eigen.
-  // cv::Mat descriptor;
-};
-
 class Landmark {
  public:
+   typedef Eigen::Vector3d Position;
+
   Landmark() : landmark_id(CreateNewId<LandmarkId>()) {}
 
   // TODO: Should not add duplicated features.
@@ -52,6 +51,9 @@ class Landmark {
   KeyframeIdToFeatureMeasurement keyframe_to_feature;
 
   LandmarkId landmark_id;
+
+  // In world frame.
+  Position position;
 
  private:
 };
