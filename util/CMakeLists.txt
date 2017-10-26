@@ -31,12 +31,18 @@ install(TARGETS ${TARGET}
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 if (USE_TEST)
-  file(GLOB TEST_SOURCE_FILE
-      "test/*.cpp" )
-       
-  add_executable(${TARGET}_test ${TEST_SOURCE_FILE})
-  target_link_libraries(${TARGET}_test ${TARGET}
-    gtest gtest_main
-    ${OpenCV_LIBS} )
-  add_test( ${TARGET}Test ${TARGET}_test )
+  file(GLOB TEST_SOURCE_FILES
+    "test/*.cpp" )
+  foreach (TEST_SOURCE_FILE ${TEST_SOURCE_FILES})
+    get_filename_component(TEST_NAME ${TEST_SOURCE_FILE} NAME_WE)
+    message(STATUS "Test file: ${TEST_SOURCE_FILE}")
+    message(STATUS "Test name: ${TEST_NAME}")
+
+    add_executable(${TEST_NAME} ${TEST_SOURCE_FILE})
+    # TODO: Maybe better to define libs for each test
+    target_link_libraries(${TEST_NAME} ${TARGET}
+      gtest gtest_main
+      ${OpenCV_LIBS} )
+    add_test( ${TARGET}Test ${TEST_NAME} )
+  endforeach()
 endif()

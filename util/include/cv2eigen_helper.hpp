@@ -21,10 +21,13 @@ inline cv::Mat EigenVec3dToCVMat(const Eigen::Vector3d &p) {
 }
 
 inline Eigen::Vector3d CVMatToEigenVec3d(const cv::Mat &mat) {
-  // TODO: Check size use assert, check Type is float.
+  // TODO: Check size use assert, check Type is double.
   Eigen::Vector3d vec;
-  vec[0] = mat.at<
+  vec[0] = mat.at<double>(0);
+  vec[1] = mat.at<double>(1);
+  vec[2] = mat.at<double>(2);
 
+  return vec;
 }
 
 #endif  // CV2EIGEN_HELPER_
