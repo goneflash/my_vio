@@ -59,7 +59,7 @@ class VisualInertialOdometry {
 
     // Check if it's too quick that the initializer hasn't started yet.
     if (initializer_thread_ != nullptr) initializer_thread_->join();
-    process_buffer_thread_->join();
+    if (process_buffer_thread_ != nullptr) process_buffer_thread_->join();
   }
 
  private:
@@ -70,6 +70,9 @@ class VisualInertialOdometry {
   void RunInitializer(
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<std::vector<cv::Vec2d> > &feature_vectors);
+  void CopyInitializedFramesAndLandmarksData(
+      const std::vector<KeyframeId> &frame_ids,
+      const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
 
   // TODO: Remove
   bool KeepRunningMainWork() {

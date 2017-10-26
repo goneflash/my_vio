@@ -190,13 +190,22 @@ void VisualInertialOdometry::RunInitializer(
   if (!map_initializer_->Initialize(feature_vectors, cv::Mat(K_), points3d,
                                     points3d_mask, Rs_est, ts_est)) {
     std::cerr << "Warning: Initialization failed.\n\n";
+    return;
   } else {
     std::cerr << "Initialization Success.\n\n";
     {
       std::unique_lock<std::mutex> status_lock(vio_status_mutex_);
       vio_status_ = INITED;
     }
+    CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
   }
+}
+
+void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
+    const std::vector<KeyframeId> &frame_ids,
+    const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est) {
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
 }
 
 void RemoveUnmatchedFeatures(Keyframe *frame) {
