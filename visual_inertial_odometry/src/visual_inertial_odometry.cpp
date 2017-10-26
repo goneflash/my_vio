@@ -8,6 +8,7 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
       last_keyframe_(nullptr),
       running_process_buffer_thread_(false),
       running_initializer_thread_(false),
+      end_of_buffer_(false),
       num_skipped_frames_(0) {
   // Setup Feature tracker.
   InitializeFeatureTracker();
@@ -42,6 +43,7 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
 
 void VisualInertialOdometry::ProcessDataInBuffer() {
   for (;;) {
+    /*
     if (!KeepRunningMainWork()) {
       std::cout << "Image buffer stats:\n";
       data_buffer_.image_buffer_stats().Print();
@@ -49,12 +51,15 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       landmark_stats_.Print();
       break;
     }
+    */
 
     /* TODO:
      * When processing is faster than coming images and the images has end, it
      * will tuck here.
      */
-    cv::Mat new_image = data_buffer_.GetImageData();
+    cv::Mat new_image;
+    if (data_buffer_.GetImageDataOrEndOfBuffer(new_image)) break;
+
     std::unique_ptr<vio::ImageFrame> frame_cur(new vio::ImageFrame(new_image));
 
     // TODO: May need to skip the first several frames.
@@ -84,8 +89,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     // TODO: Return tracking evaluation as well.
     feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
                                  matches);
-    std::cout << "Feature number in new frame " << frame_cur->keypoints().size()
-              << std::endl;
+    // std::cout << "Feature number in new frame " <<
+    // frame_cur->keypoints().size() << std::endl;
     std::cout << "Found match " << matches.size() << std::endl;
 
     /*
@@ -96,7 +101,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      */
     if (matches.size() > 500 && num_skipped_frames_ < 5) {
       // Robust tracking. Skip this frame.
-      std::cout << "Skipped a frame with " << matches.size() << " matches.\n";
+      // std::cout << "Skipped a frame with " << matches.size() << "
+      // matches.\n";
       num_skipped_frames_++;
       continue;
     } else if (matches.size() < 10) {

@@ -43,13 +43,22 @@ class VisualInertialOdometry {
   }
 
   void Stop() {
-    std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
-    running_process_buffer_thread_ = false;
-    tmp_lock.unlock();
+    // Send stop signal.
+    {
+      std::unique_lock<std::mutex> tmp_lock(
+          running_process_buffer_thread_mutex_);
+      running_process_buffer_thread_ = false;
+      tmp_lock.unlock();
+    }
+    data_buffer_.CloseBuffer();
+
+    std::cout << "Image buffer stats:\n";
+    data_buffer_.image_buffer_stats().Print();
+    GetLandmarkStats(landmarks_, landmark_stats_);
+    landmark_stats_.Print();
 
     // Check if it's too quick that the initializer hasn't started yet.
-    if (initializer_thread_ != nullptr)
-      initializer_thread_->join();
+    if (initializer_thread_ != nullptr) initializer_thread_->join();
     process_buffer_thread_->join();
   }
 
@@ -62,6 +71,7 @@ class VisualInertialOdometry {
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<std::vector<cv::Vec2d> > &feature_vectors);
 
+  // TODO: Remove
   bool KeepRunningMainWork() {
     // TODO: Should be atomic
     std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
@@ -88,6 +98,8 @@ class VisualInertialOdometry {
    * Data structures.
    */
   VIODataBuffer data_buffer_;
+  std::mutex end_of_buffer_mutex_;
+  bool end_of_buffer_;
 
   std::mutex keyframes_mutex_;
   Keyframes keyframes_;

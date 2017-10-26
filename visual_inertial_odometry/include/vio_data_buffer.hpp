@@ -31,7 +31,13 @@ struct VIODataBufferStats {
 class VIODataBuffer {
  public:
   // TODO: Move buffer size as parameters?
-  VIODataBuffer() : image_buffer_size_(10), imu_buffer_size_(50) {}
+  VIODataBuffer()
+      : buffer_closed_(false), image_buffer_size_(10), imu_buffer_size_(50) {}
+
+  void CloseBuffer() {
+    std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
+    buffer_closed_ = true;
+  }
 
   void AddImageData(cv::Mat &img) {
     image_buffer_stats_.received_count++;
@@ -52,7 +58,24 @@ class VIODataBuffer {
 
   void AddImuData() {}
 
-  cv::Mat GetImageData() { return image_buffer_.Pop(); }
+  // Return true if buffer has ended.
+  bool GetImageDataOrEndOfBuffer(cv::Mat &image) {
+    {
+      std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
+      if (buffer_closed_) return true;
+    }
+    // TODO: Still has the problem!!!! what if comes here, and then
+    // buffer_closed_ becomes true.
+
+    while (!image_buffer_.TryPop(image)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(30));
+      {
+        std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
+        if (buffer_closed_) return true;
+      }
+    }
+    return false;
+  }
 
   // TODO: Interpolate imu data to get synchronous data.
   bool GetLatestDataComb() {}
@@ -62,6 +85,9 @@ class VIODataBuffer {
   }
 
  private:
+  std::mutex buffer_closed_mutex_;
+  bool buffer_closed_;
+
   // Image data buffer.
   int image_buffer_size_;
   ThreadSafeQueue<cv::Mat> image_buffer_;
@@ -74,6 +100,6 @@ class VIODataBuffer {
   VIODataBufferStats imu_buffer_stats_;
 };
 
-} // vio
+}  // vio
 
 #endif  // VIO_DATA_BUFFER_HPP_

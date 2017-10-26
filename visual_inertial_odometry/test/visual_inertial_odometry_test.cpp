@@ -35,8 +35,7 @@ class VisualInertialOdometryTest : public ::testing::Test {
       std::this_thread::sleep_for(std::chrono::milliseconds(interval));
 
       count++;
-      if (count == num_img_to_test)
-        break;
+      if (count == num_img_to_test) break;
     }
   }
 
@@ -76,6 +75,7 @@ TEST_F(VisualInertialOdometryTest, Test_FullLength_NormalSpeed) {
 }
 /*
  * TODO: Will stuck now.
+ */
 TEST_F(VisualInertialOdometryTest, Test_FullLength_Slow) {
   Init();
   vio->Start();
@@ -85,8 +85,6 @@ TEST_F(VisualInertialOdometryTest, Test_FullLength_Slow) {
 
   vio->Stop();
 }
-*/
-
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

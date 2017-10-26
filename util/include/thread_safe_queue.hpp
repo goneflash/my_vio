@@ -53,6 +53,8 @@ class ThreadSafeQueue {
     return std::move(data);
   }
 
+  // TODO: tmp_lock is from size. Need to make sure the size
+  // stays the same when checked size and want to pop.
   T Pop(std::unique_lock<std::mutex> tmp_lock) {
     while (queue_.empty()) {
       cond_.wait(tmp_lock);
@@ -60,6 +62,18 @@ class ThreadSafeQueue {
     T data = std::move(queue_.front());
     queue_.pop();
     return std::move(data);
+  }
+
+  // TODO: This is trick. Because there might be no data any more,
+  // So try to pop once.
+  bool TryPop(T &data) {
+    std::unique_lock<std::mutex> tmp_lock(mutex_);
+    if (!queue_.empty()) {
+      data = std::move(queue_.front());
+      queue_.pop();
+      return true;
+    }
+    return false;
   }
 
  private:
