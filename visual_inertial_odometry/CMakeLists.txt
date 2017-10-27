@@ -17,6 +17,7 @@ target_link_libraries( ${TARGET}
                        feature_tracker
                        mapdata
                        map_initializer
+                       multiview_helper
                        simulator)
 
 target_include_directories(${TARGET} PUBLIC 

@@ -1,5 +1,7 @@
 #include "visual_inertial_odometry.hpp"
 
+#include "multiview.hpp"
+
 namespace vio {
 
 VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
@@ -239,8 +241,9 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   keyframe_lock.unlock();
 
   // Triangluate features again.
+  // TODO: Although it's now duplicated with the one in MapInitializer, it should have better method in the future.
 
-  // Calculate poses for current frames.
+  // Calculate poses for current keyframes.
 
   // std::lock(landmarks_lock, keyframe_lock);
 }
