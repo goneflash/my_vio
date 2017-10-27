@@ -14,6 +14,7 @@ target_link_libraries( ${TARGET}
                        ${EIGEN3_LIBS}
                        ${OpenCV_LIBS}
                        camera_model
+                       mapdata
                        util)
 
 target_include_directories(${TARGET} PUBLIC 

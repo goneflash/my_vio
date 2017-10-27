@@ -6,26 +6,10 @@
 #include <opencv2/opencv.hpp>
 
 #include "camera_model.hpp"
+#include "feature_tracks.hpp"
+#include "keyframe.hpp"
 
 namespace vio {
-
-struct CameraPose {
-  CameraPose() : timestamp(0) {
-    position << 0, 0, 0;
-    orientation << 0, 0, 0, 1;
-  }
-  double timestamp;
-  Eigen::Vector3d position;
-  Eigen::Vector4d orientation;
-
-  // TODO: Remove this. Only use eigen.
-  cv::Mat R;
-  cv::Vec3d t;
-};
-
-struct Landmark {
-  Eigen::Vector3d position;
-};
 
 /*
  * Contains

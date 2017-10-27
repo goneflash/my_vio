@@ -12,12 +12,21 @@
 
 namespace vio {
 
-struct FramePose {
+struct CameraPose {
  public:
+  CameraPose() : timestamp(0) {
+    position << 0, 0, 0;
+    orientation << 0, 0, 0, 1;
+  }
+  double timestamp;
   // In world frame.
   Eigen::Vector3d position;
   // In world frame.
   Eigen::Vector4d orientation;
+
+  // TODO: Remove this. Only use eigen.
+  cv::Mat R;
+  cv::Vec3d t;
 };
 
 typedef int FeatureId;
@@ -60,7 +69,7 @@ class Keyframe {
 
   std::unordered_map<FeatureId, Feature> features;
 
-  FramePose pose;
+  CameraPose pose;
 };
 
 typedef std::unordered_map<KeyframeId, std::unique_ptr<Keyframe>> Keyframes;

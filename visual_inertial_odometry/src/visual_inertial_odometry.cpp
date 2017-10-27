@@ -42,6 +42,9 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
 }
 
 void VisualInertialOdometry::ProcessDataInBuffer() {
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                              std::defer_lock);
   for (;;) {
     {
       std::unique_lock<std::mutex> tmp_lock(
@@ -62,29 +65,36 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     /*
      * Handle first frame.
      */
+    keyframe_lock.lock();
     if (!last_keyframe_) {
+      keyframe_lock.unlock();
       // TODO: ImageFrame must have features before passing to a keyframe.
       feature_tracker_->ComputeFrame(*frame_cur);
       std::unique_ptr<Keyframe> first_keyframe =
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
       // TODO: Should not be added before.
       const KeyframeId tmp_id = first_keyframe->frame_id;
-      {
-        std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
-        keyframes_[first_keyframe->frame_id] = std::move(first_keyframe);
-        last_keyframe_ = keyframes_[tmp_id].get();
-      }
+
+      keyframe_lock.lock();
+      keyframes_[first_keyframe->frame_id] = std::move(first_keyframe);
+      last_keyframe_ = keyframes_[tmp_id].get();
+      keyframe_lock.unlock();
 
       continue;
     }
+    keyframe_lock.unlock();
 
     /*
      * Run feature matching for new frame.
      */
     std::vector<cv::DMatch> matches;
     // TODO: Return tracking evaluation as well.
+    // Should use mutex here. Otherwise, if the pointed keyframe is changed in
+    // another thread.
+    keyframe_lock.lock();
     feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
                                  matches);
+    keyframe_lock.unlock();
     // std::cout << "Feature number in new frame " <<
     // frame_cur->keypoints().size() << std::endl;
     std::cout << "Found match " << matches.size() << std::endl;
@@ -112,22 +122,20 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
           std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
 
       // Add tracks.
-      {
-        std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
-        ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
-                                  landmarks_);
-      }
+      std::lock(landmarks_lock, keyframe_lock);
+      ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
+                                landmarks_);
+      landmarks_lock.unlock();
+      keyframe_lock.unlock();
 
       // TODO: Should not be added before.
+      keyframe_lock.lock();
       const KeyframeId tmp_id = new_keyframe->frame_id;
-      {
-        std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
-        keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
-        last_keyframe_ = keyframes_[tmp_id].get();
+      keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
+      last_keyframe_ = keyframes_[tmp_id].get();
 
-        std::cout << "Now total keyframes is: " << keyframes_.size()
-                  << std::endl;
-      }
+      std::cout << "Now total keyframes is: " << keyframes_.size() << std::endl;
+      keyframe_lock.unlock();
     }
 
     /*
@@ -146,21 +154,16 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         status_lock.unlock();
 
         // Run initilizer on the most recent frames.
+        std::lock(landmarks_lock, keyframe_lock);
         std::vector<std::vector<cv::Vec2d> > feature_vectors;
         std::vector<KeyframeId> frame_ids;
-        {
-          // TODO: Deadlock!!?
-          std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
-                                                      std::defer_lock);
-          std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_,
-                                                     std::defer_lock);
-          std::lock(landmarks_lock, keyframe_lock);
-          CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
-                                 feature_vectors);
-        }
+        CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
+                               feature_vectors);
         std::cout << "Prepared for initialization:\n"
                   << "Total frames : " << keyframes_.size()
                   << "\nTotal features: " << feature_vectors[0].size() << "\n";
+        landmarks_lock.unlock();
+        keyframe_lock.unlock();
 
         // Run independently. If succeeded, write results to the frames and
         // initialize landmarks.
@@ -171,6 +174,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
           initializer_thread_->join();
         // TODO: The problem is if already called Stop. Then this should not
         // execute.
+        // TODO: Doesn't make sense, because need to check every step in this
+        // thread
+        // if it has already received signal to stop!!!
         {
           std::unique_lock<std::mutex> tmp_lock(
               running_process_buffer_thread_mutex_);
@@ -221,9 +227,10 @@ void VisualInertialOdometry::RunInitializer(
 void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
     const std::vector<KeyframeId> &frame_ids,
     const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est) {
-  // TODO: Deadlock??
-  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
-  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                              std::defer_lock);
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+  std::lock(landmarks_lock, keyframe_lock);
 }
 
 void RemoveUnmatchedFeatures(Keyframe *frame) {
