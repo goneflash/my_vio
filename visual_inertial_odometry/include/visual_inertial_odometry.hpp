@@ -52,9 +52,12 @@ class VisualInertialOdometry {
 
     data_buffer_.CloseBuffer();
 
-    // Check if it's too quick that the initializer hasn't started yet.
-    if (initializer_thread_ != nullptr && initializer_thread_->joinable())
-      initializer_thread_->join();
+    {
+      std::unique_lock<std::mutex> tmp_lock(running_initializer_thread_mutex_);
+      // Check if it's too quick that the initializer hasn't started yet.
+      if (initializer_thread_ != nullptr && initializer_thread_->joinable())
+        initializer_thread_->join();
+    }
     if (process_buffer_thread_ != nullptr && process_buffer_thread_->joinable())
       process_buffer_thread_->join();
 

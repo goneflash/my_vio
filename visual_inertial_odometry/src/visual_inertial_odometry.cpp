@@ -165,8 +165,17 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         // Run independently. If succeeded, write results to the frames and
         // initialize landmarks.
         // TODO: Should use future::state::ready.
+        std::unique_lock<std::mutex> tmp_lock(
+            running_initializer_thread_mutex_);
         if (initializer_thread_ != nullptr && initializer_thread_->joinable())
           initializer_thread_->join();
+        // TODO: The problem is if already called Stop. Then this should not
+        // execute.
+        {
+          std::unique_lock<std::mutex> tmp_lock(
+              running_process_buffer_thread_mutex_);
+          if (!running_process_buffer_thread_) break;
+        }
         initializer_thread_ = std::unique_ptr<std::thread>(
             new std::thread(&VisualInertialOdometry::RunInitializer, this,
                             frame_ids, feature_vectors));
