@@ -38,10 +38,13 @@ struct Feature {
   // TODO: Add descriptor;
 };
 
+// TODO: This is not a thread safe object. Might make smaller molecure.
 class Keyframe {
  public:
   Keyframe(std::unique_ptr<ImageFrame> frame)
-      : frame_id(CreateNewId<KeyframeId>()), pre_frame_id(-1) {
+      : frame_id(CreateNewId<KeyframeId>()),
+        pre_frame_id(-1),
+        inited_pose_(false) {
     // TODO: Not transfer ImageFrame, just copy the keypoints and descriptor.
     image_frame = std::move(frame);
 
@@ -58,7 +61,11 @@ class Keyframe {
   Keyframe() = delete;
 
   // TODO: inline
-  void SetPose(const cv::Mat &R, const cv::Mat &t) {}
+  void SetPose(const cv::Mat &R, const cv::Mat &t) {
+    inited_pose_ = true;
+    pose.R = R.clone();
+    pose.t = t.clone();
+  }
 
   KeyframeId frame_id;
   KeyframeId pre_frame_id;
@@ -69,6 +76,7 @@ class Keyframe {
 
   std::unordered_map<FeatureId, Feature> features;
 
+  bool inited_pose_;
   CameraPose pose;
 };
 

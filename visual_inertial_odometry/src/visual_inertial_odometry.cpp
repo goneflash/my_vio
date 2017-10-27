@@ -210,11 +210,11 @@ void VisualInertialOdometry::RunInitializer(
     // TODO: Clear all keyframes and landmarks.
   } else {
     std::cerr << "Initialization Success.\n\n";
+    CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
     {
       std::unique_lock<std::mutex> status_lock(vio_status_mutex_);
       vio_status_ = INITED;
     }
-    CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
   }
 
   // TODO: Consider using future / promises.
@@ -227,11 +227,56 @@ void VisualInertialOdometry::RunInitializer(
 void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
     const std::vector<KeyframeId> &frame_ids,
     const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est) {
+  // TODO: Check size equal: frame_ids, Rs_est, ts_est.
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
                                               std::defer_lock);
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
-  std::lock(landmarks_lock, keyframe_lock);
+
+  keyframe_lock.lock();
+  for (int i = 0; i < frame_ids.size(); ++i) {
+    keyframes_[frame_ids[i]]->SetPose(Rs_est[i], ts_est[i]);
+  }
+  keyframe_lock.unlock();
+
+  // Triangluate features again.
+
+  // Calculate poses for current frames.
+
+  // std::lock(landmarks_lock, keyframe_lock);
 }
+
+#ifdef OPENCV_VIZ_FOUND
+void VisualInertialOdometry::VisualizeCurrentScene() {
+  // TODO: I think the problem using some flag is that in the whole process
+  // the flag might change. So must make sure the change of flag won't affect
+  // the current thread. For example here if vio_status_is changed after here,
+  // e.g. whole scene is reset, then it will be troublsome.
+  // TODO: For debug reason, here just hold the status mutex for the whole time.
+  std::unique_lock<std::mutex> status_lock(vio_status_mutex_, std::defer_lock);
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+
+  std::lock(status_lock, keyframe_lock);
+  if (vio_status_ != INITED) {
+    std::cerr << "Error: VIO not initialized. Couldn't visualize.\n";
+    return;
+  }
+
+  vio::Scene scene;
+  vio::SceneVisualizer visualizer("simple");
+
+  for (const auto &id_to_frame : keyframes_) {
+    const auto &keyframe = id_to_frame.second;
+    if (keyframe->inited_pose_) {
+      std::cout << "frame " << id_to_frame.first.id() << " is inited.\n";
+      scene.trajectory.push_back(keyframe->pose);
+    } else {
+      std::cout << "frame " << id_to_frame.first.id() << " is not inited.\n";
+    }
+  }
+
+  visualizer.VisualizeScene(scene);
+}
+#endif
 
 void RemoveUnmatchedFeatures(Keyframe *frame) {
   // TODO

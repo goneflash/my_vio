@@ -54,6 +54,9 @@ int TestFramesInFolder(Options option) {
   }
 
   vio->Stop();
+#ifdef OPENCV_VIZ_FOUND
+  vio->VisualizeCurrentScene();
+#endif
   return 0;
 }
 

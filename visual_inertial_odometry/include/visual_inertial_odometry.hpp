@@ -18,6 +18,11 @@
 
 #include "vio_data_buffer.hpp"
 
+#ifdef OPENCV_VIZ_FOUND
+#include "scene.hpp"
+#include "scene_visualizer.hpp"
+#endif
+
 namespace vio {
 
 class VisualInertialOdometry {
@@ -66,6 +71,11 @@ class VisualInertialOdometry {
     GetLandmarkStats(landmarks_, landmark_stats_);
     landmark_stats_.Print();
   }
+
+// TODO: This should be outside of VIO, but put here for now for easy debugging.
+#ifdef OPENCV_VIZ_FOUND
+  void VisualizeCurrentScene();
+#endif
 
  private:
   void InitializeFeatureTracker();

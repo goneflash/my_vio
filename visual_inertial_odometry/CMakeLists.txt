@@ -14,9 +14,10 @@ target_link_libraries( ${TARGET}
                        ${OpenCV_LIBS} 
                        util
                        camera_model
+                       feature_tracker
                        mapdata
                        map_initializer
-                       feature_tracker)
+                       simulator)
 
 target_include_directories(${TARGET} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/include 
