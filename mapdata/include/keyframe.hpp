@@ -13,21 +13,21 @@
 namespace vio {
 
 struct FramePose {
-  public:
-    // In world frame.
-    Eigen::Vector3d position;
-    // In world frame.
-    Eigen::Vector4d orientation;
+ public:
+  // In world frame.
+  Eigen::Vector3d position;
+  // In world frame.
+  Eigen::Vector4d orientation;
 };
 
 typedef int FeatureId;
 
-  struct Feature {
-    Feature() : landmark_id(-1), measurement(-1, -1) {}
-    LandmarkId landmark_id;
-    FeatureMeasurement measurement;
-    // TODO: Add descriptor;
-  };
+struct Feature {
+  Feature() : landmark_id(-1), measurement(-1, -1) {}
+  LandmarkId landmark_id;
+  FeatureMeasurement measurement;
+  // TODO: Add descriptor;
+};
 
 class Keyframe {
  public:
@@ -48,10 +48,8 @@ class Keyframe {
   }
   Keyframe() = delete;
 
-
   // TODO: inline
-  void SetPose(const cv::Mat &R, const cv::Mat &t) {
-  }
+  void SetPose(const cv::Mat &R, const cv::Mat &t) {}
 
   KeyframeId frame_id;
   KeyframeId pre_frame_id;

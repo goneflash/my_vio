@@ -35,8 +35,6 @@ if (USE_TEST)
     "test/*.cpp" )
   foreach (TEST_SOURCE_FILE ${TEST_SOURCE_FILES})
     get_filename_component(TEST_NAME ${TEST_SOURCE_FILE} NAME_WE)
-    message(STATUS "Test file: ${TEST_SOURCE_FILE}")
-    message(STATUS "Test name: ${TEST_NAME}")
 
     add_executable(${TEST_NAME} ${TEST_SOURCE_FILE})
     # TODO: Maybe better to define libs for each test

@@ -43,15 +43,11 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
 
 void VisualInertialOdometry::ProcessDataInBuffer() {
   for (;;) {
-    /*
-    if (!KeepRunningMainWork()) {
-      std::cout << "Image buffer stats:\n";
-      data_buffer_.image_buffer_stats().Print();
-      GetLandmarkStats(landmarks_, landmark_stats_);
-      landmark_stats_.Print();
-      break;
+    {
+      std::unique_lock<std::mutex> tmp_lock(
+          running_process_buffer_thread_mutex_);
+      if (!running_process_buffer_thread_) break;
     }
-    */
 
     /* TODO:
      * When processing is faster than coming images and the images has end, it
@@ -139,38 +135,44 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
      */
     std::unique_lock<std::mutex> status_lock(vio_status_mutex_);
     if (vio_status_ == UNINITED) {
-      status_lock.unlock();
-      {
-        std::unique_lock<std::mutex> tmp_lock(
-            running_initializer_thread_mutex_);
-        if (!running_initializer_thread_) {
-          running_initializer_thread_ = true;
-          // TODO: Should unlock here, or remove, just release when end of this
-          // section?
-          tmp_lock.unlock();
+      // TODO: Shouldn't Deadlock here. Because in RunInitialzier it is required
+      // to lock both together.
+      std::unique_lock<std::mutex> tmp_lock(running_initializer_thread_mutex_);
+      if (!running_initializer_thread_) {
+        running_initializer_thread_ = true;
+        // TODO: Should unlock here, or remove, just release when end of this
+        // section?
+        tmp_lock.unlock();
+        status_lock.unlock();
 
-          // Run initilizer on the most recent frames.
-          std::vector<std::vector<cv::Vec2d> > feature_vectors;
-          std::vector<KeyframeId> frame_ids;
-          {
-            // TODO: Deadlock!!?
-            std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
-            std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
-            CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
-                                   feature_vectors);
-          }
-          std::cout << "Prepared for initialization:\n"
-                    << "Total frames : " << keyframes_.size()
-                    << "\nTotal features: " << feature_vectors[0].size()
-                    << "\n";
-
-          // Run independently. If succeeded, write results to the frames and initialize landmarks.
-          initializer_thread_ = std::unique_ptr<std::thread>(
-              new std::thread(&VisualInertialOdometry::RunInitializer, this,
-                              frame_ids, feature_vectors));
-        } else {  // already running a initialization thread.
-          tmp_lock.unlock();
+        // Run initilizer on the most recent frames.
+        std::vector<std::vector<cv::Vec2d> > feature_vectors;
+        std::vector<KeyframeId> frame_ids;
+        {
+          // TODO: Deadlock!!?
+          std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                                      std::defer_lock);
+          std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_,
+                                                     std::defer_lock);
+          std::lock(landmarks_lock, keyframe_lock);
+          CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
+                                 feature_vectors);
         }
+        std::cout << "Prepared for initialization:\n"
+                  << "Total frames : " << keyframes_.size()
+                  << "\nTotal features: " << feature_vectors[0].size() << "\n";
+
+        // Run independently. If succeeded, write results to the frames and
+        // initialize landmarks.
+        // TODO: Should use future::state::ready.
+        if (initializer_thread_ != nullptr && initializer_thread_->joinable())
+          initializer_thread_->join();
+        initializer_thread_ = std::unique_ptr<std::thread>(
+            new std::thread(&VisualInertialOdometry::RunInitializer, this,
+                            frame_ids, feature_vectors));
+      } else {  // already running a initialization thread.
+        tmp_lock.unlock();
+        status_lock.unlock();
       }
     } else {
       // Estmiate the pose of current frame.
@@ -190,7 +192,7 @@ void VisualInertialOdometry::RunInitializer(
   if (!map_initializer_->Initialize(feature_vectors, cv::Mat(K_), points3d,
                                     points3d_mask, Rs_est, ts_est)) {
     std::cerr << "Warning: Initialization failed.\n\n";
-    return;
+    // TODO: Clear all keyframes and landmarks.
   } else {
     std::cerr << "Initialization Success.\n\n";
     {
@@ -199,11 +201,18 @@ void VisualInertialOdometry::RunInitializer(
     }
     CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
   }
+
+  // TODO: Consider using future / promises.
+  // It should be fine here, because tmp_lock won't release until the function
+  // is over and the thread is finished.
+  std::unique_lock<std::mutex> tmp_lock(running_initializer_thread_mutex_);
+  running_initializer_thread_ = false;
 }
 
 void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
     const std::vector<KeyframeId> &frame_ids,
     const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est) {
+  // TODO: Deadlock??
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_);
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
 }

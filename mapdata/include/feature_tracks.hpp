@@ -22,7 +22,7 @@ struct FeatureMeasurement {
 
 class Landmark {
  public:
-   typedef Eigen::Vector3d Position;
+  typedef Eigen::Vector3d Position;
 
   Landmark() : landmark_id(CreateNewId<LandmarkId>()) {}
 

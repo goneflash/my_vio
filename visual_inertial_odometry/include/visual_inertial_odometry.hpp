@@ -48,18 +48,20 @@ class VisualInertialOdometry {
       std::unique_lock<std::mutex> tmp_lock(
           running_process_buffer_thread_mutex_);
       running_process_buffer_thread_ = false;
-      tmp_lock.unlock();
     }
+
     data_buffer_.CloseBuffer();
+
+    // Check if it's too quick that the initializer hasn't started yet.
+    if (initializer_thread_ != nullptr && initializer_thread_->joinable())
+      initializer_thread_->join();
+    if (process_buffer_thread_ != nullptr && process_buffer_thread_->joinable())
+      process_buffer_thread_->join();
 
     std::cout << "Image buffer stats:\n";
     data_buffer_.image_buffer_stats().Print();
     GetLandmarkStats(landmarks_, landmark_stats_);
     landmark_stats_.Print();
-
-    // Check if it's too quick that the initializer hasn't started yet.
-    if (initializer_thread_ != nullptr) initializer_thread_->join();
-    if (process_buffer_thread_ != nullptr) process_buffer_thread_->join();
   }
 
  private:
@@ -74,15 +76,8 @@ class VisualInertialOdometry {
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
 
-  // TODO: Remove
-  bool KeepRunningMainWork() {
-    // TODO: Should be atomic
-    std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
-    return running_process_buffer_thread_;
-  }
-
   std::mutex vio_status_mutex_;
-  // TODO: Multthreading, atomic
+  // TODO: atomic?
   VIOStatus vio_status_;
 
   /*
@@ -95,6 +90,7 @@ class VisualInertialOdometry {
   MapInitializerPtr map_initializer_;
   std::unique_ptr<std::thread> initializer_thread_;
   std::mutex running_initializer_thread_mutex_;
+  // TODO: Use atomic?
   bool running_initializer_thread_;
 
   /*
@@ -102,6 +98,7 @@ class VisualInertialOdometry {
    */
   VIODataBuffer data_buffer_;
   std::mutex end_of_buffer_mutex_;
+  // TODO: atomic?
   bool end_of_buffer_;
 
   std::mutex keyframes_mutex_;
@@ -115,6 +112,9 @@ class VisualInertialOdometry {
 
   std::unique_ptr<std::thread> process_buffer_thread_;
   std::mutex running_process_buffer_thread_mutex_;
+  // TODO: atomic? also consider use future / async
+  // e.g. : auto f3 = ...
+  //        f3.wait_for(timeout) == std::future_status::ready
   bool running_process_buffer_thread_;
 };
 
