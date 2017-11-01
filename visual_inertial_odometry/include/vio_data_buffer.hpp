@@ -64,13 +64,11 @@ class VIODataBuffer {
       std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
       if (buffer_closed_) return true;
     }
-    // TODO: Still has the problem!!!! what if comes here, and then
-    // buffer_closed_ becomes true.
-
     while (!image_buffer_.TryPop(image)) {
       std::this_thread::sleep_for(std::chrono::milliseconds(30));
       {
         std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
+            kdfuuckdkufjei
         if (buffer_closed_) return true;
       }
     }

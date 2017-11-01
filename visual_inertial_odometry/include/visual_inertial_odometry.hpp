@@ -34,10 +34,6 @@ class VisualInertialOdometry {
 
   VisualInertialOdometry(CameraModelPtr camera);
 
-  void ProcessNewImage(cv::Mat &img);
-  // High priority, should update ASAP.
-  void ProcessImuData();
-
   void Start() {
     // TODO: Is this really necessary?
     std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
@@ -72,6 +68,14 @@ class VisualInertialOdometry {
     landmark_stats_.Print();
   }
 
+  /*
+   * Called from outside thread contains this class.
+   */
+  void ProcessNewImage(cv::Mat &img);
+  // TODO: High priority, should update ASAP.
+  void ProcessImuData();
+
+
 // TODO: This should be outside of VIO, but put here for now for easy debugging.
 #ifdef OPENCV_VIZ_FOUND
   void VisualizeCurrentScene();
@@ -81,13 +85,26 @@ class VisualInertialOdometry {
   void InitializeFeatureTracker();
   void InitializeVIOInitializer();
 
+  /*
+   * Main thread. Keep running until stopped.
+   */
   void ProcessDataInBuffer();
+
+  // ---------------------------------------
+
+  /*
+   * Thread to initialize first frames and landmarks.
+   */
   void RunInitializer(
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<std::vector<cv::Vec2d> > &feature_vectors);
+
+  // When initialization succeeded, copy data to keyframes and landmarks.
   void CopyInitializedFramesAndLandmarksData(
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
+
+  // ---------------------------------------
 
   std::mutex vio_status_mutex_;
   // TODO: atomic?

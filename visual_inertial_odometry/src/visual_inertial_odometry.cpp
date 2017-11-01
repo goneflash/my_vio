@@ -56,7 +56,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
 
     /* TODO:
      * When processing is faster than coming images and the images has end, it
-     * will tuck here.
+     * will stuck here.
      */
     cv::Mat new_image;
     if (data_buffer_.GetImageDataOrEndOfBuffer(new_image)) break;
