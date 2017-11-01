@@ -143,16 +143,18 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     /*
      * Choose what to do depend on the status of VIO
      */
-    std::unique_lock<std::mutex> status_lock(vio_status_mutex_);
+    std::unique_lock<std::mutex> status_lock(vio_status_mutex_, std::defer_lock);
+    std::unique_lock<std::mutex> initializer_lock(running_initializer_thread_mutex_,
+                                                  std::defer_lock);
+    std::lock(status_lock, initializer_lock);
     if (vio_status_ == UNINITED) {
       // TODO: Shouldn't Deadlock here. Because in RunInitialzier it is required
       // to lock both together.
-      std::unique_lock<std::mutex> tmp_lock(running_initializer_thread_mutex_);
       if (!running_initializer_thread_) {
         running_initializer_thread_ = true;
         // TODO: Should unlock here, or remove, just release when end of this
         // section?
-        tmp_lock.unlock();
+        initializer_lock.unlock();
         status_lock.unlock();
 
         // Run initilizer on the most recent frames.
@@ -170,10 +172,10 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         // Run independently. If succeeded, write results to the frames and
         // initialize landmarks.
         // TODO: Should use future::state::ready.
-        std::unique_lock<std::mutex> tmp_lock(
-            running_initializer_thread_mutex_);
+        initializer_lock.lock();
         if (initializer_thread_ != nullptr && initializer_thread_->joinable())
           initializer_thread_->join();
+        initializer_lock.unlock();
         // TODO: The problem is if already called Stop. Then this should not
         // execute.
         // TODO: Doesn't make sense, because need to check every step in this
@@ -188,10 +190,12 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
             new std::thread(&VisualInertialOdometry::RunInitializer, this,
                             frame_ids, feature_vectors));
       } else {  // already running a initialization thread.
-        tmp_lock.unlock();
+        initializer_lock.unlock();
         status_lock.unlock();
       }
     } else {
+        initializer_lock.unlock();
+        status_lock.unlock();
       // Estmiate the pose of current frame.
     }
   }

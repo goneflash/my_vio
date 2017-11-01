@@ -60,18 +60,13 @@ class VIODataBuffer {
 
   // Return true if buffer has ended.
   bool GetImageDataOrEndOfBuffer(cv::Mat &image) {
-    {
-      std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
-      if (buffer_closed_) return true;
-    }
-    while (!image_buffer_.TryPop(image)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    do {
+      std::this_thread::sleep_for(std::chrono::milliseconds(20));
       {
         std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
-            kdfuuckdkufjei
         if (buffer_closed_) return true;
-      }
-    }
+      } 
+    } while (!image_buffer_.TryPop(image));
     return false;
   }
 
