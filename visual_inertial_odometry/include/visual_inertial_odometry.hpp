@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -85,14 +86,17 @@ class VisualInertialOdometry {
   void InitializeFeatureTracker();
   void InitializeVIOInitializer();
 
-  /*
+  /* ---------------------------------------
+   *
    * Main thread. Keep running until stopped.
+   *
    */
   void ProcessDataInBuffer();
 
-  // ---------------------------------------
+  void AddNewKeyframeFromImage();
 
-  /*
+  /* ---------------------------------------
+   *
    * Thread to initialize first frames and landmarks.
    */
   void RunInitializer(
@@ -104,11 +108,12 @@ class VisualInertialOdometry {
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
 
-  // ---------------------------------------
-
-  std::mutex vio_status_mutex_;
-  // TODO: atomic?
-  VIOStatus vio_status_;
+  /* ---------------------------------------
+   * 
+   * Member variables.
+   *
+   */
+  std::atomic<VIOStatus> vio_status_;
 
   /*
    *  Functional objects.
@@ -127,9 +132,6 @@ class VisualInertialOdometry {
    * Data structures.
    */
   VIODataBuffer data_buffer_;
-  std::mutex end_of_buffer_mutex_;
-  // TODO: atomic?
-  bool end_of_buffer_;
 
   std::mutex keyframes_mutex_;
   Keyframes keyframes_;

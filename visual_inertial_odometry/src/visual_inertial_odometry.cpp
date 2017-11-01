@@ -10,7 +10,6 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
       last_keyframe_(nullptr),
       running_process_buffer_thread_(false),
       running_initializer_thread_(false),
-      end_of_buffer_(false),
       num_skipped_frames_(0) {
   // Setup Feature tracker.
   InitializeFeatureTracker();
@@ -41,6 +40,10 @@ void VisualInertialOdometry::InitializeVIOInitializer() {
 
 void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
   data_buffer_.AddImageData(img);
+}
+
+void VisualInertialOdometry::AddNewKeyframeFromImage() {
+
 }
 
 void VisualInertialOdometry::ProcessDataInBuffer() {
@@ -143,10 +146,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     /*
      * Choose what to do depend on the status of VIO
      */
-    std::unique_lock<std::mutex> status_lock(vio_status_mutex_, std::defer_lock);
-    std::unique_lock<std::mutex> initializer_lock(running_initializer_thread_mutex_,
-                                                  std::defer_lock);
-    std::lock(status_lock, initializer_lock);
+    std::unique_lock<std::mutex> initializer_lock(running_initializer_thread_mutex_);
     if (vio_status_ == UNINITED) {
       // TODO: Shouldn't Deadlock here. Because in RunInitialzier it is required
       // to lock both together.
@@ -155,7 +155,6 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         // TODO: Should unlock here, or remove, just release when end of this
         // section?
         initializer_lock.unlock();
-        status_lock.unlock();
 
         // Run initilizer on the most recent frames.
         std::lock(landmarks_lock, keyframe_lock);
@@ -191,11 +190,9 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
                             frame_ids, feature_vectors));
       } else {  // already running a initialization thread.
         initializer_lock.unlock();
-        status_lock.unlock();
       }
     } else {
         initializer_lock.unlock();
-        status_lock.unlock();
       // Estmiate the pose of current frame.
     }
   }
@@ -217,10 +214,7 @@ void VisualInertialOdometry::RunInitializer(
   } else {
     std::cerr << "Initialization Success.\n\n";
     CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
-    {
-      std::unique_lock<std::mutex> status_lock(vio_status_mutex_);
       vio_status_ = INITED;
-    }
   }
 
   // TODO: Consider using future / promises.
@@ -259,10 +253,6 @@ void VisualInertialOdometry::VisualizeCurrentScene() {
   // the current thread. For example here if vio_status_is changed after here,
   // e.g. whole scene is reset, then it will be troublsome.
   // TODO: For debug reason, here just hold the status mutex for the whole time.
-  std::unique_lock<std::mutex> status_lock(vio_status_mutex_, std::defer_lock);
-  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
-
-  std::lock(status_lock, keyframe_lock);
   if (vio_status_ != INITED) {
     std::cerr << "Error: VIO not initialized. Couldn't visualize.\n";
     return;
@@ -271,6 +261,7 @@ void VisualInertialOdometry::VisualizeCurrentScene() {
   vio::Scene scene;
   vio::SceneVisualizer visualizer("simple");
 
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
   for (const auto &id_to_frame : keyframes_) {
     const auto &keyframe = id_to_frame.second;
     if (keyframe->inited_pose_) {
