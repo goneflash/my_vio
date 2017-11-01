@@ -42,20 +42,14 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
   data_buffer_.AddImageData(img);
 }
 
-void VisualInertialOdometry::AddNewKeyframeFromImage() {
-
-}
+void VisualInertialOdometry::AddNewKeyframeFromImage() {}
 
 void VisualInertialOdometry::ProcessDataInBuffer() {
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
                                               std::defer_lock);
   for (;;) {
-    {
-      std::unique_lock<std::mutex> tmp_lock(
-          running_process_buffer_thread_mutex_);
-      if (!running_process_buffer_thread_) break;
-    }
+    if (!running_process_buffer_thread_) break;
 
     /* TODO:
      * When processing is faster than coming images and the images has end, it
@@ -146,15 +140,11 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
     /*
      * Choose what to do depend on the status of VIO
      */
-    std::unique_lock<std::mutex> initializer_lock(running_initializer_thread_mutex_);
     if (vio_status_ == UNINITED) {
       // TODO: Shouldn't Deadlock here. Because in RunInitialzier it is required
       // to lock both together.
       if (!running_initializer_thread_) {
         running_initializer_thread_ = true;
-        // TODO: Should unlock here, or remove, just release when end of this
-        // section?
-        initializer_lock.unlock();
 
         // Run initilizer on the most recent frames.
         std::lock(landmarks_lock, keyframe_lock);
@@ -171,28 +161,17 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         // Run independently. If succeeded, write results to the frames and
         // initialize landmarks.
         // TODO: Should use future::state::ready.
-        initializer_lock.lock();
         if (initializer_thread_ != nullptr && initializer_thread_->joinable())
           initializer_thread_->join();
-        initializer_lock.unlock();
-        // TODO: The problem is if already called Stop. Then this should not
-        // execute.
         // TODO: Doesn't make sense, because need to check every step in this
-        // thread
-        // if it has already received signal to stop!!!
-        {
-          std::unique_lock<std::mutex> tmp_lock(
-              running_process_buffer_thread_mutex_);
-          if (!running_process_buffer_thread_) break;
-        }
+        // thread if it has already received signal to stop!!!
+        if (!running_process_buffer_thread_) break;
         initializer_thread_ = std::unique_ptr<std::thread>(
             new std::thread(&VisualInertialOdometry::RunInitializer, this,
                             frame_ids, feature_vectors));
       } else {  // already running a initialization thread.
-        initializer_lock.unlock();
       }
     } else {
-        initializer_lock.unlock();
       // Estmiate the pose of current frame.
     }
   }
@@ -214,13 +193,9 @@ void VisualInertialOdometry::RunInitializer(
   } else {
     std::cerr << "Initialization Success.\n\n";
     CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
-      vio_status_ = INITED;
+    vio_status_ = INITED;
   }
 
-  // TODO: Consider using future / promises.
-  // It should be fine here, because tmp_lock won't release until the function
-  // is over and the thread is finished.
-  std::unique_lock<std::mutex> tmp_lock(running_initializer_thread_mutex_);
   running_initializer_thread_ = false;
 }
 
@@ -239,7 +214,8 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   keyframe_lock.unlock();
 
   // Triangluate features again.
-  // TODO: Although it's now duplicated with the one in MapInitializer, it should have better method in the future.
+  // TODO: Although it's now duplicated with the one in MapInitializer, it
+  // should have better method in the future.
 
   // Calculate poses for current keyframes.
 

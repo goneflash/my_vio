@@ -18,13 +18,15 @@ namespace vio {
  */
 struct VIODataBufferStats {
  public:
-  VIODataBufferStats() : received_count(0), dropped_count(0) {}
+  VIODataBufferStats()
+      : received_count(0), dropped_count(0), left_in_buffer(0) {}
   int received_count;
   int dropped_count;
+  int left_in_buffer;
 
   void Print() const {
     std::cout << "Received " << received_count << ", dropped " << dropped_count
-              << std::endl;
+              << ", still " << left_in_buffer << " in buffer " << std::endl;
   }
 };
 
@@ -35,8 +37,10 @@ class VIODataBuffer {
       : buffer_closed_(false), image_buffer_size_(10), imu_buffer_size_(50) {}
 
   void CloseBuffer() {
-    std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
     buffer_closed_ = true;
+    size_t size = 0;
+    auto tmp_lock = image_buffer_.size(size);
+    image_buffer_stats_.left_in_buffer = size;
   }
 
   void AddImageData(cv::Mat &img) {
@@ -62,10 +66,7 @@ class VIODataBuffer {
   bool GetImageDataOrEndOfBuffer(cv::Mat &image) {
     do {
       std::this_thread::sleep_for(std::chrono::milliseconds(20));
-      {
-        std::unique_lock<std::mutex> tmp_lock(buffer_closed_mutex_);
-        if (buffer_closed_) return true;
-      } 
+      if (buffer_closed_) return true;
     } while (!image_buffer_.TryPop(image));
     return false;
   }
@@ -78,8 +79,7 @@ class VIODataBuffer {
   }
 
  private:
-  std::mutex buffer_closed_mutex_;
-  bool buffer_closed_;
+  std::atomic<bool> buffer_closed_;
 
   // Image data buffer.
   int image_buffer_size_;

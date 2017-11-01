@@ -37,25 +37,19 @@ class VisualInertialOdometry {
 
   void Start() {
     // TODO: Is this really necessary?
-    std::unique_lock<std::mutex> tmp_lock(running_process_buffer_thread_mutex_);
     running_process_buffer_thread_ = true;
-    tmp_lock.unlock();
     process_buffer_thread_ = std::unique_ptr<std::thread>(
         new std::thread(&VisualInertialOdometry::ProcessDataInBuffer, this));
   }
 
   void Stop() {
     // Send stop signal.
-    {
-      std::unique_lock<std::mutex> tmp_lock(
-          running_process_buffer_thread_mutex_);
-      running_process_buffer_thread_ = false;
-    }
-
+    running_process_buffer_thread_ = false;
     data_buffer_.CloseBuffer();
 
     {
-      std::unique_lock<std::mutex> tmp_lock(running_initializer_thread_mutex_);
+      // std::unique_lock<std::mutex>
+      // tmp_lock(running_initializer_thread_mutex_);
       // Check if it's too quick that the initializer hasn't started yet.
       if (initializer_thread_ != nullptr && initializer_thread_->joinable())
         initializer_thread_->join();
@@ -75,7 +69,6 @@ class VisualInertialOdometry {
   void ProcessNewImage(cv::Mat &img);
   // TODO: High priority, should update ASAP.
   void ProcessImuData();
-
 
 // TODO: This should be outside of VIO, but put here for now for easy debugging.
 #ifdef OPENCV_VIZ_FOUND
@@ -109,7 +102,7 @@ class VisualInertialOdometry {
       const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
 
   /* ---------------------------------------
-   * 
+   *
    * Member variables.
    *
    */
@@ -124,9 +117,8 @@ class VisualInertialOdometry {
 
   MapInitializerPtr map_initializer_;
   std::unique_ptr<std::thread> initializer_thread_;
-  std::mutex running_initializer_thread_mutex_;
-  // TODO: Use atomic?
-  bool running_initializer_thread_;
+  // TODO: Use future and set_at_thread_end.
+  std::atomic<bool> running_initializer_thread_;
 
   /*
    * Data structures.
@@ -143,11 +135,7 @@ class VisualInertialOdometry {
   LandmarkStats landmark_stats_;
 
   std::unique_ptr<std::thread> process_buffer_thread_;
-  std::mutex running_process_buffer_thread_mutex_;
-  // TODO: atomic? also consider use future / async
-  // e.g. : auto f3 = ...
-  //        f3.wait_for(timeout) == std::future_status::ready
-  bool running_process_buffer_thread_;
+  std::atomic<bool> running_process_buffer_thread_;
 };
 
 void RemoveUnmatchedFeatures(Keyframe *frame);
