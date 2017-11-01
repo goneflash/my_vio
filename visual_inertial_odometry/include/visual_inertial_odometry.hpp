@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <atomic>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -86,7 +87,8 @@ class VisualInertialOdometry {
    */
   void ProcessDataInBuffer();
 
-  void AddNewKeyframeFromImage();
+  // Return true if new keyframe is added.
+  bool AddNewKeyframeFromImage(const cv::Mat &new_image);
 
   /* ---------------------------------------
    *
@@ -119,6 +121,7 @@ class VisualInertialOdometry {
   std::unique_ptr<std::thread> initializer_thread_;
   // TODO: Use future and set_at_thread_end.
   std::atomic<bool> running_initializer_thread_;
+  std::future<void> running_initializer_flag_;
 
   /*
    * Data structures.

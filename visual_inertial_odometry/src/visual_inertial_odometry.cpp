@@ -42,7 +42,92 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
   data_buffer_.AddImageData(img);
 }
 
-void VisualInertialOdometry::AddNewKeyframeFromImage() {}
+bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                              std::defer_lock);
+
+  std::unique_ptr<vio::ImageFrame> frame_cur(new vio::ImageFrame(new_image));
+
+  // TODO: May need to skip the first several frames.
+  /*
+   * Handle first frame.
+   */
+  keyframe_lock.lock();
+  if (!last_keyframe_) {
+    keyframe_lock.unlock();
+    // TODO: ImageFrame must have features before passing to a keyframe.
+    feature_tracker_->ComputeFrame(*frame_cur);
+    std::unique_ptr<Keyframe> first_keyframe =
+        std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
+    // TODO: Should not be added before.
+    const KeyframeId tmp_id = first_keyframe->frame_id;
+
+    keyframe_lock.lock();
+    keyframes_[first_keyframe->frame_id] = std::move(first_keyframe);
+    last_keyframe_ = keyframes_[tmp_id].get();
+    keyframe_lock.unlock();
+    return true;
+    ;
+  }
+  keyframe_lock.unlock();
+
+  /*
+   * Run feature matching for new frame.
+   */
+  std::vector<cv::DMatch> matches;
+  // TODO: Return tracking evaluation as well.
+  // Should use mutex here. Otherwise, if the pointed keyframe is changed in
+  // another thread.
+  keyframe_lock.lock();
+  feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
+                               matches);
+  keyframe_lock.unlock();
+  // std::cout << "Feature number in new frame " <<
+  // frame_cur->keypoints().size() << std::endl;
+  std::cout << "Found match " << matches.size() << std::endl;
+
+  /*
+   * There three cases:
+   * 1. Skip
+   * 2. Add as new keyframe
+   * 3. Lost tracking, need to restart. TODO: or loop closure.
+   */
+  if (matches.size() > 500 && num_skipped_frames_ < 5) {
+    // Robust tracking. Skip this frame.
+    // std::cout << "Skipped a frame with " << matches.size() << "
+    // matches.\n";
+    num_skipped_frames_++;
+    return false;
+  } else if (matches.size() < 10) {
+    // TODO
+    std::cout << "Warning: Lost tracking. Restarting...";
+
+  } else {
+    num_skipped_frames_ = 0;
+    // TODO: Also skip if estimated motion is bad.
+    // Add this frame as a new keyframe.
+    std::unique_ptr<Keyframe> new_keyframe =
+        std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
+
+    // Add tracks.
+    std::lock(landmarks_lock, keyframe_lock);
+    ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
+                              landmarks_);
+    landmarks_lock.unlock();
+    keyframe_lock.unlock();
+
+    // TODO: Should not be added before.
+    keyframe_lock.lock();
+    const KeyframeId tmp_id = new_keyframe->frame_id;
+    keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
+    last_keyframe_ = keyframes_[tmp_id].get();
+
+    std::cout << "Now total keyframes is: " << keyframes_.size() << std::endl;
+    keyframe_lock.unlock();
+  }
+  return true;
+}
 
 void VisualInertialOdometry::ProcessDataInBuffer() {
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
@@ -51,90 +136,10 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
   for (;;) {
     if (!running_process_buffer_thread_) break;
 
-    /* TODO:
-     * When processing is faster than coming images and the images has end, it
-     * will stuck here.
-     */
     cv::Mat new_image;
     if (data_buffer_.GetImageDataOrEndOfBuffer(new_image)) break;
-
-    std::unique_ptr<vio::ImageFrame> frame_cur(new vio::ImageFrame(new_image));
-
-    // TODO: May need to skip the first several frames.
-    /*
-     * Handle first frame.
-     */
-    keyframe_lock.lock();
-    if (!last_keyframe_) {
-      keyframe_lock.unlock();
-      // TODO: ImageFrame must have features before passing to a keyframe.
-      feature_tracker_->ComputeFrame(*frame_cur);
-      std::unique_ptr<Keyframe> first_keyframe =
-          std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
-      // TODO: Should not be added before.
-      const KeyframeId tmp_id = first_keyframe->frame_id;
-
-      keyframe_lock.lock();
-      keyframes_[first_keyframe->frame_id] = std::move(first_keyframe);
-      last_keyframe_ = keyframes_[tmp_id].get();
-      keyframe_lock.unlock();
-
+    if (!AddNewKeyframeFromImage(new_image)) {
       continue;
-    }
-    keyframe_lock.unlock();
-
-    /*
-     * Run feature matching for new frame.
-     */
-    std::vector<cv::DMatch> matches;
-    // TODO: Return tracking evaluation as well.
-    // Should use mutex here. Otherwise, if the pointed keyframe is changed in
-    // another thread.
-    keyframe_lock.lock();
-    feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
-                                 matches);
-    keyframe_lock.unlock();
-    // std::cout << "Feature number in new frame " <<
-    // frame_cur->keypoints().size() << std::endl;
-    std::cout << "Found match " << matches.size() << std::endl;
-
-    /*
-     * There three cases:
-     * 1. Skip
-     * 2. Add as new keyframe
-     * 3. Lost tracking, need to restart. TODO: or loop closure.
-     */
-    if (matches.size() > 500 && num_skipped_frames_ < 5) {
-      // Robust tracking. Skip this frame.
-      // std::cout << "Skipped a frame with " << matches.size() << "
-      // matches.\n";
-      num_skipped_frames_++;
-      continue;
-    } else if (matches.size() < 10) {
-      // TODO
-      std::cout << "Warning: Lost tracking. Restarting...";
-    } else {
-      num_skipped_frames_ = 0;
-      // TODO: Also skip if estimated motion is bad.
-      // Add this frame as a new keyframe.
-      std::unique_ptr<Keyframe> new_keyframe =
-          std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
-
-      // Add tracks.
-      std::lock(landmarks_lock, keyframe_lock);
-      ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
-                                landmarks_);
-      landmarks_lock.unlock();
-      keyframe_lock.unlock();
-
-      // TODO: Should not be added before.
-      keyframe_lock.lock();
-      const KeyframeId tmp_id = new_keyframe->frame_id;
-      keyframes_[new_keyframe->frame_id] = std::move(new_keyframe);
-      last_keyframe_ = keyframes_[tmp_id].get();
-
-      std::cout << "Now total keyframes is: " << keyframes_.size() << std::endl;
-      keyframe_lock.unlock();
     }
 
     /*
@@ -160,12 +165,13 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
 
         // Run independently. If succeeded, write results to the frames and
         // initialize landmarks.
+
         // TODO: Should use future::state::ready.
         if (initializer_thread_ != nullptr && initializer_thread_->joinable())
           initializer_thread_->join();
         // TODO: Doesn't make sense, because need to check every step in this
         // thread if it has already received signal to stop!!!
-        if (!running_process_buffer_thread_) break;
+        if (!running_process_buffer_thread_) return;
         initializer_thread_ = std::unique_ptr<std::thread>(
             new std::thread(&VisualInertialOdometry::RunInitializer, this,
                             frame_ids, feature_vectors));
