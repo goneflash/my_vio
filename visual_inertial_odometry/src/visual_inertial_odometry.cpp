@@ -75,6 +75,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         std::lock(landmarks_lock, keyframe_lock);
         std::vector<std::vector<cv::Vec2d> > feature_vectors;
         std::vector<KeyframeId> frame_ids;
+        // TODO: Currently copy data from first two frames.
         CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
                                feature_vectors);
         std::cout << "Prepared for initialization:\n"
@@ -261,14 +262,13 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   // should have better method in the future.
 
   // Calculate poses for current keyframes.
-
-  // std::lock(landmarks_lock, keyframe_lock);
 }
+
+bool VisualInertialOdometry::CalculatePnPForNewKeyframe(
+    const KeyframeId &frame_id, const KeyframeId &new_frame) {}
 
 bool VisualInertialOdometry::TriangulteLandmarksInKeyframes(
-  const std::vector<KeyframeId> &frame_ids) {
-  
-}
+    const std::vector<KeyframeId> &frame_ids) {}
 
 bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
@@ -405,7 +405,9 @@ bool ProcessMatchesAndAddToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
 
 void RemoveShortTrackLengthLandmark(LandmarkId landmark_id,
                                     Landmarks &landmarks,
-                                    Keyframes &keyframes) {}
+                                    Keyframes &keyframes) {
+  // TODO
+}
 
 void RemoveShortTracks(Landmarks &landmarks, Keyframes &keyframes,
                        KeyframeId &cur_keyframe_id) {
@@ -418,8 +420,8 @@ bool CopyDataForInitializer(
     std::vector<std::vector<cv::Vec2d> > &feature_vectors) {
   const int num_frames_needed_for_init = 2;
 
-  feature_vectors.resize(num_frames_needed_for_init);  // keyframes.size());
-  frame_ids.resize(num_frames_needed_for_init);  // keyframes.size());
+  feature_vectors.resize(num_frames_needed_for_init);
+  frame_ids.resize(num_frames_needed_for_init);
   int frame_count = 0;
   /*
    * Map KeyframeId to the feature_vectors.
