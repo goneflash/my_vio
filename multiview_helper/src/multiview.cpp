@@ -201,7 +201,8 @@ bool IsGoodTriangulatedPoint(const cv::Vec2d &kp0, const cv::Vec2d &kp1,
   double dist1 = cv::norm(p1_vec);
 
   double cosParallax = p0_vec.dot(p1_vec) / (dist0 * dist1);
-  if (cosParallax > 0.998) return false;
+  // TODO: I don't know what to pick.
+  if (cosParallax > 0.9998) return false;
 
   double error0 = ComputeReprojectionError(points3d, kp0, P0);
   double error1 = ComputeReprojectionError(points3d, kp1, P1);

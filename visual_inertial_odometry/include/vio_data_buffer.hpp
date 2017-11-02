@@ -99,7 +99,7 @@ class VIODataBuffer {
 
  private:
   bool SkipThisImage() {
-    if (cur_skipped_count_ > skip_time_interval_) return false;
+    if (cur_skipped_count_ >= skip_time_interval_) return false;
     const auto interval =
         std::chrono::high_resolution_clock::now() - last_image_timestamp_;
     if (std::chrono::duration_cast<std::chrono::milliseconds>(interval)

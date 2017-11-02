@@ -15,7 +15,7 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
   InitializeFeatureTracker();
   InitializeVIOInitializer();
   pnp_estimator_ = PnPEstimator::CreatePnPEstimator(ITERATIVE);
-  // cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow("tracking", cv::WINDOW_AUTOSIZE);
 }
 
 void VisualInertialOdometry::InitializeFeatureTracker() {
@@ -166,6 +166,18 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   std::cout << "Found match " << matches.size() << std::endl;
 
   /*
+  cv::Mat output_img = frame_cur->GetImage().clone();
+  int thickness = 2;
+  for (int i = 0; i < matches.size(); ++i) {
+    line(output_img, frame_cur->keypoints()[matches[i].trainIdx].pt,
+         last_keyframe_->image_frame->keypoints()[matches[i].queryIdx].pt,
+         cv::Scalar(255, 0, 0), thickness);
+  }
+  cv::imshow("tracking", output_img);
+  cv::waitKey(5);
+  */
+
+  /*
    * There three cases:
    * 1. Skip
    * 2. Add as new keyframe
@@ -174,7 +186,7 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
 
   // TODO: Should not do this because the next frame will be far
   // if the feature processing takes long time.
-  if (matches.size() > 600 && num_skipped_frames_ < 3) {
+  if (false && matches.size() > 600 && num_skipped_frames_ < 3) {
     // Robust tracking. Skip this frame.
     // std::cout << "Skipped a frame with " << matches.size() << "
     // matches.\n";
@@ -265,6 +277,7 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   keyframe_lock.lock();
   for (int i = 0; i < frame_ids.size(); ++i) {
     keyframes_[frame_ids[i]]->SetPose(Rs_est[i], ts_est[i]);
+    std::cout << "Set pose for keyframe: " << frame_ids[i].id() << std::endl;
   }
   keyframe_lock.unlock();
 
@@ -321,10 +334,13 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
       landmark_ptr.second->position[0] = point_3d.x;
       landmark_ptr.second->position[1] = point_3d.y;
       landmark_ptr.second->position[2] = point_3d.z;
+      // TODO: private.
       landmark_ptr.second->inited_ = true;
       good_count++;
     }
   }
+  landmarks_lock.unlock();
+  keyframe_lock.unlock();
   std::cout << "Tested " << tested_count << " landmarks.\n";
   std::cout << "Triangulated " << good_count << " landmarks.\n";
 }
@@ -350,7 +366,7 @@ bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &new_frame) {
   // TODO
   for (const auto &match : new_frame.match_to_pre_frame) {
     const auto &ld = pre_frame.features[match.second].landmark_id;
-    if (ld == -1) continue;
+    if (ld == -1 || !landmarks_[ld]->inited()) continue;
     points3d.push_back(cv::Point3f(landmarks_[ld]->position[0],
                                    landmarks_[ld]->position[1],
                                    landmarks_[ld]->position[2]));
@@ -361,6 +377,11 @@ bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &new_frame) {
 
   landmarks_lock.unlock();
   keyframe_lock.unlock();
+
+  if (points3d.size() < 10) {
+    std::cout << "Not enough pairs for PnP.\n";
+    return false;
+  }
 
   // TODO: Change this.
   cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
