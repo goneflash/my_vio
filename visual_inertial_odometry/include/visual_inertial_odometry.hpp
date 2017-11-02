@@ -170,7 +170,7 @@ void RemoveShortTracks(Landmarks &landmarks, KeyframeId &cur_keyframe_id);
  *   frame_ids : id of the Keyframes
  *   feature_vectors : features of the Keyframes.
  */
-void CopyDataForInitializer(
+bool CopyDataForInitializer(
     const Landmarks &landmarks, const Keyframes &keyframes,
     std::vector<KeyframeId> &frame_ids,
     std::vector<std::vector<cv::Vec2d> > &feature_vectors);

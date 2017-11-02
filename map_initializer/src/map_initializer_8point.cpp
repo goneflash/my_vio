@@ -30,7 +30,7 @@ bool MapInitializer8Point::Initialize(
   }
 
   return InitializeTwoFrames(feature_vectors[0], feature_vectors[1], K,
-                             points3d, points3d_mask, Rs, ts) && false;
+                             points3d, points3d_mask, Rs, ts);
 }
 
 bool MapInitializer8Point::InitializeTwoFrames(

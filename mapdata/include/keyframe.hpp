@@ -79,7 +79,7 @@ class Keyframe {
   CameraPose pose;
 };
 
-typedef std::unordered_map<KeyframeId, std::unique_ptr<Keyframe>> Keyframes;
+typedef std::map<KeyframeId, std::unique_ptr<Keyframe>> Keyframes;
 }  // namespace vio
 
 #endif

@@ -38,6 +38,15 @@ inline bool operator==(const KeyframeId &id0, const KeyframeId &id1) {
   return id0.id() == id1.id();
 }
 
+// This is used for map<KeyframeId>
+inline bool operator<(const KeyframeId &id0, const KeyframeId &id1) {
+  return id0.id() < id1.id();
+}
+
+inline bool operator>(const KeyframeId &id0, const KeyframeId &id1) {
+  return id0.id() > id1.id();
+}
+
 class LandmarkId : public UniqueId {
  public:
   LandmarkId() { id_ = ++unique_id_; }
