@@ -16,6 +16,9 @@ clang-format -style=file -i map_initializer/include/*.hpp
 clang-format -style=file -i map_initializer/src/*.cpp
 clang-format -style=file -i map_initializer/test/*.cpp
 
+clang-format -style=file -i pnp_estimator/include/*.hpp
+clang-format -style=file -i pnp_estimator/src/*.cpp
+
 clang-format -style=file -i mapdata/include/*.hpp
 clang-format -style=file -i mapdata/src/*.cpp
 clang-format -style=file -i mapdata/test/*.cpp

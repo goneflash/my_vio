@@ -59,7 +59,7 @@ class Landmark {
       KeyframeIdToFeatureMeasurement;
   typedef std::unordered_map<KeyframeId, FeatureId> KeyframeIdToFeatureId;
 
-  // TODO: Combine feature and feature id to an obj.
+  // TODO: Combine feature and feature id to an obj, or just need feature id.
   KeyframeIdToFeatureMeasurement keyframe_to_feature;
   KeyframeIdToFeatureId keyframe_to_feature_id;
 

@@ -113,6 +113,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       }
     } else {
       // Estmiate the pose of current frame.
+      // TODO: Wait until all keyframes are pose_inited.
     }
   }
 }
@@ -210,8 +211,6 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   return true;
 }
 
-bool VisualInertialOdometry::PrepareInitialization() {}
-
 void VisualInertialOdometry::RunInitializer(
     const std::vector<KeyframeId> &frame_ids,
     const std::vector<std::vector<cv::Vec2d> > &feature_vectors) {
@@ -257,15 +256,82 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   }
   keyframe_lock.unlock();
 
-  // Triangluate features again.
+  // TODO: For now, only support two frames.
+  if (frame_ids.size() != 2) {
+    std::cout << "Nononono...only 2 frames.\n";
+    return;
+  }
+
+  // TODO: Change this.
+  cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+
+  // Triangluate landmarks.
   // TODO: Although it's now duplicated with the one in MapInitializer, it
   // should have better method in the future.
+  std::lock(landmarks_lock, keyframe_lock);
+  int good_count = 0, tested_count = 0;
+  for (auto &landmark_ptr : landmarks_) {
+    std::vector<cv::Vec2d> kp;
+    std::vector<cv::Mat> P, R, t;
+    for (auto &frame_id : frame_ids) {
+      const auto &ptr = landmark_ptr.second->keyframe_to_feature.find(frame_id);
+      if (ptr == landmark_ptr.second->keyframe_to_feature.end()) continue;
+      // TODO: check exists.
+      const auto &keyframe_ptr = keyframes_.find(frame_id);
+      if (keyframe_ptr == keyframes_.end()) continue;
+      const Keyframe &keyframe = *(keyframe_ptr->second);
+      if (!keyframe.inited_pose()) continue;
 
-  // Calculate poses for current keyframes.
+      // Prepare data for triangulation.
+      kp.push_back(cv::Vec2d(ptr->second.x, ptr->second.y));
+      R.push_back(keyframe.pose.R);
+      cv::Mat tmp_t = cv::Mat(3, 1, CV_64F);
+      tmp_t.at<double>(0) = keyframe.pose.t[0];
+      tmp_t.at<double>(1) = keyframe.pose.t[1];
+      tmp_t.at<double>(2) = keyframe.pose.t[2];
+      t.push_back(tmp_t);
+      cv::Mat tmp_P;
+      RtToP(R.back(), t.back(), tmp_P);
+      tmp_P = cv::Mat(K) * tmp_P;
+      P.push_back(tmp_P);
+    }
+
+    // TODO
+    if (kp.size() != 2) continue;
+
+    tested_count++;
+    // TODO: Assume 2 frames.
+    cv::Point3f point_3d;
+    TriangulateDLT(kp[0], kp[1], P[0], P[1], point_3d);
+    if (IsGoodTriangulatedPoint(kp[0], kp[1], R[0], t[0], R[1], t[1], P[0],
+                                P[1], point_3d)) {
+      landmark_ptr.second->position[0] = point_3d.x;
+      landmark_ptr.second->position[1] = point_3d.y;
+      landmark_ptr.second->position[2] = point_3d.z;
+      good_count++;
+    }
+  }
+  std::cout << "Tested " << tested_count << " landmarks.\n";
+  std::cout << "Triangulated " << good_count << " landmarks.\n";
 }
 
-bool VisualInertialOdometry::CalculatePnPForNewKeyframe(
-    const KeyframeId &frame_id, const KeyframeId &new_frame) {}
+bool VisualInertialOdometry::CalculatePoseForNewKeyframe(Keyframe &new_frame) {
+  if (new_frame.pre_frame_id == -1) return false;
+  const auto &ptr = keyframes_.find(new_frame.pre_frame_id);
+  if (ptr == keyframes_.end()) return false;
+  const Keyframe &pre_frame = *(ptr->second);
+  if (!pre_frame.inited_pose()) return false;
+
+  // Gather data for estimating the pose.
+  std::vector<cv::Point3f> points3d;
+  std::vector<cv::Point2f> points2d;
+  std::vector<int> points_index;
+  // TODO
+  for (const auto &match : new_frame.match_to_pre_frame) {
+  }
+
+  return true;
+}
 
 bool VisualInertialOdometry::TriangulteLandmarksInKeyframes(
     const std::vector<KeyframeId> &frame_ids) {}
@@ -372,7 +438,9 @@ bool ProcessMatchesAndAddToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
                                      Landmarks &landmarks) {
   // TODO: Add test.
   cur_frame->pre_frame_id = pre_frame->frame_id;
+  pre_frame->next_frame_id = cur_frame->frame_id;
   for (const auto &match : matches) {
+    cur_frame->match_to_pre_frame[match.trainIdx] = match.queryIdx;
     // TODO: How can landmark_id compared to int value? Default constructor!
     if (pre_frame->features[match.queryIdx].landmark_id == -1) {
       // New landmark.

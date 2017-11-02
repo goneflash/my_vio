@@ -127,6 +127,7 @@ int TriangulatePoints(const std::vector<cv::Vec2d> &kp0,
   std::cout << "Found " << nGood << " / " << kp0.size()
             << " good triangulated points.\n";
 
+  /*
   std::cout << "Found " << nInfinite << " / " << kp0.size()
             << " infinite points during triangulation.\n";
   std::cout << "Found " << nParallal << " / " << kp0.size()
@@ -135,6 +136,7 @@ int TriangulatePoints(const std::vector<cv::Vec2d> &kp0,
             << " large error points during triangulation.\n";
   std::cout << "Found " << nNegativeDepth << " / " << kp0.size()
             << " negative depth points during triangulation.\n";
+            */
 
   return nGood;
 }
@@ -157,6 +159,58 @@ void TriangulateDLT(const cv::Vec2d &kp1, const cv::Vec2d &kp2,
   point3d.x = p3d_mat.at<double>(0) / p3d_mat.at<double>(3);
   point3d.y = p3d_mat.at<double>(1) / p3d_mat.at<double>(3);
   point3d.z = p3d_mat.at<double>(2) / p3d_mat.at<double>(3);
+}
+
+// TODO: Optimize. Don't do duplicated computation.
+bool IsGoodTriangulatedPoint(const cv::Vec2d &kp0, const cv::Vec2d &kp1,
+                             const cv::Mat &R0, const cv::Mat &t0,
+                             const cv::Mat &R1, const cv::Mat &t1,
+                             const cv::Mat &P0, const cv::Mat &P1,
+                             const cv::Point3f &points3d) {
+  cv::Mat center0 = -R0.t() * t0;
+  cv::Mat center1 = -R1.t() * t1;
+
+  cv::Mat p_global(3, 1, CV_64F);
+  p_global.at<double>(0) = points3d.x;
+  p_global.at<double>(1) = points3d.y;
+  p_global.at<double>(2) = points3d.z;
+
+  cv::Mat p3dC0 = R0 * p_global + t0;
+  cv::Mat p3dC1 = R1 * p_global + t1;
+  double depth0 = p3dC0.at<double>(2);
+  double depth1 = p3dC1.at<double>(2);
+
+  if (depth0 <= 0 || depth1 <= 0) return false;
+
+  // TODO: Make sure isfinite is in std
+  if (!std::isfinite(p3dC0.at<double>(0)) ||
+      !std::isfinite(p3dC0.at<double>(1)) ||
+      !std::isfinite(p3dC0.at<double>(2)))
+    return false;
+
+  // TODO: Make sure isfinite is in std
+  if (!std::isfinite(p3dC1.at<double>(0)) ||
+      !std::isfinite(p3dC1.at<double>(1)) ||
+      !std::isfinite(p3dC1.at<double>(2)))
+    return false;
+
+  // Check parallax
+  cv::Mat p0_vec = p3dC0 - center0;
+  cv::Mat p1_vec = p3dC1 - center1;
+  double dist0 = cv::norm(p0_vec);
+  double dist1 = cv::norm(p1_vec);
+
+  double cosParallax = p0_vec.dot(p1_vec) / (dist0 * dist1);
+  if (cosParallax > 0.998) return false;
+
+  double error0 = ComputeReprojectionError(points3d, kp0, P0);
+  double error1 = ComputeReprojectionError(points3d, kp1, P1);
+
+  double reprojection_error_thres = 5.0;
+  if (error0 > reprojection_error_thres || error1 > reprojection_error_thres)
+    return false;
+
+  return true;
 }
 
 double ComputeReprojectionError(const cv::Point3f &point3d, const cv::Vec2d &kp,

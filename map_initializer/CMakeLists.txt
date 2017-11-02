@@ -20,9 +20,14 @@ target_include_directories(${TARGET} PUBLIC
 
 file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 
+# Headers
+# TODO: Change to use {PROJECT_NAME}/{TARGET} as include directory.
 install(FILES ${headers} 
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/)
-install(TARGETS ${TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
+# Libraries
+install(TARGETS ${TARGET}
+  EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib )
 
 if (USE_TEST)
   file(GLOB TEST_SOURCE_FILE

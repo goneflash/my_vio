@@ -17,6 +17,7 @@
 #include "keyframe.hpp"
 #include "mapdata_types.hpp"
 #include "map_initializer.hpp"
+#include "pnp_estimator.hpp"
 
 #include "vio_data_buffer.hpp"
 
@@ -91,8 +92,6 @@ class VisualInertialOdometry {
 
   // Return true if new keyframe is added.
   bool AddNewKeyframeFromImage(const cv::Mat &new_image);
-  // Prepare data and run initialization thread.
-  bool PrepareInitialization();
 
   /* ---------------------------------------
    *
@@ -110,8 +109,7 @@ class VisualInertialOdometry {
   // Triangulate landmarks that are visible two or more initialized keyframes.
   bool TriangulteLandmarksInKeyframes(const std::vector<KeyframeId> &frame_ids);
 
-  bool CalculatePnPForNewKeyframe(const KeyframeId &frame_id,
-                                  const KeyframeId &new_frame);
+  bool CalculatePoseForNewKeyframe(Keyframe &new_frame);
 
   // Remove a keyframe and associated landmarks if not observed by other frames.
   bool RemoveKeyframe(const KeyframeId &frame_id);
@@ -131,6 +129,8 @@ class VisualInertialOdometry {
   FeatureTrackerPtr feature_tracker_;
 
   MapInitializerPtr map_initializer_;
+
+  PnPEstimatorPtr pnp_estimator_;
 
   // There must be only one initializer. Because once it fails, it will remove
   // the tried keyframes.

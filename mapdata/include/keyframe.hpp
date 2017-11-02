@@ -43,6 +43,7 @@ class Keyframe {
   Keyframe(std::unique_ptr<ImageFrame> frame)
       : frame_id(CreateNewId<KeyframeId>()),
         pre_frame_id(-1),
+        next_frame_id(-1),
         inited_pose_(false) {
     // TODO: Not transfer ImageFrame, just copy the keypoints and descriptor.
     image_frame = std::move(frame);
@@ -68,6 +69,7 @@ class Keyframe {
 
   KeyframeId frame_id;
   KeyframeId pre_frame_id;
+  KeyframeId next_frame_id;
   // FeatureId in current frame --> FeatureId in previous frame.
   std::unordered_map<int, int> match_to_pre_frame;
 
@@ -75,7 +77,7 @@ class Keyframe {
 
   std::unordered_map<FeatureId, Feature> features;
 
-  bool inited_pose() { return inited_pose_; }
+  bool inited_pose() const { return inited_pose_; }
   bool inited_pose_;
   CameraPose pose;
 };

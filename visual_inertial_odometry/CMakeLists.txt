@@ -18,6 +18,7 @@ target_link_libraries( ${TARGET}
                        mapdata
                        map_initializer
                        multiview_helper
+                       pnp_estimator
                        simulator)
 
 target_include_directories(${TARGET} PUBLIC 
