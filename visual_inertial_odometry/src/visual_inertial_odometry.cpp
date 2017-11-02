@@ -452,23 +452,6 @@ bool CopyDataForInitializer(
     }
   }
 
-  /*
-    if (landmark.keyframe_to_feature.size() == keyframes.size()) {
-      for (const auto &measurement_ptr : landmark.keyframe_to_feature) {
-        const KeyframeId &keyframe_id = measurement_ptr.first;
-        if (keyframe_id_to_feature_vector_id.find(keyframe_id) ==
-            keyframe_id_to_feature_vector_id.end()) {
-          // TODO: Error! Probably didn't clear previous unused Keyframes well.
-          std::cerr << "Error: Probably didn't clear previous unused Keyframes "
-                       "well.\n";
-          return false;
-        }
-        feature_vectors[keyframe_id_to_feature_vector_id[keyframe_id]]
-            .push_back(
-                cv::Vec2d(measurement_ptr.second.x, measurement_ptr.second.y));
-      }
-    }
-    */
   return true;
 }
 

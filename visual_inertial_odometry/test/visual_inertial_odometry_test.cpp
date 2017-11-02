@@ -48,8 +48,8 @@ TEST_F(VisualInertialOdometryTest, Test_Short_Quick) {
   Init();
   vio->Start();
 
-  // 20 ms, 10 frames.
-  Process(1, 10);
+  // 10 ms, 10 frames.
+  Process(10, 10);
 
   vio->Stop();
 }
@@ -58,8 +58,8 @@ TEST_F(VisualInertialOdometryTest, Test_FullLength_Quick) {
   Init();
   vio->Start();
 
-  // 20 ms, 10 frames.
-  Process(1, images.size());
+  // 10 ms, 10 frames.
+  Process(10, images.size());
 
   vio->Stop();
 }
@@ -68,20 +68,18 @@ TEST_F(VisualInertialOdometryTest, Test_FullLength_NormalSpeed) {
   Init();
   vio->Start();
 
-  // 50 ms, 40 frames.
-  Process(30, 40);
+  // 30 ms, 40 frames.
+  Process(30, images.size());
 
   vio->Stop();
 }
-/*
- * TODO: Will stuck now.
- */
-TEST_F(VisualInertialOdometryTest, Test_FullLength_Slow) {
+
+TEST_F(VisualInertialOdometryTest, Test_Long_Slow) {
   Init();
   vio->Start();
 
-  // 200 ms, 40 frames.
-  Process(200, 40);
+  // 100 ms, 40 frames.
+  Process(100, 40);
 
   vio->Stop();
 }
