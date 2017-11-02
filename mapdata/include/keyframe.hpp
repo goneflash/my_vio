@@ -29,8 +29,7 @@ struct CameraPose {
   cv::Vec3d t;
 };
 
-typedef int FeatureId;
-
+// TODO: Define a name for -1 like invalid for LandmarkId.
 struct Feature {
   Feature() : landmark_id(-1), measurement(-1, -1) {}
   LandmarkId landmark_id;

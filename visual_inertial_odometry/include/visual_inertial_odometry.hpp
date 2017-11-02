@@ -58,6 +58,8 @@ class VisualInertialOdometry {
     if (process_buffer_thread_ != nullptr && process_buffer_thread_->joinable())
       process_buffer_thread_->join();
 
+    if (running_initializer_flag_.valid()) running_initializer_flag_.wait();
+
     std::cout << "Image buffer stats:\n";
     data_buffer_.image_buffer_stats().Print();
     GetLandmarkStats(landmarks_, landmark_stats_);
@@ -89,6 +91,8 @@ class VisualInertialOdometry {
 
   // Return true if new keyframe is added.
   bool AddNewKeyframeFromImage(const cv::Mat &new_image);
+  // Prepare data and run initialization thread.
+  bool PrepareInitialization();
 
   /* ---------------------------------------
    *
@@ -102,6 +106,9 @@ class VisualInertialOdometry {
   void CopyInitializedFramesAndLandmarksData(
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
+
+  // Remove a keyframe and associated landmarks if not observed by other frames.
+  bool RemoveKeyframe(const KeyframeId &frame_id);
 
   /* ---------------------------------------
    *
@@ -118,6 +125,12 @@ class VisualInertialOdometry {
   FeatureTrackerPtr feature_tracker_;
 
   MapInitializerPtr map_initializer_;
+
+  // There must be only one initializer. Because once it fails, it will remove
+  // the tried keyframes.
+  // TODO: Looks like the initializer shouldn't be start in ProcessBuffer, it
+  // should be a separate thread keep running and try to initialize a sliding
+  // window of keyframes.
   std::unique_ptr<std::thread> initializer_thread_;
   // TODO: Use future and set_at_thread_end.
   std::atomic<bool> running_initializer_thread_;
@@ -143,9 +156,9 @@ class VisualInertialOdometry {
 
 void RemoveUnmatchedFeatures(Keyframe *frame);
 
-bool ProcessMatchesToLandmarks(Keyframe *frame0, Keyframe *frame1,
-                               const std::vector<cv::DMatch> &matches,
-                               Landmarks &landmarks);
+bool ProcessMatchesAndAddToLandmarks(Keyframe *frame0, Keyframe *frame1,
+                                     const std::vector<cv::DMatch> &matches,
+                                     Landmarks &landmarks);
 
 void RemoveShortTrackLengthLandmark(LandmarkId landmark_id,
                                     Landmarks &landmarks, Keyframes &keyframes);

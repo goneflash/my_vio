@@ -42,6 +42,76 @@ void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
   data_buffer_.AddImageData(img);
 }
 
+void VisualInertialOdometry::ProcessDataInBuffer() {
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                              std::defer_lock);
+  for (;;) {
+    if (!running_process_buffer_thread_) break;
+
+    cv::Mat new_image;
+    if (data_buffer_.GetImageDataOrEndOfBuffer(new_image)) break;
+    if (!AddNewKeyframeFromImage(new_image)) {
+      continue;
+    }
+    // Only initialize if there're more than two keyframes.
+    keyframe_lock.lock();
+    if (keyframes_.size() < 2) {
+      keyframe_lock.unlock();
+      continue;
+    }
+    keyframe_lock.unlock();
+
+    /*
+     * Choose what to do depend on the status of VIO
+     */
+    if (vio_status_ == UNINITED) {
+      // TODO: Shouldn't Deadlock here. Because in RunInitialzier it is required
+      // to lock both together.
+      if (!running_initializer_thread_) {
+        running_initializer_thread_ = true;
+
+        // Run initilizer on the most recent frames.
+        std::lock(landmarks_lock, keyframe_lock);
+        std::vector<std::vector<cv::Vec2d> > feature_vectors;
+        std::vector<KeyframeId> frame_ids;
+        CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
+                               feature_vectors);
+        std::cout << "Prepared for initialization:\n"
+                  << "Total frames : " << keyframes_.size()
+                  << "\nTotal features: " << feature_vectors[0].size() << "\n";
+        landmarks_lock.unlock();
+        keyframe_lock.unlock();
+
+        // Run independently. If succeeded, write results to the frames and
+        // initialize landmarks.
+
+        /*
+        running_initializer_flag_ =
+            std::async(&VisualInertialOdometry::RunInitializer, this, frame_ids,
+                       feature_vectors);
+        */
+
+        // TODO: Should use future::state::ready.
+        if (initializer_thread_ != nullptr && initializer_thread_->joinable())
+          initializer_thread_->join();
+        // TODO: Doesn't make sense, because need to check every step in this
+        // thread if it has already received signal to stop!!!
+        if (!running_process_buffer_thread_) return;
+        initializer_thread_ = std::unique_ptr<std::thread>(
+            new std::thread(&VisualInertialOdometry::RunInitializer, this,
+                            frame_ids, feature_vectors));
+        std::cout << "Initializer thread started ...\n";
+      } else {
+        std::cout << "Not initialized, but already running a initialization "
+                     "thread ...\n";
+      }
+    } else {
+      // Estmiate the pose of current frame.
+    }
+  }
+}
+
 bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
@@ -93,7 +163,10 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
    * 2. Add as new keyframe
    * 3. Lost tracking, need to restart. TODO: or loop closure.
    */
-  if (matches.size() > 500 && num_skipped_frames_ < 5) {
+
+  // TODO: Should not do this because the next frame will be far
+  // if the feature processing takes long time.
+  if (false && matches.size() > 600 && num_skipped_frames_ < 3) {
     // Robust tracking. Skip this frame.
     // std::cout << "Skipped a frame with " << matches.size() << "
     // matches.\n";
@@ -112,8 +185,8 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
 
     // Add tracks.
     std::lock(landmarks_lock, keyframe_lock);
-    ProcessMatchesToLandmarks(last_keyframe_, new_keyframe.get(), matches,
-                              landmarks_);
+    ProcessMatchesAndAddToLandmarks(last_keyframe_, new_keyframe.get(), matches,
+                                    landmarks_);
     landmarks_lock.unlock();
     keyframe_lock.unlock();
 
@@ -129,59 +202,7 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   return true;
 }
 
-void VisualInertialOdometry::ProcessDataInBuffer() {
-  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
-  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
-                                              std::defer_lock);
-  for (;;) {
-    if (!running_process_buffer_thread_) break;
-
-    cv::Mat new_image;
-    if (data_buffer_.GetImageDataOrEndOfBuffer(new_image)) break;
-    if (!AddNewKeyframeFromImage(new_image)) {
-      continue;
-    }
-
-    /*
-     * Choose what to do depend on the status of VIO
-     */
-    if (vio_status_ == UNINITED) {
-      // TODO: Shouldn't Deadlock here. Because in RunInitialzier it is required
-      // to lock both together.
-      if (!running_initializer_thread_) {
-        running_initializer_thread_ = true;
-
-        // Run initilizer on the most recent frames.
-        std::lock(landmarks_lock, keyframe_lock);
-        std::vector<std::vector<cv::Vec2d> > feature_vectors;
-        std::vector<KeyframeId> frame_ids;
-        CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
-                               feature_vectors);
-        std::cout << "Prepared for initialization:\n"
-                  << "Total frames : " << keyframes_.size()
-                  << "\nTotal features: " << feature_vectors[0].size() << "\n";
-        landmarks_lock.unlock();
-        keyframe_lock.unlock();
-
-        // Run independently. If succeeded, write results to the frames and
-        // initialize landmarks.
-
-        // TODO: Should use future::state::ready.
-        if (initializer_thread_ != nullptr && initializer_thread_->joinable())
-          initializer_thread_->join();
-        // TODO: Doesn't make sense, because need to check every step in this
-        // thread if it has already received signal to stop!!!
-        if (!running_process_buffer_thread_) return;
-        initializer_thread_ = std::unique_ptr<std::thread>(
-            new std::thread(&VisualInertialOdometry::RunInitializer, this,
-                            frame_ids, feature_vectors));
-      } else {  // already running a initialization thread.
-      }
-    } else {
-      // Estmiate the pose of current frame.
-    }
-  }
-}
+bool VisualInertialOdometry::PrepareInitialization() {}
 
 void VisualInertialOdometry::RunInitializer(
     const std::vector<KeyframeId> &frame_ids,
@@ -196,6 +217,15 @@ void VisualInertialOdometry::RunInitializer(
                                     points3d_mask, Rs_est, ts_est)) {
     std::cerr << "Warning: Initialization failed.\n\n";
     // TODO: Clear all keyframes and landmarks.
+    // Probably want to only remove the keyframes that failed initialization.
+    // There are other cases, e.g. loop closure, lost tracking.
+    for (auto &frame_id : frame_ids) {
+      if (!RemoveKeyframe(frame_id)) {
+        std::cout << "Fatal Error: Failed to remove keyframe.\n";
+      }
+      std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
+      std::cout << "Removed keyframes. Now " << keyframes_.size() << " left.\n";
+    }
   } else {
     std::cerr << "Initialization Success.\n\n";
     CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
@@ -226,6 +256,59 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   // Calculate poses for current keyframes.
 
   // std::lock(landmarks_lock, keyframe_lock);
+}
+
+bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                              std::defer_lock);
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+  std::lock(landmarks_lock, keyframe_lock);
+
+  auto frame_ptr = keyframes_.find(frame_id);
+  if (frame_ptr == keyframes_.end()) {
+    std::cerr << "Error: Couldn't find the keyframe to remove.\n";
+    return false;
+  }
+
+  Keyframe *keyframe = frame_ptr->second.get();
+  for (auto &feature : keyframe->features) {
+    LandmarkId ld = feature.second.landmark_id;
+    if (ld == -1)
+      continue;
+    auto landmark_ptr = landmarks_.find(ld);
+    if (landmark_ptr == landmarks_.end()) {
+      std::cerr << "Weird: landmark " << ld.id() << " is not in landmarks.\n";
+      continue;
+    }
+    // Remove the landmark if it is observed only by this frame and another
+    // frame.
+    Landmark landmark = *landmark_ptr->second.get();
+    landmark.keyframe_to_feature
+    landmark.keyframe_to_feature_id
+
+    if (landmark.keyframe_to_feature.size() <= 2) {
+      // Delete references from keyframe to this landmark.
+      for (auto &frame_to_feature : landmark.keyframe_to_feature) {
+        auto ptr = keyframes_.find(frame_to_feature.first);
+        if (ptr == keyframes_.end()) {
+          std::cerr << "Error\n";
+          continue;
+        }
+        ptr->second
+            ->features[landmark.keyframe_to_feature_id[frame_to_feature.first]]
+            .landmark_id = -1;
+      }
+      // Delete landmark.
+      landmarks_.erase(landmark_ptr);
+    }
+  }
+  // Remove this keyframe.
+  keyframes_.erase(frame_ptr);
+  if (keyframes_.empty()) last_keyframe_ = nullptr;
+
+  landmarks_lock.unlock();
+  keyframe_lock.unlock();
+  return true;
 }
 
 #ifdef OPENCV_VIZ_FOUND
@@ -263,21 +346,23 @@ void RemoveUnmatchedFeatures(Keyframe *frame) {
 }
 
 // TODO: How to use it in FeatureTracker to evaluate tracker?
-bool ProcessMatchesToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
-                               const std::vector<cv::DMatch> &matches,
-                               Landmarks &landmarks) {
+bool ProcessMatchesAndAddToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
+                                     const std::vector<cv::DMatch> &matches,
+                                     Landmarks &landmarks) {
   // TODO: Add test.
   cur_frame->pre_frame_id = pre_frame->frame_id;
-  for (const auto match : matches) {
+  for (const auto &match : matches) {
     // TODO: How can landmark_id compared to int value? Default constructor!
     if (pre_frame->features[match.queryIdx].landmark_id == -1) {
       // New landmark.
       std::unique_ptr<Landmark> new_landmark =
           std::unique_ptr<Landmark>(new Landmark());
       new_landmark->AddMeasurementInKeyframe(
-          pre_frame->frame_id, pre_frame->features[match.queryIdx].measurement);
+          pre_frame->frame_id, match.queryIdx,
+          pre_frame->features[match.queryIdx].measurement);
       new_landmark->AddMeasurementInKeyframe(
-          cur_frame->frame_id, cur_frame->features[match.trainIdx].measurement);
+          cur_frame->frame_id, match.trainIdx,
+          cur_frame->features[match.trainIdx].measurement);
       // Update keyframe feature point to landmark.
       pre_frame->features[match.queryIdx].landmark_id =
           new_landmark->landmark_id;
@@ -290,7 +375,8 @@ bool ProcessMatchesToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
       LandmarkId landmark_id = pre_frame->features[match.queryIdx].landmark_id;
       cur_frame->features[match.trainIdx].landmark_id = landmark_id;
       landmarks[landmark_id]->AddMeasurementInKeyframe(
-          cur_frame->frame_id, cur_frame->features[match.trainIdx].measurement);
+          cur_frame->frame_id, match.trainIdx,
+          cur_frame->features[match.trainIdx].measurement);
     }
   }
   return true;
@@ -317,14 +403,15 @@ void CopyDataForInitializer(
    *
    * So for example, there are two frames with id 111 and 222:
    * feature_ids = { 111, 222 }
-   * keyframe_id_to_id = { 111 -> 0, 222 -> 1 }
+   * keyframe_id_to_feature_vector_id = { 111 -> 0, 222 -> 1 }
    * feature_vectors = { measurements in 111, measurement in 222 }
    *
    */
-  std::unordered_map<KeyframeId, int> keyframe_id_to_id;
+  std::unordered_map<KeyframeId, int> keyframe_id_to_feature_vector_id;
   for (const auto &keyframe_ptr : keyframes) {
     frame_ids[frame_count] = keyframe_ptr.second->frame_id;
-    keyframe_id_to_id[keyframe_ptr.second->frame_id] = frame_count;
+    keyframe_id_to_feature_vector_id[keyframe_ptr.second->frame_id] =
+        frame_count;
     frame_count++;
   }
 
@@ -335,14 +422,16 @@ void CopyDataForInitializer(
     if (landmark.keyframe_to_feature.size() == keyframes.size()) {
       for (const auto &measurement_ptr : landmark.keyframe_to_feature) {
         const KeyframeId &keyframe_id = measurement_ptr.first;
-        if (keyframe_id_to_id.find(keyframe_id) == keyframe_id_to_id.end()) {
+        if (keyframe_id_to_feature_vector_id.find(keyframe_id) ==
+            keyframe_id_to_feature_vector_id.end()) {
           // TODO: Error! Probably didn't clear previous unused Keyframes well.
           std::cerr << "Error: Probably didn't clear previous unused Keyframes "
                        "well.\n";
           return;
         }
-        feature_vectors[keyframe_id_to_id[keyframe_id]].push_back(
-            cv::Vec2d(measurement_ptr.second.x, measurement_ptr.second.y));
+        feature_vectors[keyframe_id_to_feature_vector_id[keyframe_id]]
+            .push_back(
+                cv::Vec2d(measurement_ptr.second.x, measurement_ptr.second.y));
       }
     }
   }
