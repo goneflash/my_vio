@@ -111,9 +111,10 @@ class VisualInertialOdometry {
   void PropagateInitializationToAllKeyframes();
 
   // Triangulate landmarks that are visible two or more initialized keyframes.
-  bool TriangulteLandmarksInKeyframes(const std::vector<KeyframeId> &frame_ids);
+  bool TriangulteLandmarksInNewKeyframes(Keyframe &pre_frame,
+                                         Keyframe &new_frame);
 
-  bool InitializePoseForNewKeyframe(Keyframe &new_frame);
+  bool InitializePoseForNewKeyframe(Keyframe &pre_frame, Keyframe &new_frame);
 
   // Remove a keyframe and associated landmarks if not observed by other frames.
   bool RemoveKeyframe(const KeyframeId &frame_id);

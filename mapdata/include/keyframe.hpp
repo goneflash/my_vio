@@ -79,6 +79,7 @@ class Keyframe {
 
   bool inited_pose() const { return inited_pose_; }
   bool inited_pose_;
+
   CameraPose pose;
 };
 

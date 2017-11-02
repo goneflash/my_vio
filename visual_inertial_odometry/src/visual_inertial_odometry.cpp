@@ -254,11 +254,35 @@ void VisualInertialOdometry::RunInitializer(
     // Propagate to all keyframes.
     auto keyframe_ptr = keyframes_.begin();
     while (keyframe_ptr != keyframes_.end()) {
-      if (!keyframe_ptr->second->inited_pose() &&
-          !InitializePoseForNewKeyframe(*(keyframe_ptr->second))) {
+      // TODO: Now assume if a keyframe is initialized, it will at the same
+      // triangulate new landmarks.
+      if (keyframe_ptr->second->inited_pose()) {
+        keyframe_ptr++;
+        continue;
+      }
+
+      std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_,
+                                                 std::defer_lock);
+      keyframe_lock.lock();
+      Keyframe &new_keyframe = *(keyframe_ptr->second);
+      if (new_keyframe.pre_frame_id == -1) break;
+      const auto &ptr = keyframes_.find(new_keyframe.pre_frame_id);
+      if (ptr == keyframes_.end()) break;
+      Keyframe &pre_keyframe = *(ptr->second);
+      if (!pre_keyframe.inited_pose()) break;
+      keyframe_lock.unlock();
+
+      // TODO: If don't lock, keyframes might change.
+      if (!InitializePoseForNewKeyframe(pre_keyframe, new_keyframe)) {
         std::cerr << "Error: Can't propagate initialization. Need to redo.\n";
         break;
       }
+
+      if (!TriangulteLandmarksInNewKeyframes(pre_keyframe, new_keyframe)) {
+        std::cerr << "Error: Can't triangulate new landmarks.\n";
+        break;
+      }
+
       keyframe_ptr++;
     }
   }
@@ -346,17 +370,14 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
 }
 
 // TODO: Consider move out of class.
-bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &new_frame) {
+bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &pre_frame,
+                                                          Keyframe &new_frame) {
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
                                               std::defer_lock);
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
 
-  std::lock(keyframe_lock, landmarks_lock);
-  if (new_frame.pre_frame_id == -1) return false;
-  const auto &ptr = keyframes_.find(new_frame.pre_frame_id);
-  if (ptr == keyframes_.end()) return false;
-  Keyframe &pre_frame = *(ptr->second);
-  if (!pre_frame.inited_pose()) return false;
+  // TODO: How to increase the lock granularity here.
+  // previous keyframe.
 
   // TODO: Also try to five point method using 2D-2D matches.
 
@@ -364,6 +385,7 @@ bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &new_frame) {
   std::vector<cv::Point3f> points3d;
   std::vector<cv::Point2f> points2d;
   // TODO
+  std::lock(keyframe_lock, landmarks_lock);
   for (const auto &match : new_frame.match_to_pre_frame) {
     const auto &ld = pre_frame.features[match.second].landmark_id;
     if (ld == -1 || !landmarks_[ld]->inited()) continue;
@@ -400,8 +422,73 @@ bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &new_frame) {
   return true;
 }
 
-bool VisualInertialOdometry::TriangulteLandmarksInKeyframes(
-    const std::vector<KeyframeId> &frame_ids) {}
+bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
+    Keyframe &pre_frame, Keyframe &new_frame) {
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                              std::defer_lock);
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+
+  // TODO: Change this.
+  cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+
+  std::lock(landmarks_lock, keyframe_lock);
+  if (!new_frame.inited_pose()) return false;
+
+  int good_count = 0, tested_count = 0;
+  for (const auto &match : new_frame.match_to_pre_frame) {
+    const auto &ld = pre_frame.features[match.second].landmark_id;
+    // TODO: Don't have to triangulate points until > 3 frames see it?
+    // Already triangulated?
+    if (ld == -1 || landmarks_[ld]->inited()) continue;
+
+    Landmark &landmark = *landmarks_[ld];
+    std::vector<cv::Vec2d> kp;
+    std::vector<cv::Mat> P, R, t;
+
+    // Add measurement for all frames to triangulate.
+    // TODO: Now only supports two views.
+    for (auto &ptr : landmark.keyframe_to_feature) {
+      // TODO: Duplicated code with Copy....()
+      Keyframe &keyframe = *keyframes_[ptr.first];
+      // TODO: there might be new keyframes already added that also see this
+      // landmark.
+      if (!keyframe.inited_pose()) continue;
+      kp.push_back(cv::Vec2d(ptr.second.x, ptr.second.y));
+      R.push_back(keyframe.pose.R);
+      cv::Mat tmp_t = cv::Mat(3, 1, CV_64F);
+      tmp_t.at<double>(0) = keyframe.pose.t[0];
+      tmp_t.at<double>(1) = keyframe.pose.t[1];
+      tmp_t.at<double>(2) = keyframe.pose.t[2];
+      t.push_back(tmp_t);
+      cv::Mat tmp_P;
+      RtToP(R.back(), t.back(), tmp_P);
+      tmp_P = cv::Mat(K) * tmp_P;
+      P.push_back(tmp_P);
+    }
+    // TODO
+    if (kp.size() != 2) continue;
+
+    tested_count++;
+    // TODO: Assume 2 frames.
+    // TODO: How to triangulate a point from 3+ frames.
+    cv::Point3f point_3d;
+    TriangulateDLT(kp[0], kp[1], P[0], P[1], point_3d);
+    if (IsGoodTriangulatedPoint(kp[0], kp[1], R[0], t[0], R[1], t[1], P[0],
+                                P[1], point_3d)) {
+      landmark.position[0] = point_3d.x;
+      landmark.position[1] = point_3d.y;
+      landmark.position[2] = point_3d.z;
+      // TODO: private.
+      landmark.inited_ = true;
+      good_count++;
+    }
+  }
+  landmarks_lock.unlock();
+  keyframe_lock.unlock();
+  std::cout << "Triangulated " << good_count << " / " << tested_count
+            << " new landmarks.\n";
+  return true;
+}
 
 bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,

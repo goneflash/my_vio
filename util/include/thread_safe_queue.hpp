@@ -22,7 +22,7 @@ class ThreadSafeQueue {
   std::unique_lock<std::mutex> size(size_t &size) {
     std::unique_lock<std::mutex> tmp_lock(mutex_);
     size = queue_.size();
-    std::cout << "Now image buffer size: " << size << std::endl;
+    // std::cout << "Now image buffer size: " << size << std::endl;
     return std::move(tmp_lock);
   }
 
