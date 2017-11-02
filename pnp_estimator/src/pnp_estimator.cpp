@@ -2,7 +2,8 @@
 
 namespace vio {
 
-std::unique_ptr<PnPEstimator> PnPEstimator::CreatePnPEstimator(PnPMethod method) {
+std::unique_ptr<PnPEstimator> PnPEstimator::CreatePnPEstimator(
+    PnPMethod method) {
   switch (method) {
     // TODO: This should be OpenCV
     case ITERATIVE:

@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -34,7 +35,15 @@ class VIODataBuffer {
  public:
   // TODO: Move buffer size as parameters?
   VIODataBuffer()
-      : buffer_closed_(false), image_buffer_size_(10), imu_buffer_size_(50) {}
+      : buffer_closed_(false),
+        skip_every_num_frames_(3),
+        cur_skipped_count_(0),
+        skip_time_interval_(30),
+        image_buffer_size_(30),
+        imu_buffer_size_(50) {
+    // TODO: Not really correct.
+    last_image_timestamp_ = std::chrono::high_resolution_clock::now();
+  }
 
   void CloseBuffer() {
     buffer_closed_ = true;
@@ -45,6 +54,15 @@ class VIODataBuffer {
 
   void AddImageData(cv::Mat &img) {
     image_buffer_stats_.received_count++;
+
+    if (SkipThisImage()) {
+      cur_skipped_count_++;
+      image_buffer_stats_.dropped_count++;
+      std::cout << "Skipped an image.\n";
+      return;
+    }
+    cur_skipped_count_ = 0;
+
     while (true) {
       size_t size = 0;
       auto tmp_lock = image_buffer_.size(size);
@@ -55,6 +73,7 @@ class VIODataBuffer {
       } else {
         tmp_lock.unlock();
         image_buffer_.Push(img);
+        last_image_timestamp_ = std::chrono::high_resolution_clock::now();
         break;
       }
     }
@@ -79,6 +98,16 @@ class VIODataBuffer {
   }
 
  private:
+  bool SkipThisImage() {
+    if (cur_skipped_count_ > skip_time_interval_) return false;
+    const auto interval =
+        std::chrono::high_resolution_clock::now() - last_image_timestamp_;
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(interval)
+            .count() > skip_time_interval_)
+      return false;
+    return true;
+  }
+
   std::atomic<bool> buffer_closed_;
 
   // Image data buffer.
@@ -86,6 +115,13 @@ class VIODataBuffer {
   ThreadSafeQueue<cv::Mat> image_buffer_;
   // TODO: Do not need mutex until it is used in multithread.
   VIODataBufferStats image_buffer_stats_;
+  // Will drop new images if it met both of the criterions.
+  // 1. skipped less than 3 frames.
+  // 2. skipped in last 30 ms.
+  int skip_every_num_frames_;
+  int cur_skipped_count_;
+  float skip_time_interval_;
+  std::chrono::high_resolution_clock::time_point last_image_timestamp_;
 
   // IMU data buffer.
   int imu_buffer_size_;

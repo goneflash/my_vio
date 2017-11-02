@@ -106,10 +106,14 @@ class VisualInertialOdometry {
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
 
+  // After first several keyframes are initialized, propagate to all store
+  // keyframes.
+  void PropagateInitializationToAllKeyframes();
+
   // Triangulate landmarks that are visible two or more initialized keyframes.
   bool TriangulteLandmarksInKeyframes(const std::vector<KeyframeId> &frame_ids);
 
-  bool CalculatePoseForNewKeyframe(Keyframe &new_frame);
+  bool InitializePoseForNewKeyframe(Keyframe &new_frame);
 
   // Remove a keyframe and associated landmarks if not observed by other frames.
   bool RemoveKeyframe(const KeyframeId &frame_id);

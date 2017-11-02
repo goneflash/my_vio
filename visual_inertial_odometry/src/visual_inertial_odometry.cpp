@@ -14,6 +14,7 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
   // Setup Feature tracker.
   InitializeFeatureTracker();
   InitializeVIOInitializer();
+  pnp_estimator_ = PnPEstimator::CreatePnPEstimator(ITERATIVE);
   // cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
 }
 
@@ -237,6 +238,17 @@ void VisualInertialOdometry::RunInitializer(
     std::cerr << "Initialization Success.\n\n";
     CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
     vio_status_ = INITED;
+    // TODO: Should do it here?
+    // Propagate to all keyframes.
+    auto keyframe_ptr = keyframes_.begin();
+    while (keyframe_ptr != keyframes_.end()) {
+      if (!keyframe_ptr->second->inited_pose() &&
+          !InitializePoseForNewKeyframe(*(keyframe_ptr->second))) {
+        std::cerr << "Error: Can't propagate initialization. Need to redo.\n";
+        break;
+      }
+      keyframe_ptr++;
+    }
   }
 
   running_initializer_thread_ = false;
@@ -301,6 +313,7 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
 
     tested_count++;
     // TODO: Assume 2 frames.
+    // TODO: How to triangulate a point from 3+ frames.
     cv::Point3f point_3d;
     TriangulateDLT(kp[0], kp[1], P[0], P[1], point_3d);
     if (IsGoodTriangulatedPoint(kp[0], kp[1], R[0], t[0], R[1], t[1], P[0],
@@ -316,21 +329,53 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   std::cout << "Triangulated " << good_count << " landmarks.\n";
 }
 
-bool VisualInertialOdometry::CalculatePoseForNewKeyframe(Keyframe &new_frame) {
+// TODO: Consider move out of class.
+bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &new_frame) {
+  std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
+                                              std::defer_lock);
+  std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
+
+  std::lock(keyframe_lock, landmarks_lock);
   if (new_frame.pre_frame_id == -1) return false;
   const auto &ptr = keyframes_.find(new_frame.pre_frame_id);
   if (ptr == keyframes_.end()) return false;
-  const Keyframe &pre_frame = *(ptr->second);
+  Keyframe &pre_frame = *(ptr->second);
   if (!pre_frame.inited_pose()) return false;
+
+  // TODO: Also try to five point method using 2D-2D matches.
 
   // Gather data for estimating the pose.
   std::vector<cv::Point3f> points3d;
   std::vector<cv::Point2f> points2d;
-  std::vector<int> points_index;
   // TODO
   for (const auto &match : new_frame.match_to_pre_frame) {
+    const auto &ld = pre_frame.features[match.second].landmark_id;
+    if (ld == -1) continue;
+    points3d.push_back(cv::Point3f(landmarks_[ld]->position[0],
+                                   landmarks_[ld]->position[1],
+                                   landmarks_[ld]->position[2]));
+    points2d.push_back(
+        cv::Point2f(new_frame.features[match.first].measurement.x,
+                    new_frame.features[match.first].measurement.y));
   }
 
+  landmarks_lock.unlock();
+  keyframe_lock.unlock();
+
+  // TODO: Change this.
+  cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  std::vector<bool> inliers;
+  cv::Mat R;
+  cv::Mat t;
+  if (!pnp_estimator_->EstimatePose(points2d, points3d, cv::Mat(K), inliers, R,
+                                    t)) {
+    std::cerr << "Error: PnP estimation.\n";
+    return false;
+  }
+
+  keyframe_lock.lock();
+  new_frame.SetPose(R, t);
+  keyframe_lock.unlock();
   return true;
 }
 
