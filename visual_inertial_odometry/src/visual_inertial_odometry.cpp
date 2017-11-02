@@ -156,6 +156,7 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   keyframe_lock.lock();
   feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
                                matches);
+  // Not matched features are useless since we only match consecutive frames.
   keyframe_lock.unlock();
   // std::cout << "Feature number in new frame " <<
   // frame_cur->keypoints().size() << std::endl;
@@ -191,6 +192,7 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
     std::lock(landmarks_lock, keyframe_lock);
     ProcessMatchesAndAddToLandmarks(last_keyframe_, new_keyframe.get(), matches,
                                     landmarks_);
+    RemoveUnmatchedFeatures(*last_keyframe_);
     landmarks_lock.unlock();
     keyframe_lock.unlock();
 
@@ -261,6 +263,11 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   // Calculate poses for current keyframes.
 
   // std::lock(landmarks_lock, keyframe_lock);
+}
+
+bool VisualInertialOdometry::TriangulteLandmarksInKeyframes(
+  const std::vector<KeyframeId> &frame_ids) {
+  
 }
 
 bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
@@ -347,8 +354,16 @@ void VisualInertialOdometry::VisualizeCurrentScene() {
 }
 #endif
 
-void RemoveUnmatchedFeatures(Keyframe *frame) {
-  // TODO
+void RemoveUnmatchedFeatures(Keyframe &frame) {
+  std::cout << "Feature size reduced from " << frame.features.size();
+  auto feature_ptr = frame.features.begin();
+  while (feature_ptr != frame.features.end()) {
+    if (feature_ptr->second.landmark_id == -1)
+      feature_ptr = frame.features.erase(feature_ptr);
+    else
+      ++feature_ptr;
+  }
+  std::cout << " to " << frame.features.size() << std::endl;
 }
 
 // TODO: How to use it in FeatureTracker to evaluate tracker?

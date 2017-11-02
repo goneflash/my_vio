@@ -107,6 +107,10 @@ class VisualInertialOdometry {
       const std::vector<KeyframeId> &frame_ids,
       const std::vector<cv::Mat> &Rs_est, const std::vector<cv::Mat> &ts_est);
 
+  // Triangulate landmarks that are visible two or more initialized keyframes.
+  bool TriangulteLandmarksInKeyframes(const std::vector<KeyframeId> &frame_ids);
+
+
   // Remove a keyframe and associated landmarks if not observed by other frames.
   bool RemoveKeyframe(const KeyframeId &frame_id);
 
@@ -154,7 +158,7 @@ class VisualInertialOdometry {
   std::atomic<bool> running_process_buffer_thread_;
 };
 
-void RemoveUnmatchedFeatures(Keyframe *frame);
+void RemoveUnmatchedFeatures(Keyframe &frame);
 
 bool ProcessMatchesAndAddToLandmarks(Keyframe *frame0, Keyframe *frame1,
                                      const std::vector<cv::DMatch> &matches,

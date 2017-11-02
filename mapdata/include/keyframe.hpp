@@ -75,6 +75,7 @@ class Keyframe {
 
   std::unordered_map<FeatureId, Feature> features;
 
+  bool inited_pose() { return inited_pose_; }
   bool inited_pose_;
   CameraPose pose;
 };
