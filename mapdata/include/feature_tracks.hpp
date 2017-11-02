@@ -26,7 +26,7 @@ class Landmark {
  public:
   typedef Eigen::Vector3d Position;
 
-  Landmark() : landmark_id(CreateNewId<LandmarkId>()) {}
+  Landmark() : landmark_id(CreateNewId<LandmarkId>()), inited_(false) {}
 
   // TODO: Should not add duplicated features.
   // TODO: Use Assert of glog.
@@ -65,6 +65,8 @@ class Landmark {
 
   LandmarkId landmark_id;
 
+  bool inited() { return inited_; }
+  bool inited_;
   // In world frame.
   Position position;
 

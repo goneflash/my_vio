@@ -308,6 +308,7 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
       landmark_ptr.second->position[0] = point_3d.x;
       landmark_ptr.second->position[1] = point_3d.y;
       landmark_ptr.second->position[2] = point_3d.z;
+      landmark_ptr.second->inited_ = true;
       good_count++;
     }
   }
@@ -405,6 +406,7 @@ void VisualInertialOdometry::VisualizeCurrentScene() {
   vio::Scene scene;
   vio::SceneVisualizer visualizer("simple");
 
+  // Add frames.
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
   for (const auto &id_to_frame : keyframes_) {
     const auto &keyframe = id_to_frame.second;
@@ -416,6 +418,13 @@ void VisualInertialOdometry::VisualizeCurrentScene() {
     }
   }
 
+  // Add landmarks.
+  for (const auto &id_to_landmark : landmarks_) {
+    const auto &landmark = id_to_landmark.second;
+    if (landmark->inited()) {
+      scene.landmarks.push_back(*landmark);
+    }
+  }
   visualizer.VisualizeScene(scene);
 }
 #endif
