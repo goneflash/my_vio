@@ -31,6 +31,16 @@ struct VIODataBufferStats {
   }
 };
 
+typedef std::chrono::high_resolution_clock::time_point TimeStamp;
+
+struct TimeStampedImage {
+  TimeStampedImage() {}
+  TimeStampedImage(cv::Mat &img, TimeStamp timestamp)
+      : image(img), time_stamp(time_stamp) {}
+  cv::Mat image;
+  TimeStamp time_stamp;
+};
+
 class VIODataBuffer {
  public:
   // TODO: Move buffer size as parameters?
@@ -72,8 +82,9 @@ class VIODataBuffer {
         image_buffer_stats_.dropped_count++;
       } else {
         tmp_lock.unlock();
-        image_buffer_.Push(img);
         last_image_timestamp_ = std::chrono::high_resolution_clock::now();
+        TimeStampedImage new_image(img, last_image_timestamp_);
+        image_buffer_.Push(new_image);
         break;
       }
     }
@@ -83,10 +94,12 @@ class VIODataBuffer {
 
   // Return true if buffer has ended.
   bool GetImageDataOrEndOfBuffer(cv::Mat &image) {
+    TimeStampedImage timed_image;
     do {
       std::this_thread::sleep_for(std::chrono::milliseconds(20));
       if (buffer_closed_) return true;
-    } while (!image_buffer_.TryPop(image));
+    } while (!image_buffer_.TryPop(timed_image));
+    image = timed_image.image;
     return false;
   }
 
@@ -112,7 +125,7 @@ class VIODataBuffer {
 
   // Image data buffer.
   int image_buffer_size_;
-  ThreadSafeQueue<cv::Mat> image_buffer_;
+  ThreadSafeQueue<TimeStampedImage> image_buffer_;
   // TODO: Do not need mutex until it is used in multithread.
   VIODataBufferStats image_buffer_stats_;
   // Will drop new images if it met both of the criterions.
@@ -121,7 +134,7 @@ class VIODataBuffer {
   int skip_every_num_frames_;
   int cur_skipped_count_;
   float skip_time_interval_;
-  std::chrono::high_resolution_clock::time_point last_image_timestamp_;
+  TimeStamp last_image_timestamp_;
 
   // IMU data buffer.
   int imu_buffer_size_;
