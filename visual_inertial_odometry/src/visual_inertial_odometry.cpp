@@ -113,6 +113,31 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
                      "thread ...\n";
       }
     } else {
+      keyframe_lock.lock();
+
+      const auto &ptr = keyframes_.find(last_keyframe_->pre_frame_id);
+      if (ptr == keyframes_.end()) break;
+      Keyframe &pre_keyframe = *(ptr->second);
+      // Initialization might not propagate to here yet.
+      if (!pre_keyframe.inited_pose()) {
+        keyframe_lock.unlock();
+        continue;
+      }
+      keyframe_lock.unlock();
+
+      // TODO: If don't lock, keyframes might change.
+      if (!InitializePoseForNewKeyframe(pre_keyframe, *last_keyframe_)) {
+        std::cerr << "Error: Can't initialize new keyframe. Need to restart.\n";
+        std::cerr << "Now quiting...\n";
+        break;
+      }
+
+      if (!TriangulteLandmarksInNewKeyframes(pre_keyframe, *last_keyframe_)) {
+        std::cerr << "Error: Can't triangulate landmarks for new keyframe.\n";
+        std::cerr << "Now quiting...\n";
+        break;
+      }
+
       // Estmiate the pose of current frame.
       // TODO: Wait until all keyframes are pose_inited.
     }
