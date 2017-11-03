@@ -1,6 +1,7 @@
 #include "visual_inertial_odometry.hpp"
 
 #include "multiview.hpp"
+#include "timer.hpp"
 
 namespace vio {
 
@@ -49,6 +50,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
                                               std::defer_lock);
+  Timer timer;
+
   for (;;) {
     if (!running_process_buffer_thread_) break;
 
@@ -127,6 +130,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       }
       keyframe_lock.unlock();
 
+      timer.Start();
+
       // TODO: If don't lock, keyframes might change.
       if (!InitializePoseForNewKeyframe(pre_keyframe, *last_keyframe_)) {
         std::cerr << "Error: Can't initialize new keyframe. Need to restart.\n";
@@ -140,6 +145,10 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
         break;
       }
 
+      timer.Stop();
+      std::cout << "Initialize new keyframe and triagulate landmarks used "
+                << timer.GetInMs() << "ms.\n";
+
       // Estmiate the pose of current frame.
       // TODO: Wait until all keyframes are pose_inited.
     }
@@ -150,6 +159,7 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
                                               std::defer_lock);
+  Timer timer;
 
   std::unique_ptr<vio::ImageFrame> frame_cur(new vio::ImageFrame(new_image));
 
@@ -230,6 +240,8 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
     std::unique_ptr<Keyframe> new_keyframe =
         std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
 
+    timer.Start();
+
     // Add tracks.
     std::lock(landmarks_lock, keyframe_lock);
     ProcessMatchesAndAddToLandmarks(last_keyframe_, new_keyframe.get(), matches,
@@ -238,6 +250,10 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
     RemoveShortTracksNotVisibleToCurrentKeyframe(last_keyframe_->frame_id);
     landmarks_lock.unlock();
     keyframe_lock.unlock();
+
+    timer.Stop();
+    std::cout << "Process and clean matches used " << timer.GetInMs()
+              << "ms.\n";
 
     // TODO: Should not be added before.
     keyframe_lock.lock();
@@ -297,14 +313,23 @@ void VisualInertialOdometry::RunInitializer(
   std::vector<bool> points3d_mask;
   std::vector<cv::Mat> Rs_est, ts_est;
 
+  Timer timer;
+  timer.Start();
   // TODO: Change this.
   cv::Matx33d K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
-  if (!map_initializer_->Initialize(feature_vectors, cv::Mat(K_), points3d,
-                                    points3d_mask, Rs_est, ts_est)) {
+  const bool success = map_initializer_->Initialize(
+      feature_vectors, cv::Mat(K_), points3d, points3d_mask, Rs_est, ts_est);
+
+  timer.Stop();
+  std::cout << "Initialization used " << timer.GetInMs() << "ms.\n";
+
+  if (!success) {
     std::cerr << "Warning: Initialization failed.\n\n";
     // TODO: Clear all keyframes and landmarks.
     // Probably want to only remove the keyframes that failed initialization.
     // There are other cases, e.g. loop closure, lost tracking.
+    timer.Start();
+
     for (auto &frame_id : frame_ids) {
       if (!RemoveKeyframe(frame_id)) {
         std::cout << "Fatal Error: Failed to remove keyframe.\n";
@@ -312,10 +337,20 @@ void VisualInertialOdometry::RunInitializer(
       std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
       std::cout << "Removed keyframes. Now " << keyframes_.size() << " left.\n";
     }
+
+    timer.Stop();
+    std::cout << "Removing keyframes used " << timer.GetInMs() << "ms.\n";
+
   } else {
     std::cerr << "Initialization Success.\n\n";
+
+    timer.Start();
     CopyInitializedFramesAndLandmarksData(frame_ids, Rs_est, ts_est);
     vio_status_ = INITED;
+
+    timer.Stop();
+    std::cout << "Copy initialization data used " << timer.GetInMs() << "ms.\n";
+
     // TODO: Should do it here?
     // Propagate to all keyframes.
     auto keyframe_ptr = keyframes_.begin();
@@ -338,6 +373,8 @@ void VisualInertialOdometry::RunInitializer(
       if (!pre_keyframe.inited_pose()) break;
       keyframe_lock.unlock();
 
+      timer.Start();
+
       // TODO: If don't lock, keyframes might change.
       if (!InitializePoseForNewKeyframe(pre_keyframe, new_keyframe)) {
         std::cerr << "Error: Can't propagate initialization. Need to redo.\n";
@@ -348,6 +385,10 @@ void VisualInertialOdometry::RunInitializer(
         std::cerr << "Error: Can't triangulate new landmarks.\n";
         break;
       }
+
+      timer.Stop();
+      std::cout << "Initialize new keyframe and triagulate landmarks used "
+                << timer.GetInMs() << "ms.\n";
 
       keyframe_ptr++;
     }
