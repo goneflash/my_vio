@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <Eigen/Core>
 
@@ -26,7 +27,10 @@ class Landmark {
  public:
   typedef Eigen::Vector3d Position;
 
-  Landmark() : landmark_id(CreateNewId<LandmarkId>()), inited_(false) {}
+  Landmark()
+      : landmark_id(CreateNewId<LandmarkId>()),
+        current_track_length(0),
+        inited_(false) {}
 
   // TODO: Should not add duplicated features.
   // TODO: Use Assert of glog.
@@ -64,6 +68,8 @@ class Landmark {
   KeyframeIdToFeatureId keyframe_to_feature_id;
 
   LandmarkId landmark_id;
+
+  int current_track_length;
 
   bool inited() { return inited_; }
   bool inited_;

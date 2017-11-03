@@ -16,6 +16,8 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
   InitializeVIOInitializer();
   pnp_estimator_ = PnPEstimator::CreatePnPEstimator(ITERATIVE);
   cv::namedWindow("tracking", cv::WINDOW_AUTOSIZE);
+
+  track_length_to_landmark_.resize(3);
 }
 
 void VisualInertialOdometry::InitializeFeatureTracker() {
@@ -74,7 +76,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
 
         // Run initilizer on the most recent frames.
         std::lock(landmarks_lock, keyframe_lock);
-        std::vector<std::vector<cv::Vec2d> > feature_vectors;
+        std::vector<std::vector<cv::Vec2d>> feature_vectors;
         std::vector<KeyframeId> frame_ids;
         // TODO: Currently copy data from first two frames.
         CopyDataForInitializer(landmarks_, keyframes_, frame_ids,
@@ -231,8 +233,9 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
     // Add tracks.
     std::lock(landmarks_lock, keyframe_lock);
     ProcessMatchesAndAddToLandmarks(last_keyframe_, new_keyframe.get(), matches,
-                                    landmarks_);
+                                    track_length_to_landmark_, landmarks_);
     RemoveUnmatchedFeatures(*last_keyframe_);
+    RemoveShortTracksNotVisibleToCurrentKeyframe(last_keyframe_->frame_id);
     landmarks_lock.unlock();
     keyframe_lock.unlock();
 
@@ -249,9 +252,47 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   return true;
 }
 
+void VisualInertialOdometry::RemoveShortTracksNotVisibleToCurrentKeyframe(
+    const KeyframeId &cur_keyframe_id) {
+  const int min_track_length = 4;
+  // TODO: Could use vector or unordered_map to store index so that don't need
+  // to iterate through all landmarks.
+  int count = 0;
+  for (int len = 2; len < min_track_length; ++len) {
+    if (len + 1 > track_length_to_landmark_.size()) break;
+
+    auto landmark_id_ptr = track_length_to_landmark_[len].begin();
+    while (landmark_id_ptr != track_length_to_landmark_[len].end()) {
+      auto &landmark_id = *landmark_id_ptr;
+      Landmark &landmark = *landmarks_[landmark_id];
+      // If not visible to current keyframe then delete this landmark.
+      if (landmark.keyframe_to_feature.find(cur_keyframe_id) ==
+          landmark.keyframe_to_feature.end()) {
+        // Remove all reference from keyframes.
+        for (auto &frame_to_feature : landmark.keyframe_to_feature) {
+          auto ptr = keyframes_.find(frame_to_feature.first);
+          if (ptr == keyframes_.end()) {
+            std::cerr << "Error\n";
+            continue;
+          }
+          ptr->second->features
+              [landmark.keyframe_to_feature_id[frame_to_feature.first]]
+                  .landmark_id = -1;
+        }
+        landmarks_.erase(landmark_id);
+        landmark_id_ptr = track_length_to_landmark_[len].erase(landmark_id_ptr);
+        count++;
+      } else {
+        landmark_id_ptr++;
+      }
+    }
+  }
+  std::cout << "Removed " << count << " short track length landmarks.\n";
+}
+
 void VisualInertialOdometry::RunInitializer(
     const std::vector<KeyframeId> &frame_ids,
-    const std::vector<std::vector<cv::Vec2d> > &feature_vectors) {
+    const std::vector<std::vector<cv::Vec2d>> &feature_vectors) {
   std::vector<cv::Point3f> points3d;
   std::vector<bool> points3d_mask;
   std::vector<cv::Mat> Rs_est, ts_est;
@@ -555,7 +596,10 @@ bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
             ->features[landmark.keyframe_to_feature_id[frame_to_feature.first]]
             .landmark_id = -1;
       }
+
       // Delete landmark.
+      track_length_to_landmark_[landmark.current_track_length].erase(
+          landmark.landmark_id);
       landmarks_.erase(landmark_ptr);
     }
   }
@@ -620,9 +664,11 @@ void RemoveUnmatchedFeatures(Keyframe &frame) {
 }
 
 // TODO: How to use it in FeatureTracker to evaluate tracker?
-bool ProcessMatchesAndAddToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
-                                     const std::vector<cv::DMatch> &matches,
-                                     Landmarks &landmarks) {
+bool ProcessMatchesAndAddToLandmarks(
+    Keyframe *pre_frame, Keyframe *cur_frame,
+    const std::vector<cv::DMatch> &matches,
+    std::vector<std::unordered_set<LandmarkId>> &track_length_to_landmark,
+    Landmarks &landmarks) {
   // TODO: Add test.
   cur_frame->pre_frame_id = pre_frame->frame_id;
   pre_frame->next_frame_id = cur_frame->frame_id;
@@ -644,35 +690,38 @@ bool ProcessMatchesAndAddToLandmarks(Keyframe *pre_frame, Keyframe *cur_frame,
           new_landmark->landmark_id;
       cur_frame->features[match.trainIdx].landmark_id =
           new_landmark->landmark_id;
+      // Add to track length index.
+      track_length_to_landmark[2].insert(new_landmark->landmark_id);
+      new_landmark->current_track_length = 2;
       // Add landmark.
       landmarks[new_landmark->landmark_id] = std::move(new_landmark);
     } else {
       // Handle existing landmark.
       LandmarkId landmark_id = pre_frame->features[match.queryIdx].landmark_id;
       cur_frame->features[match.trainIdx].landmark_id = landmark_id;
-      landmarks[landmark_id]->AddMeasurementInKeyframe(
+      Landmark &landmark = *landmarks[landmark_id];
+      landmark.AddMeasurementInKeyframe(
           cur_frame->frame_id, match.trainIdx,
           cur_frame->features[match.trainIdx].measurement);
+      // Change the track length index.
+      track_length_to_landmark[landmark.current_track_length].erase(
+          landmark_id);
+      landmark.current_track_length++;
+      if (track_length_to_landmark.size() < landmark.current_track_length + 1) {
+        track_length_to_landmark.resize(landmark.current_track_length + 1);
+        track_length_to_landmark[landmark.current_track_length].clear();
+      }
+      track_length_to_landmark[landmark.current_track_length].insert(
+          landmark_id);
     }
   }
   return true;
 }
 
-void RemoveShortTrackLengthLandmark(LandmarkId landmark_id,
-                                    Landmarks &landmarks,
-                                    Keyframes &keyframes) {
-  // TODO
-}
-
-void RemoveShortTracks(Landmarks &landmarks, Keyframes &keyframes,
-                       KeyframeId &cur_keyframe_id) {
-  // TODO
-}
-
 bool CopyDataForInitializer(
     const Landmarks &landmarks, const Keyframes &keyframes,
     std::vector<KeyframeId> &frame_ids,
-    std::vector<std::vector<cv::Vec2d> > &feature_vectors) {
+    std::vector<std::vector<cv::Vec2d>> &feature_vectors) {
   const int num_frames_needed_for_init = 2;
 
   feature_vectors.resize(num_frames_needed_for_init);

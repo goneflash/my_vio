@@ -93,13 +93,15 @@ class VisualInertialOdometry {
   // Return true if new keyframe is added.
   bool AddNewKeyframeFromImage(const cv::Mat &new_image);
 
+  void RemoveShortTracksNotVisibleToCurrentKeyframe(
+      const KeyframeId &cur_keyframe_id);
   /* ---------------------------------------
    *
    * Thread to initialize first frames and landmarks.
    */
   void RunInitializer(
       const std::vector<KeyframeId> &frame_ids,
-      const std::vector<std::vector<cv::Vec2d> > &feature_vectors);
+      const std::vector<std::vector<cv::Vec2d>> &feature_vectors);
 
   // When initialization succeeded, copy data to keyframes and landmarks.
   void CopyInitializedFramesAndLandmarksData(
@@ -159,6 +161,8 @@ class VisualInertialOdometry {
 
   std::mutex landmarks_mutex_;
   Landmarks landmarks_;
+  // [0] is empty, [1] is length 1, [2] is length 2...
+  std::vector<std::unordered_set<LandmarkId>> track_length_to_landmark_;
   LandmarkStats landmark_stats_;
 
   std::unique_ptr<std::thread> process_buffer_thread_;
@@ -167,14 +171,10 @@ class VisualInertialOdometry {
 
 void RemoveUnmatchedFeatures(Keyframe &frame);
 
-bool ProcessMatchesAndAddToLandmarks(Keyframe *frame0, Keyframe *frame1,
-                                     const std::vector<cv::DMatch> &matches,
-                                     Landmarks &landmarks);
-
-void RemoveShortTrackLengthLandmark(LandmarkId landmark_id,
-                                    Landmarks &landmarks, Keyframes &keyframes);
-
-void RemoveShortTracks(Landmarks &landmarks, KeyframeId &cur_keyframe_id);
+bool ProcessMatchesAndAddToLandmarks(
+    Keyframe *frame0, Keyframe *frame1, const std::vector<cv::DMatch> &matches,
+    std::vector<std::unordered_set<LandmarkId>> &track_length_to_landmark,
+    Landmarks &landmarks);
 
 /*
  * Output:
@@ -184,7 +184,7 @@ void RemoveShortTracks(Landmarks &landmarks, KeyframeId &cur_keyframe_id);
 bool CopyDataForInitializer(
     const Landmarks &landmarks, const Keyframes &keyframes,
     std::vector<KeyframeId> &frame_ids,
-    std::vector<std::vector<cv::Vec2d> > &feature_vectors);
+    std::vector<std::vector<cv::Vec2d>> &feature_vectors);
 
 }  // vio
 
