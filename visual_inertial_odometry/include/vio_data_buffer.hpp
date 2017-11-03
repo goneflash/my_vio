@@ -46,9 +46,9 @@ class VIODataBuffer {
   // TODO: Move buffer size as parameters?
   VIODataBuffer()
       : buffer_closed_(false),
-        skip_every_num_frames_(3),
+        skip_every_num_frames_(2),
         cur_skipped_count_(0),
-        skip_time_interval_(50),
+        skip_time_interval_(30),
         image_buffer_size_(30),
         imu_buffer_size_(50) {
     // TODO: Not really correct.
@@ -80,6 +80,7 @@ class VIODataBuffer {
         // TODO: Drop smartly.
         image_buffer_.Pop(std::move(tmp_lock));
         image_buffer_stats_.dropped_count++;
+        std::cout << "Dropped an image from buffer!!!\n";
       } else {
         tmp_lock.unlock();
         last_image_timestamp_ = std::chrono::high_resolution_clock::now();
@@ -116,7 +117,7 @@ class VIODataBuffer {
 
  private:
   bool SkipThisImage() {
-    if (cur_skipped_count_ >= skip_time_interval_) return false;
+    if (cur_skipped_count_ >= skip_every_num_frames_) return false;
     const auto interval =
         std::chrono::high_resolution_clock::now() - last_image_timestamp_;
     if (std::chrono::duration_cast<std::chrono::milliseconds>(interval)

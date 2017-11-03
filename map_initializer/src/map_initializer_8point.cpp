@@ -187,6 +187,9 @@ bool MapInitializer8Point::ComputeFundamental(const std::vector<cv::Vec2d> &kp0,
 bool MapInitializer8Point::ComputeFundamentalDLT(
     const std::vector<cv::Vec2d> &kp0, const std::vector<cv::Vec2d> &kp1,
     cv::Mat &F) {
+  Timer timer;
+  timer.Start();
+
   if (kp0.size() < 8 || kp0.size() != kp1.size()) return false;
 
   const int N = kp0.size();
@@ -214,6 +217,9 @@ bool MapInitializer8Point::ComputeFundamentalDLT(
   cv::Mat Fpre = vt.row(8).reshape(0, 3);
   cv::SVDecomp(Fpre, w, u, vt, cv::SVD::MODIFY_A | cv::SVD::FULL_UV);
   w.at<double>(2) = 0;
+
+  timer.Stop();
+  timer.PrintDurationWithInfo("Compute F DLT");
 
   // Make detF = 0
   F = u * cv::Mat::diag(w) * vt;

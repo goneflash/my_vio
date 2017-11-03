@@ -32,6 +32,12 @@ void VisualInertialOdometry::InitializeFeatureTracker() {
   tracker_options.max_num_feature = 2000;
   feature_tracker_ =
       FeatureTracker::CreateFeatureTracker(tracker_options, std::move(matcher));
+
+  matcher_options.method = FeatureMatcherOptions::OCV;
+  std::unique_ptr<FeatureMatcher> long_term_matcher =
+      FeatureMatcher::CreateFeatureMatcher(matcher_options);
+  feature_tracker_long_term_ = FeatureTracker::CreateFeatureTracker(
+      tracker_options, std::move(long_term_matcher));
 }
 
 void VisualInertialOdometry::InitializeVIOInitializer() {
@@ -126,6 +132,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       // Initialization might not propagate to here yet.
       if (!pre_keyframe.inited_pose()) {
         keyframe_lock.unlock();
+        std::cout << "Added an uninited keyframe.\n";
         continue;
       }
       keyframe_lock.unlock();
@@ -196,6 +203,19 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   keyframe_lock.lock();
   feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
                                matches);
+  if (matches.size() < 30) {
+    std::cout << "Only " << matches.size()
+              << " matches detected, trying long term tracker...\n";
+    // Not enough matches, try long term feature tracker.
+    matches.clear();
+    feature_tracker_long_term_->TrackFrame(*last_keyframe_->image_frame.get(),
+                                           *frame_cur, matches);
+    if (matches.size() < 100) {
+      // TODO
+      std::cout << "Long term tracker only " << matches.size()
+                << " matches detected.";
+    }
+  }
   // Not matched features are useless since we only match consecutive frames.
   keyframe_lock.unlock();
   // std::cout << "Feature number in new frame " <<
@@ -389,7 +409,7 @@ void VisualInertialOdometry::RunInitializer(
       }
 
       timer.Stop();
-      std::cout << "Initialize new keyframe and triagulate landmarks used "
+      std::cout << "Propagate to a new keyframe and triagulate landmarks used "
                 << timer.GetInMs() << "ms.\n";
 
       keyframe_ptr++;
