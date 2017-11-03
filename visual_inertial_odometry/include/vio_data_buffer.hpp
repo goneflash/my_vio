@@ -36,7 +36,7 @@ typedef std::chrono::high_resolution_clock::time_point TimeStamp;
 struct TimeStampedImage {
   TimeStampedImage() {}
   TimeStampedImage(cv::Mat &img, TimeStamp timestamp)
-      : image(img), time_stamp(time_stamp) {}
+      : image(img), time_stamp(timestamp) {}
   cv::Mat image;
   TimeStamp time_stamp;
 };
@@ -48,7 +48,7 @@ class VIODataBuffer {
       : buffer_closed_(false),
         skip_every_num_frames_(3),
         cur_skipped_count_(0),
-        skip_time_interval_(30),
+        skip_time_interval_(50),
         image_buffer_size_(30),
         imu_buffer_size_(50) {
     // TODO: Not really correct.
@@ -100,6 +100,10 @@ class VIODataBuffer {
       if (buffer_closed_) return true;
     } while (!image_buffer_.TryPop(timed_image));
     image = timed_image.image;
+    const auto interval = last_image_timestamp_ - timed_image.time_stamp;
+    std::cout << "There's a lag in processing images: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(interval)
+                     .count() << " ms.\n";
     return false;
   }
 
