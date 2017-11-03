@@ -12,6 +12,7 @@ set(TARGET "map_initializer")
 add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        multiview_helper
+                       util
                        ${OpenCV_LIBS} )
 
 target_include_directories(${TARGET} PUBLIC 

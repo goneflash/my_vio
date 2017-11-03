@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "timer.hpp"
+
 namespace vio {
 
 std::unique_ptr<MapInitializer> MapInitializer::CreateMapInitializer8Point(
@@ -43,12 +45,18 @@ bool MapInitializer8Point::InitializeTwoFrames(
     return false;
   }
 
+  Timer timer;
+
+  timer.Start();
   cv::Mat F;
   if (!ComputeFundamental(kp0, kp1, F)) return false;
+  timer.Stop();
+  timer.PrintDurationWithInfo("Compute F");
 
   // TODO: Make tinyxml work
   // TODO: Hand pick matches for two images of calibration board?
   // TODO: Calibrate Nexus 5P
+  timer.Start();
 
   cv::Mat E = K.t() * F * K;
   std::vector<cv::Mat> Rs(2), ts(2);
@@ -56,13 +64,20 @@ bool MapInitializer8Point::InitializeTwoFrames(
   DecomposeE(E, Rs[0], Rs[1], ts[0]);
   ts[1] = -ts[0];
 
+  timer.Stop();
+  timer.PrintDurationWithInfo("Decompose E");
+
   // TODO: For now, all points are inlier.
   std::vector<bool> match_inlier_mask(kp0.size(), true);
 
+  timer.Start();
   cv::Mat R_final, t_final;
   if (!SelectSolutionRT(Rs, ts, K, kp0, kp1, match_inlier_mask, R_final,
                         t_final, points3d, points3d_mask))
     return false;
+
+  timer.Stop();
+  timer.PrintDurationWithInfo("Select Solution");
 
   R_est.resize(2);
   t_est.resize(2);

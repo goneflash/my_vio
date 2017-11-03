@@ -50,7 +50,7 @@ int TestFramesInFolder(Options option) {
     cv::Mat image = cv::imread(images[i]);
     vio->ProcessNewImage(image);
     // At 20hz.
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
   }
 
   vio->Stop();

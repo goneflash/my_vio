@@ -273,6 +273,7 @@ void VisualInertialOdometry::RemoveShortTracksNotVisibleToCurrentKeyframe(
   const int min_track_length = 4;
   // TODO: Could use vector or unordered_map to store index so that don't need
   // to iterate through all landmarks.
+  const int initial_num_landmarks = landmarks_.size();
   int count = 0;
   for (int len = 2; len < min_track_length; ++len) {
     if (len + 1 > track_length_to_landmark_.size()) break;
@@ -303,7 +304,8 @@ void VisualInertialOdometry::RemoveShortTracksNotVisibleToCurrentKeyframe(
       }
     }
   }
-  std::cout << "Removed " << count << " short track length landmarks.\n";
+  std::cout << "Reduced landmarks from " << initial_num_landmarks << " to "
+            << landmarks_.size() << std::endl;
 }
 
 void VisualInertialOdometry::RunInitializer(
