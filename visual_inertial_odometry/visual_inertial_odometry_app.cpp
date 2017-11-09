@@ -31,13 +31,12 @@ int TestFramesInFolder(Options option) {
   cv::Mat image0 = cv::imread(images[0]);
   std::unique_ptr<vio::ImageFrame> frame_pre(new vio::ImageFrame(image0));
 
-  vio::CameraModelPtr camera;
   std::unique_ptr<vio::VisualInertialOdometry> vio;
 
   vio::PinholeCameraModel<double>::ParamsArray params;
   // Principal point is camera center.
   params << 1.0, 2.0, 0, 0;
-  camera = vio::CameraModelPtr(
+  vio::CameraModelPtr camera = vio::CameraModelPtr(
       new vio::PinholeCameraModel<double>(480, 640, params));
 
   vio = std::unique_ptr<vio::VisualInertialOdometry>(

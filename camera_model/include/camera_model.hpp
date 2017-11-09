@@ -72,9 +72,12 @@ class CameraModelBase : public CameraModel {
  *
  * Here in the template parameter list, must use PinholeCameraModel<ParamsType>.
  */
+#define PINHOLE_NUM_PARAMETERS 4
+
 template <typename ParamsType>
 class PinholeCameraModel
-    : public CameraModelBase<PinholeCameraModel<ParamsType>, ParamsType, 4> {
+    : public CameraModelBase<PinholeCameraModel<ParamsType>, ParamsType,
+                             PINHOLE_NUM_PARAMETERS> {
  public:
   typedef CameraModelBase<PinholeCameraModel, ParamsType, 4> CameraModelType;
   using CameraModelType::params_;
@@ -110,6 +113,70 @@ bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
 
   pixel(0) = fx * (point(0) / point(2)) + cx;
   pixel(1) = fy * (point(1) / point(2)) + cy;
+
+  if (pixel(0) < 0 || pixel(0) >= CameraModelType::image_width() ||
+      pixel(1) < 0 || pixel(1) >= CameraModelType::image_height())
+    return false;
+
+  return true;
+}
+
+#define FISHEYE_NUM_PARAMETERS 8
+
+template <typename ParamsType>
+class FisheyeCameraModel
+    : public CameraModelBase<FisheyeCameraModel<ParamsType>, ParamsType,
+                             FISHEYE_NUM_PARAMETERS> {
+ public:
+  typedef CameraModelBase<FisheyeCameraModel, ParamsType,
+                          FISHEYE_NUM_PARAMETERS> CameraModelType;
+  using CameraModelType::params_;
+  using typename CameraModelType::ParamsArray;
+
+  FisheyeCameraModel(int image_height, int image_width,
+                     const ParamsArray &params)
+      : CameraModelType(image_height, image_width, params) {
+    CameraModelType::camera_type_ = FISHEYE;
+  }
+
+  bool ProjectPointToPixel(const Eigen::Vector3d &point,
+                           Eigen::Vector2d &pixel) const override;
+
+  const ParamsArray params() const { return params_; }
+
+ private:
+};
+
+template <typename ParamsType>
+bool FisheyeCameraModel<ParamsType>::ProjectPointToPixel(
+    const Eigen::Vector3d &point, Eigen::Vector2d &pixel) const {
+  // TODO: Eigen could use both () and [] to access elements?
+  // Point should not behind the camera center.
+  if (point(2) <= 0.0) {
+    return false;
+  }
+
+  const ParamsType fx = params_[0];
+  const ParamsType fy = params_[1];
+  const ParamsType cx = params_[2];
+  const ParamsType cy = params_[3];
+
+  const ParamsType k1 = params_[4];
+  const ParamsType k2 = params_[5];
+  const ParamsType p1 = params_[6];
+  const ParamsType p2 = params_[7];
+
+  ParamsType undistorted_x = fx * (point(0) / point(2)) + cx;
+  ParamsType undistorted_y = fy * (point(1) / point(2)) + cy;
+  ParamsType r_square =
+      undistorted_x * undistorted_x + undistorted_y * undistorted_y;
+
+  pixel(0) = undistorted_x * (1 + k1 * r_square + k2 * r_square * r_square) +
+             2 * p1 * undistorted_x * undistorted_y +
+             p2 * (r_square + 2 * undistorted_x * undistorted_x);
+  pixel(1) = undistorted_y * (1 + k1 * r_square + k2 * r_square * r_square) +
+             2 * p2 * undistorted_x * undistorted_y +
+             p1 * (r_square + 2 * undistorted_y * undistorted_y);
 
   if (pixel(0) < 0 || pixel(0) >= CameraModelType::image_width() ||
       pixel(1) < 0 || pixel(1) >= CameraModelType::image_height())
