@@ -11,6 +11,7 @@ set(TARGET "camera_model")
 
 add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
+                       ${OpenCV_LIBS} 
                        ${EIGEN3_LIBS} )
 
 target_include_directories(${TARGET} PUBLIC

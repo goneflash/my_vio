@@ -4,10 +4,18 @@
 #include <memory>
 
 #include <Eigen/Core>
+// Only used for loading a configuration file.
+#include <opencv2/opencv.hpp>
 
 namespace vio {
 
-enum CameraModelTypeName { UNKNOWN = 0, PINHOLE, FISHEYE };
+enum CameraModelTypeName { UNKNOWN = 0, PINHOLE, FOV, FISHEYE };
+
+#define PINHOLE_NUM_PARAMETERS 4
+#define FOV_NUM_PARAMETERS 8
+#define FISHEYE_NUM_PARAMETERS 8
+
+
 /*
  * Abstract class for camera.
  */
@@ -21,8 +29,10 @@ class CameraModel {
   virtual CameraModelTypeName camera_model_type() const = 0;
 };
 
-typedef std::shared_ptr<CameraModel> CameraModelPtr;
-typedef std::shared_ptr<const CameraModel> CameraModelConstPtr;
+typedef std::unique_ptr<CameraModel> CameraModelPtr;
+
+CameraModelPtr CreateCameraModelFromConfig(const cv::FileNode &node);
+// TODO: Maybe create from parameters.
 
 /*
  * Use CRTP pattern.
@@ -72,7 +82,6 @@ class CameraModelBase : public CameraModel {
  *
  * Here in the template parameter list, must use PinholeCameraModel<ParamsType>.
  */
-#define PINHOLE_NUM_PARAMETERS 4
 
 template <typename ParamsType>
 class PinholeCameraModel
@@ -88,6 +97,7 @@ class PinholeCameraModel
       : CameraModelType(image_height, image_width, params) {
     CameraModelType::camera_type_ = PINHOLE;
   }
+  PinholeCameraModel() = delete;
 
   bool ProjectPointToPixel(const Eigen::Vector3d &point,
                            Eigen::Vector2d &pixel) const override;
@@ -120,8 +130,6 @@ bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
 
   return true;
 }
-
-#define FISHEYE_NUM_PARAMETERS 8
 
 template <typename ParamsType>
 class FisheyeCameraModel
