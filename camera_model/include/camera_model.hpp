@@ -21,6 +21,7 @@ class CameraModel {
                                    Eigen::Vector2d &pixel) const = 0;
   virtual bool UndistortPixel(const Eigen::Vector2d &distorted,
                               Eigen::Vector2d &undistorted) const = 0;
+  virtual bool UndistortImage(const cv::Mat &input, cv::Mat &output) const = 0;
 
   virtual int image_height() const = 0;
   virtual int image_width() const = 0;
@@ -108,15 +109,27 @@ class PinholeCameraModel
   typedef CameraModelBase<PinholeCameraModel, ParamsType,
                           PINHOLE_NUM_PARAMETERS> CameraModelType;
 
+  // TODO: Is this the better way to use father class members?
   using CameraModelType::params_;
+  using CameraModelType::camera_matrix_;
+  using CameraModelType::image_width_;
+  using CameraModelType::image_height_;
   using typename CameraModelType::ParamsArray;
 
   PinholeCameraModel(int image_height, int image_width,
                      const ParamsArray &params)
       : CameraModelType(image_height, image_width, params) {
     CameraModelType::camera_type_ = PINHOLE;
-    CameraModelType::camera_matrix_ = cv::Mat_<double>(3, 3) << params[0], 0.0,
-    params[2], 0.0, params[1], params[3], 0.0, 0.0, 1.0;
+    camera_matrix_ = (cv::Mat_<double>(3, 3) << params[0], 0.0, params[2], 0.0,
+                      params[1], params[3], 0.0, 0.0, 1.0);
+
+    cv::Mat distortion_parameters(4, 1, CV_64F);
+    distortion_parameters.at<double>(0) = params[4];
+    distortion_parameters.at<double>(1) = params[5];
+    distortion_parameters.at<double>(2) = params[6];
+    distortion_parameters.at<double>(3) = params[7];
+
+    initializeUndistortTable(distortion_parameters);
   }
 
   PinholeCameraModel() = delete;
@@ -125,11 +138,15 @@ class PinholeCameraModel
                            Eigen::Vector2d &pixel) const override;
   bool UndistortPixel(const Eigen::Vector2d &distorted,
                       Eigen::Vector2d &undistorted) const override;
+  bool UndistortImage(const cv::Mat &input, cv::Mat &output) const override;
 
   // const ParamsArray params() const { return params_; }
 
  private:
-  void initializeUndistortTable();
+  void initializeUndistortTable(const cv::Mat &distortion);
+
+  // For distortion model.
+  cv::Mat map1_, map2_;
 };
 
 template <typename ParamsType>
@@ -177,7 +194,21 @@ bool PinholeCameraModel<ParamsType>::UndistortPixel(
 }
 
 template <typename ParamsType>
-void PinholeCameraModel<ParamsType>::initializeUndistortTable() {}
+bool PinholeCameraModel<ParamsType>::UndistortImage(const cv::Mat &input,
+                                                    cv::Mat &output) const {
+  cv::remap(input, output, map1_, map2_, cv::INTER_LINEAR);
+  return true;
+}
+
+template <typename ParamsType>
+void PinholeCameraModel<ParamsType>::initializeUndistortTable(
+    const cv::Mat &distortion_parameters) {
+  cv::Mat new_camera_matrix;
+  cv::initUndistortRectifyMap(
+      camera_matrix_, distortion_parameters, cv::Mat(), new_camera_matrix,
+      cv::Size(image_width_ * 2, image_height_ * 2), CV_32FC1, map1_, map2_);
+  std::cout << "New camera matrix:\n" << new_camera_matrix;
+}
 
 }  // namespace vio
 

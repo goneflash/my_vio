@@ -58,8 +58,16 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  cv::namedWindow("original", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow("undistorted", cv::WINDOW_AUTOSIZE);
   for (int i = 0; i < images.size(); ++i) {
     cv::Mat image = cv::imread(images[i]);
+    cv::Mat undistorted_image;
+    camera_ptr->UndistortImage(image, undistorted_image);
+
+    cv::imshow("original", image);
+    cv::imshow("undistorted", undistorted_image);
+    cv::waitKey(0);
   }
   return 0;
 }
