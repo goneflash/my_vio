@@ -16,7 +16,7 @@ class VisualInertialOdometryTest : public ::testing::Test {
         new vio::PinholeCameraModel<double>(480, 640, params));
 
     vio = std::unique_ptr<vio::VisualInertialOdometry>(
-        new vio::VisualInertialOdometry(camera));
+        new vio::VisualInertialOdometry(std::move(camera)));
 
     // Setup test data.
     ASSERT_TRUE(GetImageNamesInFolder(

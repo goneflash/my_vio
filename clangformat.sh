@@ -5,6 +5,7 @@ clang-format -style=file -i feature_tracker/include/*.hpp
 clang-format -style=file -i feature_tracker/src/*.cpp
 clang-format -style=file -i feature_tracker/test/*.cpp
 
+clang-format -style=file -i camera_model/*.cpp
 clang-format -style=file -i camera_model/include/*.hpp
 clang-format -style=file -i camera_model/src/*.cpp
 clang-format -style=file -i camera_model/test/*.cpp

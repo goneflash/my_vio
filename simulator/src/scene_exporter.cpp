@@ -18,15 +18,14 @@ bool SceneExporter::WriteSceneToYAMLFile(const Scene &scene,
     switch (scene.camera->camera_model_type()) {
       case PINHOLE: {
         fs << "Pinhole";
-        fs << "NumParams" << 4;
-        Eigen::Array<double, 4, 1> params =
+        fs << "NumParams" << PINHOLE_NUM_PARAMETERS;
+        PinholeCameraModel<double>::ParamsArray params =
             reinterpret_cast<PinholeCameraModel<double> *>(scene.camera.get())
                 ->params();
-        cv::Mat p(1, 4, CV_64F);
-        p.at<double>(0) = params[0];
-        p.at<double>(1) = params[1];
-        p.at<double>(2) = params[2];
-        p.at<double>(3) = params[3];
+        cv::Mat p(1, PINHOLE_NUM_PARAMETERS, CV_64F);
+        for (int i = 0; i < PINHOLE_NUM_PARAMETERS; ++i) {
+          p.at<double>(i) = params[i];
+        }
         fs << "Params" << p;
         break;
       }

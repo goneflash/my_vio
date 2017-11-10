@@ -6,7 +6,7 @@
 namespace vio {
 
 VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
-    : camera_(camera),
+    : camera_(std::move(camera)),
       vio_status_(UNINITED),
       last_keyframe_(nullptr),
       running_process_buffer_thread_(false),
