@@ -48,8 +48,8 @@ void VisualInertialOdometry::InitializeVIOInitializer() {
   map_initializer_ = MapInitializer::CreateMapInitializer(options);
 }
 
-void VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
-  data_buffer_.AddImageData(img);
+bool VisualInertialOdometry::ProcessNewImage(cv::Mat &img) {
+  return data_buffer_.AddImageData(img);
 }
 
 void VisualInertialOdometry::ProcessDataInBuffer() {

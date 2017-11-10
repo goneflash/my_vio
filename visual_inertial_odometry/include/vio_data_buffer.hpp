@@ -62,14 +62,17 @@ class VIODataBuffer {
     image_buffer_stats_.left_in_buffer = size;
   }
 
-  void AddImageData(cv::Mat &img) {
+  // Return false if can not add, which means buffer is closed.
+  bool AddImageData(cv::Mat &img) {
+    if (buffer_closed_)
+      return false;
     image_buffer_stats_.received_count++;
 
     if (SkipThisImage()) {
       cur_skipped_count_++;
       image_buffer_stats_.dropped_count++;
       std::cout << "Skipped an image.\n";
-      return;
+      return true;
     }
     cur_skipped_count_ = 0;
 
@@ -89,6 +92,7 @@ class VIODataBuffer {
         break;
       }
     }
+    return true;
   }
 
   void AddImuData() {}

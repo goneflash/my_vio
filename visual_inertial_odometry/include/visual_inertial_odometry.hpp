@@ -70,7 +70,7 @@ class VisualInertialOdometry {
   /*
    * Called from outside thread contains this class.
    */
-  void ProcessNewImage(cv::Mat &img);
+  bool ProcessNewImage(cv::Mat &img);
   // TODO: High priority, should update ASAP.
   void ProcessImuData();
 

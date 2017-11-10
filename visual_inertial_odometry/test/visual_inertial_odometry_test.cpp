@@ -30,7 +30,8 @@ class VisualInertialOdometryTest : public ::testing::Test {
     for (auto img : images) {
       cv::Mat image = cv::imread(img);
 
-      vio->ProcessNewImage(image);
+      if (!vio->ProcessNewImage(image))
+        break;
 
       std::this_thread::sleep_for(std::chrono::milliseconds(interval));
 
