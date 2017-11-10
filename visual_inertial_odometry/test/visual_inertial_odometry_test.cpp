@@ -11,7 +11,7 @@ class VisualInertialOdometryTest : public ::testing::Test {
   void Init() {
     vio::PinholeCameraModel<double>::ParamsArray params;
     // Principal point is camera center.
-    params << 1.0, 2.0, 0, 0;
+    params << 1.0, 2.0, 0, 0, 0, 0, 0, 0;
     camera = vio::CameraModelPtr(
         new vio::PinholeCameraModel<double>(480, 640, params));
 

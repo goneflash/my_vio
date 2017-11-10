@@ -20,7 +20,7 @@ class CameraModelTest : public ::testing::Test {
 TEST_F(CameraModelTest, TestPinholeCameraOriginAtPrincipalPoint) {
   vio::PinholeCameraModel<double>::ParamsArray params;
   // Principal point is camera center.
-  params << 1.0, 2.0, 0, 0;
+  params << 1.0, 2.0, 0, 0, 0, 0, 0, 0;
   vio::PinholeCameraModel<double> camera(480, 640, params);
   // A point on center ray
   TestProjectPoint(camera, Eigen::Vector3d(0, 0, 10), Eigen::Vector2d(0, 0),
@@ -31,7 +31,7 @@ TEST_F(CameraModelTest, TestPinholeCameraOriginAtPrincipalPoint) {
 
 TEST_F(CameraModelTest, TestPinholeCameraNormalCases) {
   vio::PinholeCameraModel<double>::ParamsArray params;
-  params << 1.0, 2.0, 3.0, 4.0;
+  params << 1.0, 2.0, 3.0, 4.0, 0, 0, 0, 0;
   vio::PinholeCameraModel<double> camera(480, 640, params);
   TestProjectPoint(camera, Eigen::Vector3d(0, 0, 1), Eigen::Vector2d(3, 4),
                    true);
@@ -42,7 +42,7 @@ TEST_F(CameraModelTest, TestPinholeCameraNormalCases) {
 // TODO: For expected false test, don't need to input expected pixel.
 TEST_F(CameraModelTest, TestPinholeCameraFailedCases) {
   vio::PinholeCameraModel<double>::ParamsArray params;
-  params << 1.0, 2.0, 3.0, 4.0;
+  params << 1.0, 2.0, 3.0, 4.0, 0, 0, 0, 0;
   vio::PinholeCameraModel<double> camera(480, 640, params);
 
   // Behind the camera.
