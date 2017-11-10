@@ -134,6 +134,32 @@ bool FeatureTrackerOCV::TrackFrame(ImageFrame &prev_frame,
   return true;
 }
 
+bool FeatureTrackerOCV::TrackFrame(ImageFrame &prev_frame,
+                                   ImageFrame &new_frame,
+                                   const CameraModel *camera_model,
+                                   std::vector<cv::DMatch> &matches) {
+  if (!matcher_) {
+    std::cerr << "Error: FeatureMatcher not set up.\n";
+    return false;
+  }
+  if (!prev_frame.feature_computed()) {
+    FeatureTracker::ComputeFeatures(prev_frame, camera_model);
+  }
+  if (!new_frame.feature_computed()) {
+    FeatureTracker::ComputeFeatures(new_frame, camera_model);
+  }
+
+  Timer timer;
+  timer.Start();
+
+  if (!matcher_->Match(prev_frame, new_frame, matches)) return false;
+
+  timer.Stop();
+  std::cout << "Matching used " << timer.GetInMs() << "ms.\n";
+
+  return true;
+}
+
 bool FeatureTrackerOCV::MatchFrame(const ImageFrame &prev_frame,
                                    ImageFrame &new_frame,
                                    std::vector<cv::DMatch> &matches) {

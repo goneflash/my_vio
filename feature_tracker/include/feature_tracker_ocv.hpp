@@ -17,6 +17,9 @@ class FeatureTrackerOCV : public FeatureTracker {
   virtual bool ComputeFrame(ImageFrame &frame);
 
   virtual bool TrackFrame(ImageFrame &prev_frame, ImageFrame &output_frame,
+                          const CameraModel *camera_model,
+                          std::vector<cv::DMatch> &matches) override;
+  virtual bool TrackFrame(ImageFrame &prev_frame, ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) override;
   // Use match approach when lost tracking.
   virtual bool MatchFrame(const ImageFrame &prev_frame,

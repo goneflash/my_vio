@@ -15,6 +15,12 @@ class ImageFrame {
   // ImageFrame() = delete;
 
   const cv::Mat &GetImage() const { return image_; }
+  // TODO: Note that it will not compute features automatically when the image
+  // is changed.
+  void ResetImage(cv::Mat &new_image) {
+    image_ = new_image;
+    InitializeGridParameters();
+  }
 
   void set_features(std::vector<cv::KeyPoint> &keypoints,
                     cv::Mat &descriptors) {
@@ -44,6 +50,7 @@ class ImageFrame {
     descriptors.copyTo(descriptors_);
   }
 
+  void InitializeGridParameters();
   bool CreateGridKeypointIndex();
 
   cv::Mat image_;

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "camera_model.hpp"
 #include "feature_matcher.hpp"
 #include "feature_tracker_options.hpp"
 #include "image_frame.hpp"
@@ -27,7 +28,10 @@ class FeatureTracker {
       FeatureTrackerOptions option, std::unique_ptr<FeatureMatcher> matcher);
 
   virtual bool ComputeFrame(ImageFrame &frame) = 0;
-  // TODO: Might need to use customized Match class.
+
+  virtual bool TrackFrame(ImageFrame &prev_frame, ImageFrame &output_frame,
+                          const CameraModel *camera_model,
+                          std::vector<cv::DMatch> &matches) = 0;
   virtual bool TrackFrame(ImageFrame &prev_frame, ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) = 0;
   virtual bool MatchFrame(const ImageFrame &prev_frame,
@@ -44,6 +48,7 @@ class FeatureTracker {
 
   // Detect features in the entire image.
   void ComputeFeatures(ImageFrame &frame);
+  void ComputeFeatures(ImageFrame &frame, const CameraModel *camera_model);
 
   void ComputeDistributedFeatures(ImageFrame &frame);
 

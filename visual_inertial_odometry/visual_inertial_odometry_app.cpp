@@ -33,14 +33,25 @@ int TestFramesInFolder(Options option) {
 
   std::unique_ptr<vio::VisualInertialOdometry> vio;
 
-  vio::PinholeCameraModel<double>::ParamsArray params;
-  // Principal point is camera center.
-  params << 1.0, 2.0, 0, 0;
-  vio::CameraModelPtr camera = vio::CameraModelPtr(
-      new vio::PinholeCameraModel<double>(480, 640, params));
+  // Load camera information.
+  const std::string config_file_name = "calibration.yaml";
+  const std::string full_path_to_config = option.path + '/' + config_file_name;
+  cv::FileStorage config_file;
+  vio::CameraModelPtr camera_ptr = nullptr;
+  config_file.open(full_path_to_config, cv::FileStorage::READ);
+  if (!config_file.isOpened()) {
+    std::cout << "Couldn't open config file " << full_path_to_config
+              << ". Skipped\n";
+  } else {
+    camera_ptr = vio::CreateCameraModelFromConfig(config_file["CameraModel"]);
+    if (camera_ptr == nullptr) {
+      std::cerr << "Error: Couldn't create camera model.\n";
+      return -1;
+    }
+  }
 
   vio = std::unique_ptr<vio::VisualInertialOdometry>(
-      new vio::VisualInertialOdometry(std::move(camera)));
+      new vio::VisualInertialOdometry(std::move(camera_ptr)));
 
   vio->Start();
 

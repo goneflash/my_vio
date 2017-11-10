@@ -15,11 +15,35 @@ std::unique_ptr<FeatureTracker> FeatureTracker::CreateFeatureTracker(
   }
 }
 
-// Detect features in the entire image.
 void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
+  ComputeFeatures(frame, nullptr);
+}
+
+// Detect features in the entire image.
+void FeatureTracker::ComputeFeatures(ImageFrame &frame,
+                                     const CameraModel *camera_model) {
   Timer timer;
   timer.Start();
 
+  if (camera_model) {
+    cv::Mat undistorted_image;
+
+    Timer undistort_timer;
+    undistort_timer.Start();
+    camera_model->UndistortImage(frame.GetImage(), undistorted_image);
+
+    // cv::namedWindow("original", cv::WINDOW_AUTOSIZE);
+    // cv::namedWindow("undistorted", cv::WINDOW_AUTOSIZE);
+    // cv::imshow("original", frame.GetImage());
+
+    frame.ResetImage(undistorted_image);
+
+    undistort_timer.Stop();
+    undistort_timer.PrintDurationWithInfo("Undistort image");
+
+    // cv::imshow("undistorted", frame.GetImage());
+    // cv::waitKey(0);
+  }
   // cv::Mat mask = cv::Mat::zeros(frame.GetImage().size(), CV_8U);
   cv::Mat mask(frame.GetImage().size(), CV_8U);
   mask = cv::Scalar(255);
@@ -31,6 +55,23 @@ void FeatureTracker::ComputeFeatures(ImageFrame &frame) {
   DetectFeatures(frame, kp, mask);
   cv::Mat desc;
   ComputeDescriptors(frame, kp, desc);
+
+  /*
+  // If apply camera model.
+  if (camera_model) {
+    for (auto &keypoint : kp) {
+      std::cout << "Undistorted (" << keypoint.pt.x << ", " << keypoint.pt.y
+                << ") to (";
+      Eigen::Vector2d original_kp(keypoint.pt.x, keypoint.pt.y);
+      Eigen::Vector2d undistorted_kp;
+      camera_model->UndistortPixel(original_kp, undistorted_kp);
+      keypoint.pt.x = undistorted_kp[0];
+      keypoint.pt.y = undistorted_kp[1];
+
+      std::cout << keypoint.pt.x << ", " << keypoint.pt.y << ")\n";
+    }
+  }
+  */
 
   frame.set_features(kp, desc);
 

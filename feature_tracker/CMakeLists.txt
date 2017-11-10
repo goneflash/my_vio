@@ -12,6 +12,7 @@ set(TARGET "feature_tracker")
 add_library(${TARGET} SHARED ${SOURCE_FILE})
 target_link_libraries( ${TARGET} 
                        ${OpenCV_LIBS} 
+                       camera_model
                        mapdata )
 
 target_include_directories(${TARGET} PUBLIC 

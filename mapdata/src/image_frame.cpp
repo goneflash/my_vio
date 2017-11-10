@@ -10,6 +10,10 @@ ImageFrame::ImageFrame(const cv::Mat &image)
       grid_width_size_(10),
       grid_height_size_(10) {
   image.copyTo(image_);
+  InitializeGridParameters();
+}
+
+void ImageFrame::InitializeGridParameters() {
   grid_width_index_range_ = image_.size().width / grid_width_size_;
   grid_height_index_range_ = image_.size().height / grid_height_size_;
 

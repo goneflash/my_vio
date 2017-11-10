@@ -97,6 +97,7 @@ export(PACKAGE my_vio)
 # Add all targets to the build-tree export set
 export(TARGETS 
   util
+  camera_model
   mapdata
   feature_tracker 
   imu_integrator

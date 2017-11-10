@@ -190,13 +190,17 @@ bool PinholeCameraModel<ParamsType>::ProjectPointToPixel(
 template <typename ParamsType>
 bool PinholeCameraModel<ParamsType>::UndistortPixel(
     const Eigen::Vector2d &distorted, Eigen::Vector2d &undistorted) const {
+  undistorted[0] = map1_.at<float>(distorted[0], distorted[1]);
+  undistorted[1] = map2_.at<float>(distorted[0], distorted[1]);
+
   return true;
 }
 
 template <typename ParamsType>
 bool PinholeCameraModel<ParamsType>::UndistortImage(const cv::Mat &input,
                                                     cv::Mat &output) const {
-  cv::remap(input, output, map1_, map2_, cv::INTER_LINEAR);
+  // cv::remap(input, output, map1_, map2_, cv::INTER_LINEAR);
+  cv::remap(input, output, map1_, map2_, cv::INTER_NEAREST);
   return true;
 }
 

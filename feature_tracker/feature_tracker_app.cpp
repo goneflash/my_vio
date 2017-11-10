@@ -64,6 +64,23 @@ int TestFramesInFolder(Options option) {
 
   if (tracker == NULL) return -1;
 
+  // Load camera information.
+  const std::string config_file_name = "calibration.yaml";
+  const std::string full_path_to_config = option.path + '/' + config_file_name;
+  cv::FileStorage config_file;
+  vio::CameraModelPtr camera_ptr = nullptr;
+  config_file.open(full_path_to_config, cv::FileStorage::READ);
+  if (!config_file.isOpened()) {
+    std::cout << "Couldn't open config file " << full_path_to_config
+              << ". Skipped\n";
+  } else {
+    camera_ptr = vio::CreateCameraModelFromConfig(config_file["CameraModel"]);
+    if (camera_ptr == nullptr) {
+      std::cerr << "Error: Couldn't create camera model.\n";
+      return -1;
+    }
+  }
+
   // TODO: Add track length count.
 
   // Visualize tracking
@@ -77,33 +94,35 @@ int TestFramesInFolder(Options option) {
     cv::Mat image = cv::imread(images[i]);
     std::unique_ptr<vio::ImageFrame> frame_cur(new vio::ImageFrame(image));
     std::vector<cv::DMatch> matches;
-    tracker->TrackFrame(*frame_pre, *frame_cur, matches);
+    tracker->TrackFrame(*frame_pre, *frame_cur, camera_ptr.get(), matches);
 
     std::cout << "Feature number in new frame " << frame_cur->keypoints().size()
               << std::endl;
     std::cout << "Found match " << matches.size() << std::endl;
 
+    cv::Mat output_img;
+
     // Two ways to visualize the results.
     if (option.draw_match) {
-      cv::Mat output_img;
       drawMatches(frame_pre->GetImage(), frame_pre->keypoints(),
                   frame_cur->GetImage(), frame_cur->keypoints(), matches,
                   output_img, cv::Scalar(255, 0, 0), cv::Scalar(5, 255, 0));
-      cv::namedWindow("result", cv::WINDOW_AUTOSIZE);
-      cv::imshow("result", output_img);
-      cv::waitKey(0);
     } else {
-      cv::Mat output_img = frame_cur->GetImage().clone();
+      output_img = frame_cur->GetImage().clone();
       int thickness = 2;
       for (int i = 0; i < matches.size(); ++i) {
         line(output_img, frame_cur->keypoints()[matches[i].trainIdx].pt,
              frame_pre->keypoints()[matches[i].queryIdx].pt,
              cv::Scalar(255, 0, 0), thickness);
       }
-      cv::imshow("result", output_img);
-      cv::waitKey(20);
+      // Draw all features.
+      for (auto &kp : frame_cur->keypoints()) {
+        circle(output_img, kp.pt, 1, cv::Scalar(0, 0, 255));
+      }
     }
 
+    cv::imshow("result", output_img);
+    cv::waitKey(0);
     // Store feature tracks.
     // std::unique_ptr<Keyframe> keyframe(new Keyframe(std::move(frame_pre)));
 
