@@ -1,0 +1,12 @@
+%YAML:1.0
+CameraModel:
+  CameraType: "Pinhole"
+  ImageWidth: 752
+  ImageHeight: 480
+  NumParams: 8
+  Params: !!opencv-matrix
+      rows: 8
+      cols: 1
+      dt: d
+      # fu, fv, cu, cv, radial-tangential
+      data: [458.654, 457.296, 367.215, 248.375, -0.28340811, 0.07395907, 0.00019359, 1.76187114e-05]
