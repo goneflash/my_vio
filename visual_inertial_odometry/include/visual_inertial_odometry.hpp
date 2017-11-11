@@ -172,6 +172,9 @@ class VisualInertialOdometry {
 
 void RemoveUnmatchedFeatures(Keyframe &frame);
 
+bool ShouldSkipThisFrame(Keyframe *frame0, Keyframe *frame1,
+                         const std::vector<cv::DMatch> &matches);
+
 bool ProcessMatchesAndAddToLandmarks(
     Keyframe *frame0, Keyframe *frame1, const std::vector<cv::DMatch> &matches,
     std::vector<std::unordered_set<LandmarkId>> &track_length_to_landmark,

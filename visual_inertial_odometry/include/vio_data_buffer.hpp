@@ -64,8 +64,7 @@ class VIODataBuffer {
 
   // Return false if can not add, which means buffer is closed.
   bool AddImageData(cv::Mat &img) {
-    if (buffer_closed_)
-      return false;
+    if (buffer_closed_) return false;
     image_buffer_stats_.received_count++;
 
     if (SkipThisImage()) {

@@ -23,6 +23,10 @@ struct FeatureMeasurement {
   float x, y;
 };
 
+inline float feature_dist(FeatureMeasurement &f0, FeatureMeasurement &f1) {
+  return sqrt((f0.x - f1.x) * (f0.x - f1.x) + (f0.y - f1.y) * (f0.y - f1.y));
+}
+
 class Landmark {
  public:
   typedef Eigen::Vector3d Position;

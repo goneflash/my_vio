@@ -63,6 +63,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
 
     cv::Mat new_image;
     if (data_buffer_.GetImageDataOrEndOfBuffer(new_image)) break;
+    // Return false means the image is skipped.
     if (!AddNewKeyframeFromImage(new_image)) {
       continue;
     }
@@ -203,6 +204,7 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   keyframe_lock.lock();
   feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
                                matches);
+
   if (matches.size() < 30) {
     std::cout << "Only " << matches.size()
               << " matches detected, trying long term tracker...\n";
@@ -223,18 +225,6 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   std::cout << "Found match " << matches.size() << std::endl;
 
   /*
-  cv::Mat output_img = frame_cur->GetImage().clone();
-  int thickness = 2;
-  for (int i = 0; i < matches.size(); ++i) {
-    line(output_img, frame_cur->keypoints()[matches[i].trainIdx].pt,
-         last_keyframe_->image_frame->keypoints()[matches[i].queryIdx].pt,
-         cv::Scalar(255, 0, 0), thickness);
-  }
-  cv::imshow("tracking", output_img);
-  cv::waitKey(5);
-  */
-
-  /*
    * There three cases:
    * 1. Skip
    * 2. Add as new keyframe
@@ -243,22 +233,25 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
 
   // TODO: Should not do this because the next frame will be far
   // if the feature processing takes long time.
-  if (false && matches.size() > 600 && num_skipped_frames_ < 3) {
-    // Robust tracking. Skip this frame.
-    // std::cout << "Skipped a frame with " << matches.size() << "
-    // matches.\n";
-    num_skipped_frames_++;
-    return false;
-  } else if (matches.size() < 10) {
-    // TODO
+  if (matches.size() < 10) {
     std::cout << "Warning: Lost tracking. Restarting...";
-
+    // TODO: Should stop.
+    return false;
   } else {
-    num_skipped_frames_ = 0;
-    // TODO: Also skip if estimated motion is bad.
     // Add this frame as a new keyframe.
     std::unique_ptr<Keyframe> new_keyframe =
         std::unique_ptr<Keyframe>(new Keyframe(std::move(frame_cur)));
+
+    keyframe_lock.lock();
+    if (ShouldSkipThisFrame(last_keyframe_, new_keyframe.get(), matches) &&
+        num_skipped_frames_ < 8) {
+      num_skipped_frames_++;
+      keyframe_lock.unlock();
+      return false;
+    }
+    keyframe_lock.unlock();
+
+    num_skipped_frames_ = 0;
 
     timer.Start();
 
@@ -724,6 +717,22 @@ void RemoveUnmatchedFeatures(Keyframe &frame) {
       ++feature_ptr;
   }
   std::cout << " to " << frame.features.size() << std::endl;
+}
+
+bool ShouldSkipThisFrame(Keyframe *frame0, Keyframe *frame1,
+                         const std::vector<cv::DMatch> &matches) {
+  // Estimate motion, skip if it's static.
+  int excceed_thresh_count = 0;
+  for (const auto &match : matches) {
+    if (feature_dist(frame0->features[match.queryIdx].measurement,
+                     frame1->features[match.trainIdx].measurement) > 5.0f)
+      excceed_thresh_count++;
+  }
+  // TODO: Find better criterion.
+  if (excceed_thresh_count < 30 && matches.size() > 500) {
+    return true;
+  }
+  return false;
 }
 
 // TODO: How to use it in FeatureTracker to evaluate tracker?
