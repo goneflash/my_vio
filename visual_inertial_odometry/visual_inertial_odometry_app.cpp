@@ -63,7 +63,7 @@ int TestFramesInFolder(Options option) {
       break;
     }
     // At 20hz.
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
   vio->Stop();

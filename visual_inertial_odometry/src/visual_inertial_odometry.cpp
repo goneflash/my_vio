@@ -331,9 +331,10 @@ void VisualInertialOdometry::RunInitializer(
   Timer timer;
   timer.Start();
   // TODO: Change this.
-  cv::Matx33d K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  // cv::Matx33d K_ = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  const cv::Mat &K = camera_->camera_matrix();
   const bool success = map_initializer_->Initialize(
-      feature_vectors, cv::Mat(K_), points3d, points3d_mask, Rs_est, ts_est);
+      feature_vectors, K, points3d, points3d_mask, Rs_est, ts_est);
 
   timer.Stop();
   std::cout << "Initialization used " << timer.GetInMs() << "ms.\n";
@@ -351,6 +352,8 @@ void VisualInertialOdometry::RunInitializer(
       }
       std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_);
       std::cout << "Removed keyframes. Now " << keyframes_.size() << " left.\n";
+      // TODO: For now only delete the first keyframe.
+      break;
     }
 
     timer.Stop();
@@ -434,7 +437,8 @@ void VisualInertialOdometry::CopyInitializedFramesAndLandmarksData(
   }
 
   // TODO: Change this.
-  cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  // cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  const cv::Mat &K = camera_->camera_matrix();
 
   // Triangluate landmarks.
   // TODO: Although it's now duplicated with the one in MapInitializer, it
@@ -528,7 +532,9 @@ bool VisualInertialOdometry::InitializePoseForNewKeyframe(Keyframe &pre_frame,
   }
 
   // TODO: Change this.
-  cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  // cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  const cv::Mat &K = camera_->camera_matrix();
+
   std::vector<bool> inliers;
   cv::Mat R;
   cv::Mat t;
@@ -551,7 +557,8 @@ bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
 
   // TODO: Change this.
-  cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  // cv::Matx33d K = cv::Matx33d(650, 0, 320, 0, 650, 240, 0, 0, 1);
+  const cv::Mat &K = camera_->camera_matrix();
 
   std::lock(landmarks_lock, keyframe_lock);
   if (!new_frame.inited_pose()) return false;
@@ -570,11 +577,18 @@ bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
     // Add measurement for all frames to triangulate.
     // TODO: Now only supports two views.
     for (auto &ptr : landmark.keyframe_to_feature) {
-      // TODO: Duplicated code with Copy....()
-      Keyframe &keyframe = *keyframes_[ptr.first];
+      auto keyframe_ptr = keyframes_.find(ptr.first);
+      if (keyframe_ptr == keyframes_.end()) {
+        std::cerr << "Weird: keyframe " << ptr.first.id()
+                  << " is not in keyframes.\n";
+        continue;
+      }
+
+      Keyframe &keyframe = *(keyframe_ptr->second);
       // TODO: there might be new keyframes already added that also see this
       // landmark.
       if (!keyframe.inited_pose()) continue;
+
       kp.push_back(cv::Vec2d(ptr.second.x, ptr.second.y));
       R.push_back(keyframe.pose.R);
       cv::Mat tmp_t = cv::Mat(3, 1, CV_64F);
@@ -626,7 +640,7 @@ bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
 
   Keyframe *keyframe = frame_ptr->second.get();
   for (auto &feature : keyframe->features) {
-    LandmarkId ld = feature.second.landmark_id;
+    LandmarkId &ld = feature.second.landmark_id;
     if (ld == -1) continue;
     auto landmark_ptr = landmarks_.find(ld);
     if (landmark_ptr == landmarks_.end()) {
@@ -635,7 +649,7 @@ bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
     }
     // Remove the landmark if it is observed only by this frame and another
     // frame.
-    Landmark landmark = *landmark_ptr->second.get();
+    Landmark &landmark = *landmark_ptr->second;
     // TODO: Check exists.
     landmark.keyframe_to_feature.erase(frame_id);
     landmark.keyframe_to_feature_id.erase(frame_id);
@@ -660,7 +674,7 @@ bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
     }
   }
   // Remove this keyframe.
-  keyframes_.erase(frame_ptr);
+  keyframes_.erase(frame_id);
   std::cout << "Remove keyframe " << frame_id.id() << std::endl;
   if (keyframes_.empty()) last_keyframe_ = nullptr;
 
@@ -725,11 +739,12 @@ bool ShouldSkipThisFrame(Keyframe *frame0, Keyframe *frame1,
   int excceed_thresh_count = 0;
   for (const auto &match : matches) {
     if (feature_dist(frame0->features[match.queryIdx].measurement,
-                     frame1->features[match.trainIdx].measurement) > 5.0f)
+                     frame1->features[match.trainIdx].measurement) > 4.0f)
       excceed_thresh_count++;
   }
   // TODO: Find better criterion.
-  if (excceed_thresh_count < 30 && matches.size() > 500) {
+  // if (excceed_thresh_count < 30 && matches.size() > 300) {
+  if ((double)excceed_thresh_count / (double)matches.size() < 0.4) {
     return true;
   }
   return false;
