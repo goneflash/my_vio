@@ -13,9 +13,11 @@ using namespace vio;
 
 class Options {
  public:
-  Options() {}
+  Options() : image_interval(30) {}
   string path;
   string format;
+  // In millisecond.
+  int image_interval;
 };
 
 int TestFramesInFolder(Options option) {
@@ -62,8 +64,8 @@ int TestFramesInFolder(Options option) {
       std::cout << "VIO Stopped accepting new images.\n";
       break;
     }
-    // At 20hz.
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(option.image_interval));
   }
 
   vio->Stop();
@@ -80,6 +82,8 @@ int main(int argc, char **argv) {
       option.path = argv[++i];
     } else if (!strcmp(argv[i], "-f") || !strcmp(argv[i], "--format")) {
       option.format = argv[++i];
+    } else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--image_interval")) {
+      option.image_interval = atoi(argv[++i]);
     }
   }
 
