@@ -17,6 +17,7 @@ class UniqueId {
   UniqueId() : id_(-1) {}
 
   int id() const { return id_; }
+  bool valid() const { return id_ != -1; }
 
  protected:
   int id_;

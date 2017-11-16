@@ -23,7 +23,7 @@ class FeatureTrackerOCV : public FeatureTracker {
                           std::vector<cv::DMatch> &matches) override;
   // Use match approach when lost tracking.
   virtual bool MatchFrame(const ImageFrame &prev_frame,
-                          ImageFrame &output_frame,
+                          const ImageFrame &output_frame,
                           std::vector<cv::DMatch> &matches) override;
 
  protected:

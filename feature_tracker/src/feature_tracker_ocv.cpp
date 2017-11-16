@@ -126,7 +126,8 @@ bool FeatureTrackerOCV::TrackFrame(ImageFrame &prev_frame,
   Timer timer;
   timer.Start();
 
-  if (!matcher_->Match(prev_frame, new_frame, matches)) return false;
+  if (!MatchFrame(prev_frame, new_frame, matches)) return false;
+  // if (!matcher_->Match(prev_frame, new_frame, matches)) return false;
 
   timer.Stop();
   std::cout << "Matching used " << timer.GetInMs() << "ms.\n";
@@ -152,7 +153,8 @@ bool FeatureTrackerOCV::TrackFrame(ImageFrame &prev_frame,
   Timer timer;
   timer.Start();
 
-  if (!matcher_->Match(prev_frame, new_frame, matches)) return false;
+  if (!MatchFrame(prev_frame, new_frame, matches)) return false;
+  // if (!matcher_->Match(prev_frame, new_frame, matches)) return false;
 
   timer.Stop();
   std::cout << "Matching used " << timer.GetInMs() << "ms.\n";
@@ -161,15 +163,27 @@ bool FeatureTrackerOCV::TrackFrame(ImageFrame &prev_frame,
 }
 
 bool FeatureTrackerOCV::MatchFrame(const ImageFrame &prev_frame,
-                                   ImageFrame &new_frame,
+                                   const ImageFrame &new_frame,
                                    std::vector<cv::DMatch> &matches) {
+  // Must already computed features.
+  if (!prev_frame.feature_computed() || !new_frame.feature_computed()) {
+    return false;
+  }
+
+  if (matcher_->Match(prev_frame, new_frame, matches) && matches.size() > 30)
+    return true;
+
+  // Otherwise try long term matcher.
+  std::cout << "Only " << matches.size()
+            << " matches detected, trying long term tracker...\n";
+
   if (!long_term_matcher_) {
     std::cerr << "Error: Long term FeatureMatcher not set up.\n";
     return false;
   }
-  FeatureTracker::ComputeFeatures(new_frame);
   if (!long_term_matcher_->Match(prev_frame, new_frame, matches)) return false;
 
+  std::cout << "Long term tracker found " << matches.size() << " matches.";
   return true;
 }
 

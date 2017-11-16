@@ -33,12 +33,6 @@ void VisualInertialOdometry::InitializeFeatureTracker() {
   tracker_options.max_num_feature = 2000;
   feature_tracker_ =
       FeatureTracker::CreateFeatureTracker(tracker_options, std::move(matcher));
-
-  matcher_options.method = FeatureMatcherOptions::OCV;
-  std::unique_ptr<FeatureMatcher> long_term_matcher =
-      FeatureMatcher::CreateFeatureMatcher(matcher_options);
-  feature_tracker_long_term_ = FeatureTracker::CreateFeatureTracker(
-      tracker_options, std::move(long_term_matcher));
 }
 
 void VisualInertialOdometry::InitializeVIOInitializer() {
@@ -210,19 +204,6 @@ bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {
   feature_tracker_->TrackFrame(*last_keyframe_->image_frame.get(), *frame_cur,
                                matches);
 
-  if (matches.size() < 30) {
-    std::cout << "Only " << matches.size()
-              << " matches detected, trying long term tracker...\n";
-    // Not enough matches, try long term feature tracker.
-    matches.clear();
-    feature_tracker_long_term_->TrackFrame(*last_keyframe_->image_frame.get(),
-                                           *frame_cur, matches);
-    if (matches.size() < 100) {
-      // TODO
-      std::cout << "Long term tracker only " << matches.size()
-                << " matches detected.";
-    }
-  }
   // Not matched features are useless since we only match consecutive frames.
   keyframe_lock.unlock();
   // std::cout << "Feature number in new frame " <<
@@ -643,12 +624,6 @@ bool VisualInertialOdometry::RemoveKeyframe(KeyframeId frame_id) {
     return false;
   }
 
-  // If it's the only keyframe.
-  if (keyframes_.size() == 1) {
-    keyframes_.clear();
-    return true;
-  }
-
   Keyframe *keyframe = frame_ptr->second.get();
   for (auto &feature : keyframe->features) {
     LandmarkId &ld = feature.second.landmark_id;
@@ -685,11 +660,30 @@ bool VisualInertialOdometry::RemoveKeyframe(KeyframeId frame_id) {
     }
   }
 
-  // TODO: It's wrong now!! Must connect its previous frame and its next frame.
-  if (keyframe->next_frame_id.id() != -1) {
+  // If it's a middle keyframe, must connect previous frame and next frame.
+  if (keyframe->next_frame_id.valid() && keyframe->pre_frame_id.valid()) {
+    auto next_keyframe_ptr = keyframes_.find(keyframe->next_frame_id);
+    auto prev_keyframe_ptr = keyframes_.find(keyframe->pre_frame_id);
+    if (next_keyframe_ptr == keyframes_.end()) {
+      std::cerr << "Error: Next keyframe doesn't exist but specified.\n";
+      return false;
+    }
+    if (prev_keyframe_ptr == keyframes_.end()) {
+      std::cerr << "Error: Previous keyframe doesn't exist but specified.\n";
+      return false;
+    }
+    auto next_keyframe = next_keyframe_ptr->second.get();
+    auto prev_keyframe = prev_keyframe_ptr->second.get();
+    prev_keyframe->next_frame_id = next_keyframe->frame_id;
+    next_keyframe->pre_frame_id = prev_keyframe->frame_id;
+    // Recompute the vision constraint between the keyframes.
+    // TODO: May be redo the tracking?
+  }
 
-  } else {
-    // Deleting the last keyframe.
+  // TODO: If it's the only keyframe.
+  if (keyframes_.size() == 1) {
+    keyframes_.clear();
+    return true;
   }
 
   // Remove this keyframe.

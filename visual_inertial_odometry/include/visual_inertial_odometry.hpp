@@ -134,7 +134,6 @@ class VisualInertialOdometry {
   CameraModelPtr camera_;
 
   FeatureTrackerPtr feature_tracker_;
-  FeatureTrackerPtr feature_tracker_long_term_;
 
   MapInitializerPtr map_initializer_;
 
