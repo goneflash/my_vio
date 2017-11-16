@@ -128,7 +128,10 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       keyframe_lock.lock();
 
       const auto &ptr = keyframes_.find(last_keyframe_->pre_frame_id);
-      if (ptr == keyframes_.end()) break;
+      if (ptr == keyframes_.end()) {
+        std::cerr << "Error: No previous keyframes exist.\n";
+        break;
+      }
       Keyframe &pre_keyframe = *(ptr->second);
       // Initialization might not propagate to here yet.
       if (!pre_keyframe.inited_pose()) {
@@ -161,6 +164,7 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
       // TODO: Wait until all keyframes are pose_inited.
     }
   }
+  data_buffer_.CloseBuffer();
 }
 
 bool VisualInertialOdometry::AddNewKeyframeFromImage(const cv::Mat &new_image) {

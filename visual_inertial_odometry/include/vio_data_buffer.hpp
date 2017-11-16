@@ -76,6 +76,7 @@ class VIODataBuffer {
     cur_skipped_count_ = 0;
 
     while (true) {
+      if (buffer_closed_) return false;
       size_t size = 0;
       auto tmp_lock = image_buffer_.size(size);
       if (size >= image_buffer_size_) {
