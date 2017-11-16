@@ -56,10 +56,12 @@ class VIODataBuffer {
   }
 
   void CloseBuffer() {
-    buffer_closed_ = true;
-    size_t size = 0;
-    auto tmp_lock = image_buffer_.size(size);
-    image_buffer_stats_.left_in_buffer = size;
+    if (!buffer_closed_) {
+      buffer_closed_ = true;
+      size_t size = 0;
+      auto tmp_lock = image_buffer_.size(size);
+      image_buffer_stats_.left_in_buffer = size;
+    }
   }
 
   // Return false if can not add, which means buffer is closed.

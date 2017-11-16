@@ -84,6 +84,7 @@ class Keyframe {
 };
 
 typedef std::map<KeyframeId, std::unique_ptr<Keyframe>> Keyframes;
+
 }  // namespace vio
 
 #endif

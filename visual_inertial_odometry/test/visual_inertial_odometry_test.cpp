@@ -69,7 +69,7 @@ TEST_F(VisualInertialOdometryTest, Test_FullLength_NormalSpeed) {
   vio->Start();
 
   // 30 ms, 40 frames.
-  Process(30, images.size());
+  Process(100, images.size());
 
   vio->Stop();
 }
@@ -79,7 +79,7 @@ TEST_F(VisualInertialOdometryTest, Test_Long_Slow) {
   vio->Start();
 
   // 100 ms, 40 frames.
-  Process(100, 40);
+  Process(200, 40);
 
   vio->Stop();
 }

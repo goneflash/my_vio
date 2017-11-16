@@ -609,6 +609,7 @@ bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
   keyframe_lock.unlock();
   std::cout << "Triangulated " << good_count << " / " << tested_count
             << " new landmarks.\n";
+  if (good_count < 10) return false;
   return true;
 }
 
@@ -640,7 +641,7 @@ bool VisualInertialOdometry::RemoveKeyframe(KeyframeId frame_id) {
     landmark.keyframe_to_feature.erase(frame_id);
     landmark.keyframe_to_feature_id.erase(frame_id);
 
-    if (landmark.keyframe_to_feature.size() <= 2) {
+    if (landmark.keyframe_to_feature.size() < 2) {
       // Delete references from keyframe to this landmark.
       for (auto &frame_to_feature : landmark.keyframe_to_feature) {
         auto ptr = keyframes_.find(frame_to_feature.first);
@@ -677,13 +678,55 @@ bool VisualInertialOdometry::RemoveKeyframe(KeyframeId frame_id) {
     prev_keyframe->next_frame_id = next_keyframe->frame_id;
     next_keyframe->pre_frame_id = prev_keyframe->frame_id;
     // Recompute the vision constraint between the keyframes.
-    // TODO: May be redo the tracking?
-  }
+    std::vector<cv::DMatch> matches;
+    if (!feature_tracker_->MatchFrame(*prev_keyframe->image_frame,
+                                      *next_keyframe->image_frame, matches)) {
+      std::cerr << "Error: Failed compute vision constraint after a keyframe "
+                   "is removed.\n";
+      return false;
+    }
+    // TODO: For now, only add matches that are both exists in
+    // prev <-- cur --> next.
+    int num_reconnected_features = 0;
+    std::cout << "From prev to to_be_delete "
+              << keyframe->match_to_pre_frame.size()
+              << " matches, from to_be_delete to next "
+              << next_keyframe->match_to_pre_frame.size() << " matches. ";
+    for (const auto &match : matches) {
+      auto tmp_ptr = next_keyframe->match_to_pre_frame.find(match.trainIdx);
+      if (tmp_ptr == next_keyframe->match_to_pre_frame.end()) continue;
 
-  // TODO: If it's the only keyframe.
-  if (keyframes_.size() == 1) {
-    keyframes_.clear();
-    return true;
+      const auto id_in_keyframe_to_be_removed = tmp_ptr->second;
+      tmp_ptr = keyframe->match_to_pre_frame.find(id_in_keyframe_to_be_removed);
+      if (tmp_ptr == keyframe->match_to_pre_frame.end()) continue;
+
+      // Matches are not consistent.
+      if (tmp_ptr->second != match.queryIdx) continue;
+      next_keyframe->match_to_pre_frame[match.trainIdx] = match.queryIdx;
+      num_reconnected_features++;
+    }
+    std::cout << "Reconnected " << num_reconnected_features << " matches.\n";
+  } else if (keyframe->next_frame_id.valid()) {
+    // For first frame
+    auto next_keyframe_ptr = keyframes_.find(keyframe->next_frame_id);
+    if (next_keyframe_ptr == keyframes_.end()) {
+      std::cerr << "Error: Next keyframe doesn't exist but specified.\n";
+      return false;
+    }
+    auto next_keyframe = next_keyframe_ptr->second.get();
+    next_keyframe->pre_frame_id = -1;
+  } else if (keyframe->pre_frame_id.valid()) {
+    // For last frame.
+    auto prev_keyframe_ptr = keyframes_.find(keyframe->pre_frame_id);
+    if (prev_keyframe_ptr == keyframes_.end()) {
+      std::cerr << "Error: Previous keyframe doesn't exist but specified.\n";
+      return false;
+    }
+    auto prev_keyframe = prev_keyframe_ptr->second.get();
+    prev_keyframe->next_frame_id = -1;
+    last_keyframe_ = prev_keyframe_ptr->second.get();
+  } else {
+    // It's the only frame.
   }
 
   // Remove this keyframe.
