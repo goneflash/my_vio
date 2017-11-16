@@ -8,6 +8,7 @@ namespace vio {
 VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
     : camera_(std::move(camera)),
       vio_status_(UNINITED),
+      // TODO: Remove and use keyframes_.end()
       last_keyframe_(nullptr),
       running_process_buffer_thread_(false),
       running_initializer_thread_(false),
@@ -630,7 +631,7 @@ bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
   return true;
 }
 
-bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
+bool VisualInertialOdometry::RemoveKeyframe(KeyframeId frame_id) {
   std::unique_lock<std::mutex> landmarks_lock(landmarks_mutex_,
                                               std::defer_lock);
   std::unique_lock<std::mutex> keyframe_lock(keyframes_mutex_, std::defer_lock);
@@ -640,6 +641,12 @@ bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
   if (frame_ptr == keyframes_.end()) {
     std::cerr << "Error: Couldn't find the keyframe to remove.\n";
     return false;
+  }
+
+  // If it's the only keyframe.
+  if (keyframes_.size() == 1) {
+    keyframes_.clear();
+    return true;
   }
 
   Keyframe *keyframe = frame_ptr->second.get();
@@ -677,6 +684,14 @@ bool VisualInertialOdometry::RemoveKeyframe(const KeyframeId &frame_id) {
       landmarks_.erase(landmark_ptr);
     }
   }
+
+  // TODO: It's wrong now!! Must connect its previous frame and its next frame.
+  if (keyframe->next_frame_id.id() != -1) {
+
+  } else {
+    // Deleting the last keyframe.
+  }
+
   // Remove this keyframe.
   keyframes_.erase(frame_id);
   std::cout << "Remove keyframe " << frame_id.id() << std::endl;

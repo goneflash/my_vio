@@ -12,7 +12,7 @@ namespace vio {
 struct MapInitializerOptions {
   MapInitializerOptions()
       : method(NORMALIZED8POINTFUNDAMENTAL),
-        use_f_ransac(false),
+        use_f_ransac(true),
         f_ransac_confidence(0.99),
         f_ransac_max_dist_to_epipolar(2),
         reprojection_error_thres(5),

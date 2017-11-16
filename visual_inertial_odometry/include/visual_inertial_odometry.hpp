@@ -119,7 +119,7 @@ class VisualInertialOdometry {
   bool InitializePoseForNewKeyframe(Keyframe &pre_frame, Keyframe &new_frame);
 
   // Remove a keyframe and associated landmarks if not observed by other frames.
-  bool RemoveKeyframe(const KeyframeId &frame_id);
+  bool RemoveKeyframe(KeyframeId frame_id);
 
   /* ---------------------------------------
    *
