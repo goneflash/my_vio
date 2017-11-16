@@ -48,8 +48,9 @@ class VIODataBuffer {
       : buffer_closed_(false),
         skip_every_num_frames_(2),
         cur_skipped_count_(0),
-        skip_time_interval_(30),
+        skip_time_interval_(10),
         image_buffer_size_(30),
+        block_when_buffer_full_(false),
         imu_buffer_size_(50) {
     // TODO: Not really correct.
     last_image_timestamp_ = std::chrono::high_resolution_clock::now();
@@ -82,6 +83,12 @@ class VIODataBuffer {
       size_t size = 0;
       auto tmp_lock = image_buffer_.size(size);
       if (size >= image_buffer_size_) {
+        if (block_when_buffer_full_) {
+          tmp_lock.unlock();
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+          continue;
+        }
+
         // TODO: Drop smartly.
         image_buffer_.Pop(std::move(tmp_lock));
         image_buffer_stats_.dropped_count++;
@@ -121,6 +128,8 @@ class VIODataBuffer {
     return image_buffer_stats_;
   }
 
+  bool set_block_when_buffer_full(bool flag) { block_when_buffer_full_ = flag; }
+
  private:
   bool SkipThisImage() {
     if (cur_skipped_count_ >= skip_every_num_frames_) return false;
@@ -151,6 +160,9 @@ class VIODataBuffer {
   int imu_buffer_size_;
   // ThreadSafeQueue<cv::Mat> imu_buffer_;
   VIODataBufferStats imu_buffer_stats_;
+
+  // Do not drop data. Block when full.
+  bool block_when_buffer_full_;
 };
 
 }  // vio

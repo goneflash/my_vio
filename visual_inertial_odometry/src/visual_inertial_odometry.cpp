@@ -12,6 +12,7 @@ VisualInertialOdometry::VisualInertialOdometry(CameraModelPtr camera)
       last_keyframe_(nullptr),
       running_process_buffer_thread_(false),
       running_initializer_thread_(false),
+      single_thread_mode_(false),
       num_skipped_frames_(0) {
   // Setup Feature tracker.
   InitializeFeatureTracker();
@@ -115,6 +116,8 @@ void VisualInertialOdometry::ProcessDataInBuffer() {
             new std::thread(&VisualInertialOdometry::RunInitializer, this,
                             frame_ids, feature_vectors));
         std::cout << "Initializer thread started ...\n";
+
+        if (single_thread_mode_) initializer_thread_->join();
       } else {
         std::cout << "Not initialized, but already running a initialization "
                      "thread ...\n";
@@ -609,7 +612,6 @@ bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
   keyframe_lock.unlock();
   std::cout << "Triangulated " << good_count << " / " << tested_count
             << " new landmarks.\n";
-  if (good_count < 10) return false;
   return true;
 }
 

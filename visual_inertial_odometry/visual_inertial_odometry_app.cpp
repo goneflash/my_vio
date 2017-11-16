@@ -18,6 +18,7 @@ class Options {
   string format;
   // In millisecond.
   int image_interval;
+  bool use_single_thread;
 };
 
 int TestFramesInFolder(Options option) {
@@ -28,8 +29,6 @@ int TestFramesInFolder(Options option) {
     return -1;
   }
   cout << "Testing with " << images.size() << " images.\n";
-
-  std::unique_ptr<vio::VisualInertialOdometry> vio;
 
   // Load camera information.
   const std::string config_file_name = "calibration.yaml";
@@ -48,8 +47,10 @@ int TestFramesInFolder(Options option) {
     }
   }
 
-  vio = std::unique_ptr<vio::VisualInertialOdometry>(
-      new vio::VisualInertialOdometry(std::move(camera_ptr)));
+  std::unique_ptr<vio::VisualInertialOdometry> vio =
+      std::unique_ptr<vio::VisualInertialOdometry>(
+          new vio::VisualInertialOdometry(std::move(camera_ptr)));
+  vio->set_single_thread_mode(true);
 
   vio->Start();
 
@@ -80,6 +81,9 @@ int main(int argc, char **argv) {
       option.format = argv[++i];
     } else if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--image_interval")) {
       option.image_interval = atoi(argv[++i]);
+    } else if (!strcmp(argv[i], "--use_single_thread")) {
+      option.use_single_thread = true;
+      std::cout << "Simulating single thread...\n";
     }
   }
 

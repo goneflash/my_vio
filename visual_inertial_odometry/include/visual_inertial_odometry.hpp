@@ -79,6 +79,11 @@ class VisualInertialOdometry {
   void VisualizeCurrentScene();
 #endif
 
+  void set_single_thread_mode(bool flag) {
+    single_thread_mode_ = flag;
+    data_buffer_.set_block_when_buffer_full(true);
+  }
+
  private:
   void InitializeFeatureTracker();
   void InitializeVIOInitializer();
@@ -167,6 +172,11 @@ class VisualInertialOdometry {
 
   std::unique_ptr<std::thread> process_buffer_thread_;
   std::atomic<bool> running_process_buffer_thread_;
+
+  // Single Thread mode
+  // Only one thread can have this mutex at the same.
+  std::mutex vio_mutex_;
+  bool single_thread_mode_;
 };
 
 void RemoveUnmatchedFeatures(Keyframe &frame);
