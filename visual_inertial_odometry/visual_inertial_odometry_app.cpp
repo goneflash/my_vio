@@ -29,10 +29,6 @@ int TestFramesInFolder(Options option) {
   }
   cout << "Testing with " << images.size() << " images.\n";
 
-  // Track first frame.
-  cv::Mat image0 = cv::imread(images[0]);
-  std::unique_ptr<vio::ImageFrame> frame_pre(new vio::ImageFrame(image0));
-
   std::unique_ptr<vio::VisualInertialOdometry> vio;
 
   // Load camera information.
