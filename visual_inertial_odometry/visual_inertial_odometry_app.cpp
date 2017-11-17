@@ -13,7 +13,7 @@ using namespace vio;
 
 class Options {
  public:
-  Options() : image_interval(30) {}
+  Options() : image_interval(30), use_single_thread(false) {}
   string path;
   string format;
   // In millisecond.
@@ -50,7 +50,7 @@ int TestFramesInFolder(Options option) {
   std::unique_ptr<vio::VisualInertialOdometry> vio =
       std::unique_ptr<vio::VisualInertialOdometry>(
           new vio::VisualInertialOdometry(std::move(camera_ptr)));
-  vio->set_single_thread_mode(true);
+  vio->set_single_thread_mode(option.use_single_thread);
 
   vio->Start();
 

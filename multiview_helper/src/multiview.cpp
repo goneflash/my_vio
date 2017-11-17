@@ -141,6 +141,7 @@ int TriangulatePoints(const std::vector<cv::Vec2d> &kp0,
   return nGood;
 }
 
+// From two views
 template <typename Point3Type>
 void TriangulateDLT(const cv::Vec2d &kp1, const cv::Vec2d &kp2,
                     const cv::Mat &P1, const cv::Mat &P2, Point3Type &point3d) {
@@ -159,6 +160,28 @@ void TriangulateDLT(const cv::Vec2d &kp1, const cv::Vec2d &kp2,
   point3d.x = p3d_mat.at<double>(0) / p3d_mat.at<double>(3);
   point3d.y = p3d_mat.at<double>(1) / p3d_mat.at<double>(3);
   point3d.z = p3d_mat.at<double>(2) / p3d_mat.at<double>(3);
+}
+
+// From n views.
+bool TriangulateDLTNViews(const std::vector<cv::Vec2d> &kp,
+                    const std::vector<cv::Mat> &P, cv::Point3f &point3d) {
+  if (kp.size() != P.size())
+    return false;
+  cv::Mat A(kp.size() * 2, 4, CV_64F);
+
+  for (int i = 0; i < kp.size(); ++i) {
+    A.row(i * 2    ) = kp[i][0] * P[i].row(2) - P[i].row(0);
+    A.row(i * 2 + 1) = kp[i][1] * P[i].row(2) - P[i].row(1);
+  }
+  cv::Mat u, w, vt;
+  cv::SVD::compute(A, w, u, vt, cv::SVD::MODIFY_A | cv::SVD::FULL_UV);
+
+  // It's homogeneous
+  cv::Mat p3d_mat = vt.row(3).t();
+  point3d.x = p3d_mat.at<double>(0) / p3d_mat.at<double>(3);
+  point3d.y = p3d_mat.at<double>(1) / p3d_mat.at<double>(3);
+  point3d.z = p3d_mat.at<double>(2) / p3d_mat.at<double>(3);
+  return true;
 }
 
 // TODO: Optimize. Don't do duplicated computation.
