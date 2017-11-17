@@ -15,12 +15,18 @@ void TriangulateDLT(const cv::Vec2d &kp1, const cv::Vec2d &kp2,
                     const cv::Mat &P1, const cv::Mat &P2, Point3Type &point3d);
 
 bool TriangulateDLTNViews(const std::vector<cv::Vec2d> &kp,
-                    const std::vector<cv::Mat> &P1, cv::Point3f &point3d);
+                          const std::vector<cv::Mat> &P1, cv::Point3f &point3d);
 
 bool IsGoodTriangulatedPoint(const cv::Vec2d &kp0, const cv::Vec2d &kp1,
                              const cv::Mat &R0, const cv::Mat &t0,
                              const cv::Mat &R1, const cv::Mat &t1,
                              const cv::Mat &P0, const cv::Mat &P1,
+                             const cv::Point3f &points3d);
+
+bool IsGoodTriangulatedPoint(const std::vector<cv::Vec2d> &kp,
+                             const std::vector<cv::Mat> &R,
+                             const std::vector<cv::Mat> &t,
+                             const std::vector<cv::Mat> &P,
                              const cv::Point3f &points3d);
 
 double ComputeReprojectionError(const cv::Point3f &point3d, const cv::Vec2d &kp,

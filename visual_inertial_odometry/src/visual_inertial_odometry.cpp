@@ -590,18 +590,18 @@ bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
       tmp_P = cv::Mat(K) * tmp_P;
       P.push_back(tmp_P);
     }
-    // TODO
-    //if (kp.size() != 2) continue;
+
+    // if (kp.size() != 2) continue;
 
     tested_count++;
-    // TODO: Assume 2 frames.
-    // TODO: How to triangulate a point from 3+ frames.
     cv::Point3f point_3d;
+
     // TriangulateDLT(kp[0], kp[1], P[0], P[1], point_3d);
-    if (!TriangulateDLTNViews(kp, P, point_3d))
-      continue;
-    if (IsGoodTriangulatedPoint(kp[0], kp[1], R[0], t[0], R[1], t[1], P[0],
-                                P[1], point_3d)) {
+    if (!TriangulateDLTNViews(kp, P, point_3d)) continue;
+
+    // if (IsGoodTriangulatedPoint(kp[0], kp[1], R[0], t[0], R[1], t[1], P[0],
+    //                            P[1], point_3d)) {
+    if (IsGoodTriangulatedPoint(kp, R, t, P, point_3d)) {
       landmark.position[0] = point_3d.x;
       landmark.position[1] = point_3d.y;
       landmark.position[2] = point_3d.z;
@@ -609,8 +609,11 @@ bool VisualInertialOdometry::TriangulteLandmarksInNewKeyframes(
       landmark.inited_ = true;
       good_count++;
 
-      if (kp.size() > 2) 
-        std::cout << "Cool! point triangulated from " << kp.size() << " frames.\n";
+      /*
+      if (kp.size() > 2)
+        std::cout << "Cool! point triangulated from " << kp.size()
+                  << " frames.\n";
+      */
     }
   }
   landmarks_lock.unlock();

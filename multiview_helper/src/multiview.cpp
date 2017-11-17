@@ -164,13 +164,12 @@ void TriangulateDLT(const cv::Vec2d &kp1, const cv::Vec2d &kp2,
 
 // From n views.
 bool TriangulateDLTNViews(const std::vector<cv::Vec2d> &kp,
-                    const std::vector<cv::Mat> &P, cv::Point3f &point3d) {
-  if (kp.size() != P.size())
-    return false;
+                          const std::vector<cv::Mat> &P, cv::Point3f &point3d) {
+  if (kp.size() != P.size()) return false;
   cv::Mat A(kp.size() * 2, 4, CV_64F);
 
   for (int i = 0; i < kp.size(); ++i) {
-    A.row(i * 2    ) = kp[i][0] * P[i].row(2) - P[i].row(0);
+    A.row(i * 2) = kp[i][0] * P[i].row(2) - P[i].row(0);
     A.row(i * 2 + 1) = kp[i][1] * P[i].row(2) - P[i].row(1);
   }
   cv::Mat u, w, vt;
@@ -233,6 +232,55 @@ bool IsGoodTriangulatedPoint(const cv::Vec2d &kp0, const cv::Vec2d &kp1,
   double reprojection_error_thres = 5.0;
   if (error0 > reprojection_error_thres || error1 > reprojection_error_thres)
     return false;
+
+  return true;
+}
+
+bool IsGoodTriangulatedPoint(const std::vector<cv::Vec2d> &kp,
+                             const std::vector<cv::Mat> &R,
+                             const std::vector<cv::Mat> &t,
+                             const std::vector<cv::Mat> &P,
+                             const cv::Point3f &points3d) {
+  if (kp.size() != R.size() || kp.size() != t.size() || kp.size() != P.size())
+    return false;
+  const size_t num_frames = kp.size();
+
+  cv::Mat p_global(3, 1, CV_64F);
+  p_global.at<double>(0) = points3d.x;
+  p_global.at<double>(1) = points3d.y;
+  p_global.at<double>(2) = points3d.z;
+
+  // TODO: Now only check two of the frames has enough parallex,
+  // the two frames are not necessarily next to each other.
+  cv::Mat last_p_vec;
+  double last_dist;
+
+  for (int i = 0; i < num_frames; ++i) {
+    cv::Mat center = -R[i].t() * t[i];
+    cv::Mat p3dC = R[i] * p_global + t[i];
+    double depth = p3dC.at<double>(2);
+    if (depth <= 0) return false;
+
+    // TODO: Make sure isfinite is in std
+    if (!std::isfinite(p3dC.at<double>(0)) ||
+        !std::isfinite(p3dC.at<double>(1)) ||
+        !std::isfinite(p3dC.at<double>(2)))
+      return false;
+    double error = ComputeReprojectionError(points3d, kp[i], P[i]);
+
+    double reprojection_error_thres = 5.0;
+    if (error > reprojection_error_thres) return false;
+
+    cv::Mat p_vec = p3dC - center;
+    double dist = cv::norm(p_vec);
+    if (i > 0) {
+      double cosParallax = p_vec.dot(last_p_vec) / (dist * last_dist);
+      // TODO: I don't know what to pick.
+      if (cosParallax > 0.9998) return false;
+    }
+    last_p_vec = p_vec;
+    last_dist = dist;
+  }
 
   return true;
 }
