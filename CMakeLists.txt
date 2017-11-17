@@ -46,7 +46,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 find_package( OpenCV REQUIRED )
 find_package( Eigen3 REQUIRED )
-find_package( Ceres )
+find_package( Ceres REQUIRED)
 
 include_directories(
   ${OpenCV_INCLUDE_DIRS}
@@ -73,6 +73,9 @@ message(STATUS "    libraries: ${OpenCV_LIBS}")
 message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 message(STATUS "Eigen library status:")
 message(STATUS "    include path: ${EIGEN3_INCLUDE_DIR}")
+message(STATUS "Ceres library status:")
+message(STATUS "    libraries: ${CERES_LIBRARIES}")
+message(STATUS "    include path: ${CERES_INCLUDE_DIR}")
 
 # For config.hpp used in tests in subdirectories.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -86,6 +89,7 @@ add_subdirectory(imu_integrator)
 add_subdirectory(orientation_tracking)
 add_subdirectory(multiview_helper)
 add_subdirectory(map_initializer)
+add_subdirectory(graph_optimizer)
 add_subdirectory(pnp_estimator)
 add_subdirectory(visual_inertial_odometry)
 
