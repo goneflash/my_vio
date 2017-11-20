@@ -1,5 +1,9 @@
 alias clang-format='clang-format-3.6'
 
+clang-format -style=file -i dataset_loader/*.cpp
+clang-format -style=file -i dataset_loader/include/*.hpp
+clang-format -style=file -i dataset_loader/src/*.cpp
+
 clang-format -style=file -i feature_tracker/*.cpp
 clang-format -style=file -i feature_tracker/include/*.hpp
 clang-format -style=file -i feature_tracker/src/*.cpp

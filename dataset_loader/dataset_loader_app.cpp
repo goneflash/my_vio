@@ -20,8 +20,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (option.dataset_path.empty())
-    return -1;
+  if (option.dataset_path.empty()) return -1;
 
   MavDatasetLoader dataset(option.dataset_path);
 
