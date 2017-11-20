@@ -81,6 +81,7 @@ message(STATUS "    include path: ${CERES_INCLUDE_DIR}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(util)
+add_subdirectory(dataset_loader)
 add_subdirectory(mapdata)
 add_subdirectory(camera_model)
 add_subdirectory(simulator)
